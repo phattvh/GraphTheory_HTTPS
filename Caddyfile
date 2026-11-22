@@ -1,0 +1,19 @@
+{
+    local_certs
+}
+
+https://localhost, http://localhost:80 {
+    handle /api/* {
+        reverse_proxy fastapi:8000
+    }
+    handle /docs* {
+        reverse_proxy fastapi:8000
+    }
+    handle /openapi.json {
+        reverse_proxy fastapi:8000
+    }
+    handle {
+        root * /srv/web
+        file_server
+    }
+}
