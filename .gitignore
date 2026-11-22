@@ -1,0 +1,40 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+tmp/
+temp/
+
+# Database / Docker local data
+pg_data/
+caddy_data/
+caddy_config/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
