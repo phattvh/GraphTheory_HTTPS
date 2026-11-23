@@ -10,28 +10,8 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
-  <!-- Thanh chuyển đổi nhanh chế độ xem Layout Shell (Admin / Sinh viên) phục vụ kiểm thử UI Shell -->
-  <div id="role-switcher-bar" class="bg-slate-900 text-slate-200 text-xs px-4 py-1.5 flex items-center justify-between no-print">
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-      <span class="font-medium">UI Shell Preview (TV4 - Ngày 1):</span>
-      <span class="text-slate-400">Chuyển đổi nhanh giữa khung giao diện Quản trị viên và Cổng Sinh viên</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <button id="btn-switch-admin" type="button" onclick="switchRoleLayout('admin')"
-        class="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition">
-        Khung Admin (admin)
-      </button>
-      <button id="btn-switch-student" type="button" onclick="switchRoleLayout('sinh_vien')"
-        class="px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium transition">
-        Khung Sinh viên (sinh_vien)
-      </button>
-      <a href="/student.html" class="ml-2 underline text-blue-300 hover:text-blue-200">Mở trang student.html riêng →</a>
-    </div>
-  </div>
-
   <!-- ===================================================================== -->
-  <!-- 1. KHUNG GIAO DIỆN QUẢN TRỊ VIÊN (ADMIN LAYOUT SHELL)                 -->
+  <!-- KHUNG GIAO DIỆN QUẢN TRỊ VIÊN (ADMIN LAYOUT SHELL)                    -->
   <!-- ===================================================================== -->
   <div id="admin-layout-shell" class="flex flex-1 min-h-0">
 
@@ -257,82 +237,6 @@
 
       </main>
     </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- 2. KHUNG GIAO DIỆN CỔNG SINH VIÊN (STUDENT PORTAL LAYOUT SHELL)       -->
-  <!-- ===================================================================== -->
-  <div id="student-layout-shell" class="hidden flex-1 flex flex-col">
-
-    <!-- STUDENT TOP NAVBAR (72px) -->
-    <header id="student-header" class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-          🎓
-        </div>
-        <div>
-          <h1 class="text-base font-bold text-slate-900">Cổng Thông tin Lịch thi Sinh viên (Student Portal - UC11)</h1>
-          <p class="text-xs text-slate-500">Hệ thống Xếp lịch thi Tập trung • Kiểm soát truy cập cá nhân bằng JWT</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
-          JWT Role: sinh_vien • MSSV: 22110399
-        </span>
-        <span class="text-sm font-semibold text-slate-800" id="student-user-display">
-          Bùi Thiên Phúc (22110399)
-        </span>
-        <a href="/login.html" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 no-print">
-          Đăng xuất
-        </a>
-      </div>
-    </header>
-
-    <!-- STUDENT MAIN CONTENT -->
-    <main id="student-main-content" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-
-      <!-- Action Banner (UC12) -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-sm font-bold text-slate-900">Lịch thi Học kỳ 1 (Năm học 2026 - 2027) • Đã đăng ký: 4 Học phần</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Cam kết từ thuật toán DSatur: 0% trùng ca thi • Các môn được phân vào 4 ca riêng biệt</p>
-        </div>
-        <div class="flex items-center gap-2.5 no-print">
-          <button type="button" class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700">
-            📥 Tải Lịch thi CSV / Excel (UTF-8 BOM)
-          </button>
-          <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">
-            🖨️ In Phiếu Dự Thi / Lưu PDF (UC12)
-          </button>
-        </div>
-      </div>
-
-      <!-- Two-column Split: Left Registered Exam Cards + Right Personal FullCalendar -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <section class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-          <h3 class="text-sm font-bold text-slate-900">Danh sách Môn thi Cá nhân (UC11)</h3>
-          <div class="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs space-y-1">
-            <div class="text-slate-600">🔵 Ca 1 • Thứ Hai 15/12/2026 (07:30 - 09:00)</div>
-            <div class="font-bold text-slate-900 text-sm">IT002 - Cấu trúc Dữ liệu &amp; Giải thuật</div>
-            <div class="text-slate-700">Phòng thi: A101 • Thời lượng: 90 phút • Ghế: 14</div>
-          </div>
-          <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs space-y-1">
-            <div class="text-slate-600">🟢 Ca 2 • Thứ Hai 15/12/2026 (09:30 - 11:00)</div>
-            <div class="font-bold text-slate-900 text-sm">IT001 - Lý thuyết Đồ thị (Graph Theory)</div>
-            <div class="text-slate-700">Phòng thi: A102 • Thời lượng: 90 phút • Ghế: 08</div>
-          </div>
-        </section>
-
-        <section id="student-fullcalendar-shell" class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[380px]">
-          <h3 class="text-sm font-bold text-slate-900 mb-3">Lịch Tuần Cá nhân trên FullCalendar (UC11)</h3>
-          <div class="border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500">
-            Khung hiển thị FullCalendar cá nhân của sinh viên
-          </div>
-        </section>
-      </div>
-
-    </main>
   </div>
 
   <script src="/js/layout.js"></script>

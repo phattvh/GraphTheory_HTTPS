@@ -45,7 +45,8 @@ def test_admin_and_student_shell_structure():
     for marker in admin_markers:
         assert marker in index_html, f"Thiếu thành phần khung Admin: {marker}"
 
-    # Kiểm tra khung giao diện Sinh viên (Student Portal)
+    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html (không lặp trong index.html)
+    assert 'id="student-layout-shell"' not in index_html
     student_markers = [
         'id="student-header"',
         'id="student-main-content"',
@@ -53,7 +54,6 @@ def test_admin_and_student_shell_structure():
         "Student Portal",
     ]
     for marker in student_markers:
-        assert marker in index_html, f"Thiếu thành phần khung Sinh viên trong index.html: {marker}"
         assert marker in student_html, f"Thiếu thành phần khung Sinh viên trong student.html: {marker}"
 
 
@@ -64,7 +64,6 @@ def test_caddy_serves_layout_if_running():
             body = resp.read().decode("utf-8")
             assert resp.status == 200
             assert 'id="admin-layout-shell"' in body
-            assert 'id="student-layout-shell"' in body
 
         with urllib.request.urlopen(BASE_URL + "/student.html", context=SSL_CTX, timeout=3) as resp:
             body = resp.read().decode("utf-8")

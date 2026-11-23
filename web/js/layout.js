@@ -36,35 +36,19 @@ function switchAdminTab(tabId) {
   }
 }
 
-function switchRoleLayout(role) {
-  const adminShell = document.getElementById("admin-layout-shell");
-  const studentShell = document.getElementById("student-layout-shell");
-  const btnAdmin = document.getElementById("btn-switch-admin");
-  const btnStudent = document.getElementById("btn-switch-student");
-
-  if (!adminShell || !studentShell) return;
-
-  if (role === "sinh_vien") {
-    adminShell.classList.add("hidden");
-    studentShell.classList.remove("hidden");
-    if (btnStudent && btnAdmin) {
-      btnStudent.className = "px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition";
-      btnAdmin.className = "px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium transition";
-    }
-  } else {
-    studentShell.classList.add("hidden");
-    adminShell.classList.remove("hidden");
-    if (btnStudent && btnAdmin) {
-      btnAdmin.className = "px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition";
-      btnStudent.className = "px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium transition";
-    }
+function navigateByRole(role) {
+  if (role === "sinh_vien" && !window.location.pathname.endsWith("/student.html")) {
+    window.location.href = "/student.html";
+  } else if (role === "admin" && window.location.pathname.endsWith("/student.html")) {
+    window.location.href = "/index.html";
   }
 }
 
-// Tự động kiểm tra query param ?role=sinh_vien nếu có
+// Tự động điều hướng sang student.html nếu truy cập với ?role=sinh_vien
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
-  if (params.get("role") === "sinh_vien") {
-    switchRoleLayout("sinh_vien");
+  const role = params.get("role");
+  if (role === "sinh_vien" || role === "admin") {
+    navigateByRole(role);
   }
 });
