@@ -1,5 +1,5 @@
 /**
- * Điều khiển Layout Shell cho Admin Dashboard & Student Portal (TV4 - Ngày 1)
+ * Điều khiển Layout Shell & chuyển tab cho Admin Dashboard (web/js/admin/layout.js)
  */
 
 const TAB_TITLES = {
@@ -35,33 +35,3 @@ function switchAdminTab(tabId) {
     titleEl.textContent = TAB_TITLES[tabId];
   }
 }
-
-function navigateByRole(role) {
-  if (role === "sinh_vien" && !window.location.pathname.endsWith("/student.html")) {
-    window.location.href = "/student.html";
-  } else if (role === "admin" && window.location.pathname.endsWith("/student.html")) {
-    window.location.href = "/index.html";
-  }
-}
-
-async function handleLogout() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("exam_jwt");
-  try {
-    const resp = await fetch("/login.html", { method: "HEAD" });
-    if (resp.ok) {
-      window.location.href = "/login.html";
-      return;
-    }
-  } catch (_) {}
-  alert("Đã đăng xuất khỏi phiên hiện tại (trang /login.html sẽ được TV5 bổ sung).");
-}
-
-// Tự động điều hướng sang student.html nếu truy cập với ?role=sinh_vien
-document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const role = params.get("role");
-  if (role === "sinh_vien" || role === "admin") {
-    navigateByRole(role);
-  }
-});

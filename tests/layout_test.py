@@ -10,12 +10,13 @@ SSL_CTX = ssl._create_unverified_context()
 
 
 def test_layout_files_exist():
-    """Kiểm tra đầy đủ các file khung giao diện Admin & Sinh viên trong web/."""
+    """Kiểm tra đầy đủ các file khung giao diện Admin & Sinh viên theo 09. Project structure.md."""
     required_files = [
         WEB_DIR / "index.html",
         WEB_DIR / "student.html",
         WEB_DIR / "css" / "layout.css",
-        WEB_DIR / "js" / "layout.js",
+        WEB_DIR / "js" / "core" / "auth.js",
+        WEB_DIR / "js" / "admin" / "layout.js",
     ]
     for file_path in required_files:
         assert file_path.exists(), f"Thiếu file giao diện bắt buộc: {file_path}"
@@ -41,21 +42,24 @@ def test_admin_and_student_shell_structure():
         'id="tab-calendar"',
         'id="tab-stats"',
         "GraphSchedule",
+        'src="/js/core/auth.js"',
+        'src="/js/admin/layout.js"',
     ]
     for marker in admin_markers:
         assert marker in index_html, f"Thiếu thành phần khung Admin: {marker}"
 
-    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html (không lặp trong index.html)
+    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS của Admin
     assert 'id="student-layout-shell"' not in index_html
+    assert 'src="/js/admin/layout.js"' not in student_html
     student_markers = [
         'id="student-header"',
         'id="student-main-content"',
         'id="student-fullcalendar-shell"',
         "Student Portal",
+        'src="/js/core/auth.js"',
     ]
     for marker in student_markers:
         assert marker in student_html, f"Thiếu thành phần khung Sinh viên trong student.html: {marker}"
-
 
     # Kiểm tra nút đăng xuất dùng handleLogout() an toàn thay vì link trực tiếp /login.html gây 404
     assert 'onclick="handleLogout()"' in index_html
@@ -82,11 +86,15 @@ def test_caddy_serves_layout_if_running():
             assert resp.status == 200
             assert "@media print" in css_body
 
-        with urllib.request.urlopen(BASE_URL + "/js/layout.js", context=SSL_CTX, timeout=3) as resp:
-            js_body = resp.read().decode("utf-8")
+        with urllib.request.urlopen(BASE_URL + "/js/core/auth.js", context=SSL_CTX, timeout=3) as resp:
+            auth_js = resp.read().decode("utf-8")
             assert resp.status == 200
-            assert "switchAdminTab" in js_body
-            assert "handleLogout" in js_body
+            assert "handleLogout" in auth_js
+
+        with urllib.request.urlopen(BASE_URL + "/js/admin/layout.js", context=SSL_CTX, timeout=3) as resp:
+            layout_js = resp.read().decode("utf-8")
+            assert resp.status == 200
+            assert "switchAdminTab" in layout_js
     except urllib.error.HTTPError:
         # Không được nuốt lỗi 404/502 khi Caddy đang chạy
         raise
