@@ -130,6 +130,40 @@ def test_tuple_and_list_format():
     assert G["CS101"]["CS102"]["weight"] == 2
 
 
+def test_duplicate_registrations():
+    registrations = [
+        ("SV01", "CS101"),
+        ("SV01", "CS101"),
+        ("SV01", "CS102"),
+        {"mssv": "SV01", "ma_mon": "CS102"},
+    ]
+    G = build_conflict_graph(registrations)
+    assert G.number_of_nodes() == 2
+    assert G.number_of_edges() == 1
+    assert G.nodes["CS101"]["size"] == 1
+    assert G.nodes["CS102"]["size"] == 1
+    assert G["CS101"]["CS102"]["weight"] == 1
+
+
+def test_none_and_whitespace_inputs():
+    courses = [
+        {"ma_mon": " CS101 ", "ten_mon": "Cấu trúc dữ liệu"},
+        {"ma_mon": None, "ten_mon": "Không hợp lệ"},
+    ]
+    registrations = [
+        {"mssv": None, "ma_mon": "CS101"},
+        (None, "CS102"),
+        ("SV01", None),
+        ("  ", "CS101"),
+        {"mssv": " SV01 ", "ma_mon": " CS101 "},
+    ]
+    G = build_conflict_graph(registrations, courses=courses)
+    assert list(G.nodes()) == ["CS101"]
+    assert G.number_of_edges() == 0
+    assert G.nodes["CS101"]["size"] == 1
+    assert G.nodes["CS101"]["ten_mon"] == "Cấu trúc dữ liệu"
+
+
 if __name__ == "__main__":
     test_empty_input()
     test_isolated_courses()
@@ -137,4 +171,6 @@ if __name__ == "__main__":
     test_overlapping_weights_and_degrees()
     test_course_metadata_support()
     test_tuple_and_list_format()
+    test_duplicate_registrations()
+    test_none_and_whitespace_inputs()
     print("ALL GRAPH BUILDER TESTS PASSED!")
