@@ -44,6 +44,19 @@ function navigateByRole(role) {
   }
 }
 
+async function handleLogout() {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("exam_jwt");
+  try {
+    const resp = await fetch("/login.html", { method: "HEAD" });
+    if (resp.ok) {
+      window.location.href = "/login.html";
+      return;
+    }
+  } catch (_) {}
+  alert("Đã đăng xuất khỏi phiên hiện tại (trang /login.html sẽ được TV5 bổ sung).");
+}
+
 // Tự động điều hướng sang student.html nếu truy cập với ?role=sinh_vien
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
