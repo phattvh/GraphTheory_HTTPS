@@ -70,7 +70,7 @@ def build_conflict_graph(
     # 3. Tạo/Cập nhật các đỉnh môn học với thuộc tính `size` (số thí sinh)
     for ma_mon, count in course_student_count.items():
         if not G.has_node(ma_mon):
-            G.add_node(ma_mon, ma_mon=ma_mon, size=count)
+            G.add_node(ma_mon, ma_mon=ma_mon, ten_mon="", size=count)
         else:
             G.nodes[ma_mon]["size"] = count
 
