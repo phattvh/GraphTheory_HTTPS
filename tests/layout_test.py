@@ -57,8 +57,15 @@ def test_admin_and_student_shell_structure():
         assert marker in student_html, f"Thiếu thành phần khung Sinh viên trong student.html: {marker}"
 
 
+    # Kiểm tra nút đăng xuất dùng handleLogout() an toàn thay vì link trực tiếp /login.html gây 404
+    assert 'onclick="handleLogout()"' in index_html
+    assert 'onclick="handleLogout()"' in student_html
+    assert 'href="/login.html"' not in index_html
+    assert 'href="/login.html"' not in student_html
+
+
 def test_caddy_serves_layout_if_running():
-    """Nếu container caddy:2-alpine đang chạy, kiểm tra truy cập trực tiếp qua HTTPS."""
+    """Nếu container caddy:2-alpine đang chạy, kiểm tra truy cập trực tiếp qua HTTPS và bắt lỗi HTTP (404/502)."""
     try:
         with urllib.request.urlopen(BASE_URL + "/", context=SSL_CTX, timeout=3) as resp:
             body = resp.read().decode("utf-8")
@@ -70,12 +77,21 @@ def test_caddy_serves_layout_if_running():
             assert resp.status == 200
             assert 'id="student-header"' in body
 
+        with urllib.request.urlopen(BASE_URL + "/css/layout.css", context=SSL_CTX, timeout=3) as resp:
+            css_body = resp.read().decode("utf-8")
+            assert resp.status == 200
+            assert "@media print" in css_body
+
         with urllib.request.urlopen(BASE_URL + "/js/layout.js", context=SSL_CTX, timeout=3) as resp:
             js_body = resp.read().decode("utf-8")
             assert resp.status == 200
             assert "switchAdminTab" in js_body
+            assert "handleLogout" in js_body
+    except urllib.error.HTTPError:
+        # Không được nuốt lỗi 404/502 khi Caddy đang chạy
+        raise
     except urllib.error.URLError:
-        # Cho phép chạy unit test cấu trúc file ngay cả khi container chưa bật
+        # Chỉ bỏ qua khi không kết nối được (container chưa bật)
         pass
 
 
