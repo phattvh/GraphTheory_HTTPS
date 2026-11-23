@@ -22,15 +22,16 @@ def test_layout_files_exist():
 
 
 def test_admin_and_student_shell_structure():
-    """Kiểm tra cấu trúc HTML của khung Admin (Sidebar, Header, 4 tab) và Sinh viên."""
+    """Kiểm tra cấu trúc HTML chuẩn Figma của khung Admin (Sidebar, Header, 4 tab) và Sinh viên."""
     index_html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
     student_html = (WEB_DIR / "student.html").read_text(encoding="utf-8")
+    layout_js = (WEB_DIR / "js" / "layout.js").read_text(encoding="utf-8")
 
     # Kiểm tra nhúng Tailwind CSS CDN theo 07. Technology stack.md
     assert "https://cdn.tailwindcss.com" in index_html
     assert "https://cdn.tailwindcss.com" in student_html
 
-    # Kiểm tra các vùng khung giao diện Admin (Sidebar, Top Header, Main Content, 4 Tabs)
+    # Kiểm tra các vùng khung giao diện Admin (Sidebar trái, Top Header, Main Content, 4 Tabs)
     admin_markers = [
         'id="admin-layout-shell"',
         'id="admin-sidebar"',
@@ -45,7 +46,11 @@ def test_admin_and_student_shell_structure():
     for marker in admin_markers:
         assert marker in index_html, f"Thiếu thành phần khung Admin: {marker}"
 
-    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html (không lặp trong index.html)
+    # Kiểm tra các hàm điều khiển trong layout.js
+    for fn_name in ["switchAdminTab", "navigateByRole", "handleLogout"]:
+        assert fn_name in layout_js, f"Thiếu hàm điều khiển trong layout.js: {fn_name}"
+
+    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html
     assert 'id="student-layout-shell"' not in index_html
     student_markers = [
         'id="student-header"',
@@ -55,7 +60,6 @@ def test_admin_and_student_shell_structure():
     ]
     for marker in student_markers:
         assert marker in student_html, f"Thiếu thành phần khung Sinh viên trong student.html: {marker}"
-
 
     # Kiểm tra nút đăng xuất dùng handleLogout() an toàn thay vì link trực tiếp /login.html gây 404
     assert 'onclick="handleLogout()"' in index_html
@@ -88,10 +92,8 @@ def test_caddy_serves_layout_if_running():
             assert "switchAdminTab" in js_body
             assert "handleLogout" in js_body
     except urllib.error.HTTPError:
-        # Không được nuốt lỗi 404/502 khi Caddy đang chạy
         raise
     except urllib.error.URLError:
-        # Chỉ bỏ qua khi không kết nối được (container chưa bật)
         pass
 
 
