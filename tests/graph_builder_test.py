@@ -34,6 +34,7 @@ def test_isolated_courses():
     assert metrics["density"] == 0.0
     assert len(metrics["isolated_nodes"]) == 3
     assert G.nodes["CS101"]["size"] == 1
+    assert G.nodes["CS101"]["ten_mon"] == ""
     assert G.nodes["CS102"]["size"] == 1
     assert G.nodes["CS103"]["size"] == 1
 
