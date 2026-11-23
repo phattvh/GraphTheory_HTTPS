@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
-  <!-- 1. TOP HEADER CỔNG SINH VIÊN (KHỚP 100% ẢNH 1 FIGMA) -->
+  <!-- 1. TOP HEADER CỔNG SINH VIÊN (KHỚP 100% ẢNH MẪU) -->
   <header id="student-header" class="bg-white border-b border-slate-200 px-8 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20 no-print">
     <div class="flex items-center gap-2.5">
       <span class="text-xl">🎓</span>
@@ -33,8 +33,36 @@
     </div>
   </header>
 
-  <!-- 2. NỘI DUNG CHÍNH CỔNG SINH VIÊN (KHỚP 100% ẢNH 1 FIGMA) -->
-  <main id="student-main-content" class="flex-1 max-w-[1440px] w-full mx-auto px-8 py-6 space-y-6">
+  <!-- 2. NỘI DUNG CHÍNH CỔNG SINH VIÊN (KHỚP 100% ẢNH MẪU) -->
+  <main id="student-main-content" class="flex-1 max-w-[1440px] w-full mx-auto px-8 py-5 space-y-5">
+
+    <!-- Thanh nút điều hướng ngang giống hệt ảnh mẫu -->
+    <div class="flex flex-wrap items-center gap-2 no-print">
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Kỳ thi (UC02)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition">
+        Môn học (UC04 - Đang chọn)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Sinh viên (UC03)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Phòng thi (UC06)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Đăng ký thi (UC05)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        📥 Import CSV / Excel (UC07)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        📤 Export Excel
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition">
+        + Thêm Môn thi mới
+      </a>
+    </div>
 
     <!-- Thanh Action Banner (UC12) -->
     <div class="bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
@@ -52,7 +80,7 @@
       </div>
     </div>
 
-    <!-- Bố cục 2 cột đúng Ảnh 1: Danh sách 4 môn thi cá nhân (Trái) + Lịch Tuần FullCalendar (Phải) -->
+    <!-- Bố cục 2 cột đúng Ảnh mẫu: Danh sách 4 môn thi cá nhân (Trái) + Lịch Tuần FullCalendar (Phải) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
       <!-- Cột trái (5/12): 4 Thẻ Môn thi Cá nhân -->
@@ -84,49 +112,49 @@
         </div>
       </section>
 
-      <!-- Cột phải (7/12): Lịch Tuần Cá nhân trên FullCalendar (Khớp lưới 4 ô màu của Ảnh 1) -->
+      <!-- Cột phải (7/12): Lịch Tuần Cá nhân trên FullCalendar (Khớp lưới 4 ô màu của Ảnh mẫu) -->
       <section id="student-fullcalendar-shell" class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
         <h3 class="text-sm font-bold text-slate-900 mb-4">Lịch Tuần Cá nhân trên FullCalendar (Tháng 12/2026)</h3>
         <div class="flex-1 rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex items-center justify-center">
           <div class="w-full grid grid-cols-5 border border-slate-200 bg-white rounded-lg overflow-hidden text-xs">
-            <!-- Hàng tiêu đề ngày -->
+            <!-- Hàng tiêu đề -->
             <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
-            <div class="h-10 border-b border-r border-slate-200 bg-slate-50 flex items-center justify-center font-semibold text-slate-700">Thứ 2 (15/12)</div>
-            <div class="h-10 border-b border-r border-slate-200 bg-slate-50 flex items-center justify-center text-slate-500">Thứ 3</div>
-            <div class="h-10 border-b border-r border-slate-200 bg-slate-50 flex items-center justify-center text-slate-500">Thứ 4</div>
-            <div class="h-10 border-b border-slate-200 bg-slate-50 flex items-center justify-center text-slate-500">Thứ 5</div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-slate-200 bg-slate-50"></div>
 
             <!-- Ca 1 -->
-            <div class="h-24 border-b border-r border-slate-200 flex items-center justify-center text-slate-500 font-medium">07:30</div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200 p-1.5">
-              <div class="w-full h-full rounded-md bg-blue-100 border-2 border-blue-500 p-1.5 text-[11px] font-semibold text-blue-900">IT002<br/><span class="font-normal">A101</span></div>
+              <div class="w-full h-full rounded-md bg-blue-100 border-2 border-blue-500"></div>
             </div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-slate-200"></div>
 
             <!-- Ca 2 -->
-            <div class="h-24 border-b border-r border-slate-200 flex items-center justify-center text-slate-500 font-medium">09:30</div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200 p-1.5">
-              <div class="w-full h-full rounded-md bg-emerald-100 border-2 border-emerald-500 p-1.5 text-[11px] font-semibold text-emerald-900">IT001<br/><span class="font-normal">A102</span></div>
+              <div class="w-full h-full rounded-md bg-emerald-100 border-2 border-emerald-500"></div>
             </div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-slate-200"></div>
 
             <!-- Ca 3 -->
-            <div class="h-24 border-b border-r border-slate-200 flex items-center justify-center text-slate-500 font-medium">13:30</div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200 p-1.5">
-              <div class="w-full h-full rounded-md bg-amber-100 border-2 border-amber-500 p-1.5 text-[11px] font-semibold text-amber-900">IT008<br/><span class="font-normal">A101</span></div>
+              <div class="w-full h-full rounded-md bg-amber-100 border-2 border-amber-500"></div>
             </div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-r border-slate-200"></div>
             <div class="h-24 border-b border-slate-200"></div>
 
             <!-- Ca 4 -->
-            <div class="h-24 border-r border-slate-200 flex items-center justify-center text-slate-500 font-medium">15:30</div>
+            <div class="h-24 border-r border-slate-200"></div>
             <div class="h-24 border-r border-slate-200 p-1.5">
-              <div class="w-full h-full rounded-md bg-purple-100 border-2 border-purple-500 p-1.5 text-[11px] font-semibold text-purple-900">IT003<br/><span class="font-normal">B201</span></div>
+              <div class="w-full h-full rounded-md bg-purple-100 border-2 border-purple-500"></div>
             </div>
             <div class="h-24 border-r border-slate-200"></div>
             <div class="h-24 border-r border-slate-200"></div>
