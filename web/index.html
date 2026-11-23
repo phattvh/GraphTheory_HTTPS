@@ -1,1 +1,340 @@
-xin chao
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphSchedule — Hệ thống Xếp lịch thi Tập trung (DSatur & Welsh–Powell)</title>
+  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/layout.css" />
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+
+  <!-- Thanh chuyển đổi nhanh chế độ xem Layout Shell (Admin / Sinh viên) phục vụ kiểm thử UI Shell -->
+  <div id="role-switcher-bar" class="bg-slate-900 text-slate-200 text-xs px-4 py-1.5 flex items-center justify-between no-print">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+      <span class="font-medium">UI Shell Preview (TV4 - Ngày 1):</span>
+      <span class="text-slate-400">Chuyển đổi nhanh giữa khung giao diện Quản trị viên và Cổng Sinh viên</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btn-switch-admin" type="button" onclick="switchRoleLayout('admin')"
+        class="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition">
+        Khung Admin (admin)
+      </button>
+      <button id="btn-switch-student" type="button" onclick="switchRoleLayout('sinh_vien')"
+        class="px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium transition">
+        Khung Sinh viên (sinh_vien)
+      </button>
+      <a href="/student.html" class="ml-2 underline text-blue-300 hover:text-blue-200">Mở trang student.html riêng →</a>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 1. KHUNG GIAO DIỆN QUẢN TRỊ VIÊN (ADMIN LAYOUT SHELL)                 -->
+  <!-- ===================================================================== -->
+  <div id="admin-layout-shell" class="flex flex-1 min-h-0">
+
+    <!-- SIDEBAR (248px) -->
+    <aside id="admin-sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 no-print">
+      <div class="p-5">
+        <!-- Brand Header -->
+        <div class="pb-5 mb-5 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              G
+            </div>
+            <div>
+              <h1 class="text-base font-bold text-slate-900 leading-tight">GraphSchedule</h1>
+              <p class="text-xs text-slate-500">DSatur &amp; Welsh–Powell Engine</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation Menu -->
+        <nav aria-label="Admin Sidebar Navigation" class="space-y-1.5">
+          <button type="button" data-tab="tab-crud" onclick="switchAdminTab('tab-crud')"
+            class="admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 transition text-left">
+            <span class="w-5 text-center">🗂️</span>
+            <span>1. Quản lý dữ liệu</span>
+          </button>
+
+          <button type="button" data-tab="tab-graph" onclick="switchAdminTab('tab-graph')"
+            class="admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition text-left">
+            <span class="w-5 text-center">🕸️</span>
+            <span>2. Đồ thị &amp; Xếp lịch</span>
+          </button>
+
+          <button type="button" data-tab="tab-calendar" onclick="switchAdminTab('tab-calendar')"
+            class="admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition text-left">
+            <span class="w-5 text-center">📅</span>
+            <span>3. Lịch thi toàn trường</span>
+          </button>
+
+          <button type="button" data-tab="tab-stats" onclick="switchAdminTab('tab-stats')"
+            class="admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition text-left">
+            <span class="w-5 text-center">📊</span>
+            <span>4. Thống kê &amp; Phân tích</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Footer Status -->
+      <div class="p-4 m-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+        <div class="font-semibold text-slate-800">Trạng thái Engine</div>
+        <div>• Thuật toán: <span class="font-medium text-blue-700">DSatur + FFD</span></div>
+        <div>• Sắc số đạt được: <span class="font-medium text-emerald-700">χ(G) = 4 ca</span></div>
+        <div>• Xung đột lịch SV: <span class="font-semibold text-emerald-700">0.0%</span></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA (HEADER + BODY) -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- TOP HEADER BAR (68px) -->
+      <header id="admin-header" class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+        <div>
+          <h2 id="admin-page-title" class="text-lg font-bold text-slate-900">
+            02. Quản lý Dữ liệu &amp; Import Excel (UC02 - UC07)
+          </h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+            Kỳ thi HK1 2026-2027 • χ(G) = 4 Ca thi
+          </span>
+          <div class="text-sm font-semibold text-slate-800" id="header-user-display">
+            Admin: Phòng Đào Tạo (admin)
+          </div>
+          <a href="/login.html" id="btn-admin-logout"
+            class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
+            Đăng xuất
+          </a>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT CONTAINER -->
+      <main id="admin-main-content" class="flex-1 p-6 overflow-y-auto space-y-6">
+
+        <!-- TAB 1: QUẢN LÝ DỮ LIỆU ĐẦU VÀO & IMPORT EXCEL (UC02 - UC07) -->
+        <section id="tab-crud" class="admin-tab-section space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Kỳ thi (UC02)</button>
+              <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">Môn học (UC04)</button>
+              <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Sinh viên (UC03)</button>
+              <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Phòng thi (UC06)</button>
+              <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Đăng ký thi (UC05)</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
+                📥 Import CSV / Excel (UC07)
+              </button>
+              <button type="button" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">
+                + Thêm bản ghi mới
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-slate-900">Khung Bảng Danh mục Dữ liệu Đầu vào (Placeholder cho TV5)</h3>
+                <span class="text-xs text-slate-500">15 học phần • PostgreSQL 16</span>
+              </div>
+              <div class="border border-dashed border-slate-300 rounded-lg p-8 text-center text-sm text-slate-500">
+                Vùng gắn bảng CRUD Học phần, Sinh viên, Phòng thi, Đăng ký thi (`UC02` – `UC06`)
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <h3 class="text-sm font-bold text-slate-900">Khung Nạp File CSV/Excel &amp; Cấu hình Kỳ thi (UC02, UC07)</h3>
+              <div class="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-lg p-6 text-center text-xs text-slate-600">
+                📂 Kéo thả file <code class="font-mono">.xlsx</code> hoặc <code class="font-mono">.csv</code> vào đây (Chống Formula Injection)
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: ĐỒ THỊ XUNG ĐỘT CYTOSCAPE.JS & XẾP LỊCH DSATUR (UC08, UC09) -->
+        <section id="tab-graph" class="admin-tab-section hidden space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">Thuật toán: DSatur (Đang chọn)</span>
+              <span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Đối chứng: Welsh–Powell</span>
+              <span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Layout: CoSE Force-Directed</span>
+            </div>
+            <button type="button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-sm">
+              ⚡ Chạy Xếp lịch Tự động (DSatur + FFD)
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div id="cytoscape-container-shell" class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[420px] flex flex-col justify-between">
+              <h3 class="text-sm font-bold text-slate-900">Đồ thị Xung đột G = (V, E, W) • Cytoscape.js Viewport (UC09)</h3>
+              <div class="my-auto border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500">
+                Khung canvas vẽ đồ thị tô màu đỉnh/cạnh bằng thư viện Cytoscape.js
+              </div>
+              <div class="flex flex-wrap gap-4 text-xs text-slate-600 pt-3 border-t border-slate-100">
+                <span>🔵 Ca 1: IT002, IT005</span>
+                <span>🟢 Ca 2: IT001, IT006</span>
+                <span>🟡 Ca 3: IT008, IT004</span>
+                <span>🟣 Ca 4: IT003, IT007</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <h3 class="text-sm font-bold text-slate-900">Chi tiết Đỉnh đang chọn (Node Inspector)</h3>
+              <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
+                <div class="font-bold">✅ Schedule Verifier: HỢP LỆ 100%</div>
+                <div>• Sắc số đạt được: χ(G) = 4 ca thi (DSatur)</div>
+                <div>• Kiểm chứng cạnh: 0 cạnh nối 2 đỉnh cùng màu</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: LỊCH THI TOÀN TRƯỜNG FULLCALENDAR (UC10, UC10.1) -->
+        <section id="tab-calendar" class="admin-tab-section hidden space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Lọc Môn học: Tất cả ▾</span>
+              <span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">Lọc Phòng thi: Tất cả ▾</span>
+            </div>
+            <button type="button" onclick="window.print()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
+              🖨️ In Lịch Toàn Trường (PDF)
+            </button>
+          </div>
+
+          <div id="admin-fullcalendar-shell" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[420px]">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Khung Lịch thi Toàn trường • FullCalendar Viewport (UC10)</h3>
+            <div class="border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500">
+              Khung gắn thư viện FullCalendar hiển thị ca thi theo Ngày / Tuần / Tháng
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: THỐNG KÊ KPI & PHÂN TÍCH ĐỒ THỊ CHART.JS (UC13, UC14) -->
+        <section id="tab-stats" class="admin-tab-section hidden space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500">Tổng số Môn thi |V|</div>
+              <div class="text-2xl font-bold text-slate-900 mt-1">15 Môn</div>
+              <div class="text-xs text-slate-500 mt-1">46 cạnh xung đột |E|</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500">Tổng số Sinh viên</div>
+              <div class="text-2xl font-bold text-slate-900 mt-1">1,250 SV</div>
+              <div class="text-xs text-slate-500 mt-1">3,420 lượt đăng ký dự thi</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500">Số Ca thi Tối thiểu χ(G)</div>
+              <div class="text-2xl font-bold text-blue-600 mt-1">4 Ca thi</div>
+              <div class="text-xs text-slate-500 mt-1">DSatur tiết kiệm 1 ca so với WP</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500">Tỷ lệ Xung đột Lịch thi</div>
+              <div class="text-2xl font-bold text-emerald-600 mt-1">0.0%</div>
+              <div class="text-xs text-slate-500 mt-1">Kiểm chứng bởi Schedule Verifier</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[320px]">
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Biểu đồ 1 (Chart.js): Đối chứng DSatur vs Welsh–Powell (UC13)</h3>
+              <div class="border border-dashed border-slate-300 rounded-lg p-10 text-center text-sm text-slate-500">
+                Khung Canvas Chart.js so sánh sắc số χ(G) và thời gian chạy
+              </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[320px]">
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Biểu đồ 2 (Chart.js): Top 5 Môn học có Bậc đỉnh deg(v) cao nhất (UC14)</h3>
+              <div class="border border-dashed border-slate-300 rounded-lg p-10 text-center text-sm text-slate-500">
+                Khung Canvas Chart.js phân tích bậc đỉnh đồ thị xung đột
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 2. KHUNG GIAO DIỆN CỔNG SINH VIÊN (STUDENT PORTAL LAYOUT SHELL)       -->
+  <!-- ===================================================================== -->
+  <div id="student-layout-shell" class="hidden flex-1 flex flex-col">
+
+    <!-- STUDENT TOP NAVBAR (72px) -->
+    <header id="student-header" class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
+          🎓
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900">Cổng Thông tin Lịch thi Sinh viên (Student Portal - UC11)</h1>
+          <p class="text-xs text-slate-500">Hệ thống Xếp lịch thi Tập trung • Kiểm soát truy cập cá nhân bằng JWT</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+          JWT Role: sinh_vien • MSSV: 22110399
+        </span>
+        <span class="text-sm font-semibold text-slate-800" id="student-user-display">
+          Bùi Thiên Phúc (22110399)
+        </span>
+        <a href="/login.html" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 no-print">
+          Đăng xuất
+        </a>
+      </div>
+    </header>
+
+    <!-- STUDENT MAIN CONTENT -->
+    <main id="student-main-content" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+      <!-- Action Banner (UC12) -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">Lịch thi Học kỳ 1 (Năm học 2026 - 2027) • Đã đăng ký: 4 Học phần</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Cam kết từ thuật toán DSatur: 0% trùng ca thi • Các môn được phân vào 4 ca riêng biệt</p>
+        </div>
+        <div class="flex items-center gap-2.5 no-print">
+          <button type="button" class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700">
+            📥 Tải Lịch thi CSV / Excel (UTF-8 BOM)
+          </button>
+          <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">
+            🖨️ In Phiếu Dự Thi / Lưu PDF (UC12)
+          </button>
+        </div>
+      </div>
+
+      <!-- Two-column Split: Left Registered Exam Cards + Right Personal FullCalendar -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <section class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="text-sm font-bold text-slate-900">Danh sách Môn thi Cá nhân (UC11)</h3>
+          <div class="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs space-y-1">
+            <div class="text-slate-600">🔵 Ca 1 • Thứ Hai 15/12/2026 (07:30 - 09:00)</div>
+            <div class="font-bold text-slate-900 text-sm">IT002 - Cấu trúc Dữ liệu &amp; Giải thuật</div>
+            <div class="text-slate-700">Phòng thi: A101 • Thời lượng: 90 phút • Ghế: 14</div>
+          </div>
+          <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs space-y-1">
+            <div class="text-slate-600">🟢 Ca 2 • Thứ Hai 15/12/2026 (09:30 - 11:00)</div>
+            <div class="font-bold text-slate-900 text-sm">IT001 - Lý thuyết Đồ thị (Graph Theory)</div>
+            <div class="text-slate-700">Phòng thi: A102 • Thời lượng: 90 phút • Ghế: 08</div>
+          </div>
+        </section>
+
+        <section id="student-fullcalendar-shell" class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[380px]">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Lịch Tuần Cá nhân trên FullCalendar (UC11)</h3>
+          <div class="border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500">
+            Khung hiển thị FullCalendar cá nhân của sinh viên
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/js/layout.js"></script>
+</body>
+</html>

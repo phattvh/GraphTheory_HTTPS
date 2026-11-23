@@ -1,0 +1,9 @@
+/* Styles bổ trợ cho khung giao diện Admin & Sinh viên (UI Shell) */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+}
