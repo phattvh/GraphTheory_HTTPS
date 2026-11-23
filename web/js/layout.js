@@ -1,16 +1,18 @@
 /**
- * Điều khiển Layout Shell cho Admin Dashboard & Student Portal (TV4 - Ngày 1)
+ * Điều khiển Layout Shell chuẩn Figma cho Admin Dashboard & Student Portal (TV4)
  */
 
 const TAB_TITLES = {
-  "tab-crud": "02. Quản lý Dữ liệu & Import Excel (UC02 - UC07)",
-  "tab-graph": "03. Đồ thị Xung đột & Xếp lịch DSatur (UC08 - UC09)",
+  "tab-crud": "02. Quản lý Dữ liệu & Import Excel (UC02-07)",
+  "tab-graph": "03. Đồ thị Xung đột & Xếp lịch DSatur (UC08-09)",
   "tab-calendar": "04. Lịch thi Toàn trường FullCalendar (UC10)",
-  "tab-stats": "05. Thống kê & Phân tích Đồ thị (UC13 - UC14)",
+  "tab-stats": "05. Thống kê & Phân tích Đồ thị (UC13-14)",
 };
 
 function switchAdminTab(tabId) {
   const sections = document.querySelectorAll(".admin-tab-section");
+  if (!sections.length) return;
+
   sections.forEach((sec) => {
     if (sec.id === tabId) {
       sec.classList.remove("hidden");
@@ -23,10 +25,10 @@ function switchAdminTab(tabId) {
   navButtons.forEach((btn) => {
     if (btn.getAttribute("data-tab") === tabId) {
       btn.className =
-        "admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 transition text-left";
+        "admin-nav-btn w-full flex items-center px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-slate-100 text-slate-900 transition text-left";
     } else {
       btn.className =
-        "admin-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition text-left";
+        "admin-nav-btn w-full flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition text-left";
     }
   });
 
@@ -37,10 +39,10 @@ function switchAdminTab(tabId) {
 }
 
 function navigateByRole(role) {
-  if (role === "sinh_vien" && !window.location.pathname.endsWith("/student.html")) {
-    window.location.href = "/student.html";
-  } else if (role === "admin" && window.location.pathname.endsWith("/student.html")) {
-    window.location.href = "/index.html";
+  if (role === "sinh_vien" && !window.location.pathname.endsWith("student.html")) {
+    window.location.href = "student.html";
+  } else if (role === "admin" && window.location.pathname.endsWith("student.html")) {
+    window.location.href = "index.html";
   }
 }
 
@@ -48,17 +50,26 @@ async function handleLogout() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("exam_jwt");
   try {
-    const resp = await fetch("/login.html", { method: "HEAD" });
+    const resp = await fetch("login.html", { method: "HEAD" });
     if (resp.ok) {
-      window.location.href = "/login.html";
+      window.location.href = "login.html";
       return;
     }
   } catch (_) {}
   alert("Đã đăng xuất khỏi phiên hiện tại (trang /login.html sẽ được TV5 bổ sung).");
 }
 
-// Tự động điều hướng sang student.html nếu truy cập với ?role=sinh_vien
+function applyHashTab() {
+  const hash = window.location.hash.replace("#", "");
+  if (hash && TAB_TITLES[hash]) {
+    switchAdminTab(hash);
+  }
+}
+
+window.addEventListener("hashchange", applyHashTab);
+
 document.addEventListener("DOMContentLoaded", () => {
+  applyHashTab();
   const params = new URLSearchParams(window.location.search);
   const role = params.get("role");
   if (role === "sinh_vien" || role === "admin") {
