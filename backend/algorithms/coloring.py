@@ -29,13 +29,14 @@ def dsatur_coloring(G: nx.Graph) -> Dict[str, Any]:
         - is_valid: True nếu 100% các cạnh không bị trùng màu (0% xung đột)
         - conflicts_count: Số cạnh vi phạm ràng buộc cứng (phải bằng 0)
     """
-    if G.number_of_nodes() == 0:
+    if G is None or not isinstance(G, nx.Graph) or G.number_of_nodes() == 0:
         return {
             "color_map": {},
             "total_colors": 0,
             "shifts": {},
             "is_valid": True,
             "conflicts_count": 0,
+            "conflict_pairs": [],
         }
 
     # 1. Thực thi thuật toán DSatur từ NetworkX (trả về 0-indexed colors)
@@ -56,14 +57,19 @@ def dsatur_coloring(G: nx.Graph) -> Dict[str, Any]:
         shift: sorted(courses) for shift, courses in sorted(shifts_dict.items())
     }
 
-    # 4. Kiểm chứng ràng buộc cứng (Hard Constraint Verification):
+    # 4. Kiểm chứng ràng buộc cứng & bóc tách chi tiết các cạnh vi phạm:
     # Với mọi cạnh (u, v) in E: color(u) != color(v)
-    conflicts_count = 0
+    conflict_pairs: List[Dict[str, Any]] = []
     for u, v in G.edges():
-        if color_map.get(u) == color_map.get(v):
-            conflicts_count += 1
+        if u != v and color_map.get(u) == color_map.get(v):
+            conflict_pairs.append({
+                "course_u": u,
+                "course_v": v,
+                "shift": color_map.get(u),
+                "weight": G[u][v].get("weight", 1),
+            })
 
-    is_valid = conflicts_count == 0
+    is_valid = len(conflict_pairs) == 0
     total_colors = len(sorted_shifts)
 
     return {
@@ -71,7 +77,8 @@ def dsatur_coloring(G: nx.Graph) -> Dict[str, Any]:
         "total_colors": total_colors,
         "shifts": sorted_shifts,
         "is_valid": is_valid,
-        "conflicts_count": conflicts_count,
+        "conflicts_count": len(conflict_pairs),
+        "conflict_pairs": conflict_pairs,
     }
 
 
@@ -85,15 +92,17 @@ def get_schedule_summary(G: nx.Graph, color_map: Dict[str, int]) -> Dict[str, An
     Returns:
         Dict chứa các chỉ số thống kê tổng hợp:
         - total_courses: Tổng số môn thi
+        - total_students: Tổng số lượt thi của toàn trường
         - total_shifts: Tổng số ca thi
         - max_students_shift: Ca thi có số lượng thí sinh đông nhất
         - max_students_count: Số thí sinh trong ca đông nhất
         - avg_students_per_shift: Số thí sinh trung bình mỗi ca thi
         - shift_details: Thống kê chi tiết từng ca (danh sách môn, số môn, tổng SV)
     """
-    if not color_map or G.number_of_nodes() == 0:
+    if not color_map or G is None or not isinstance(G, nx.Graph) or G.number_of_nodes() == 0:
         return {
             "total_courses": 0,
+            "total_students": 0,
             "total_shifts": 0,
             "max_students_shift": 0,
             "max_students_count": 0,
@@ -106,7 +115,13 @@ def get_schedule_summary(G: nx.Graph, color_map: Dict[str, int]) -> Dict[str, An
     )
 
     for node, shift in color_map.items():
-        student_count = G.nodes[node].get("size", 0) if G.has_node(node) else 0
+        # Xử lý an toàn: chống lỗi khi size=None hoặc kiểu chuỗi (ví dụ: '30')
+        raw_count = G.nodes[node].get("size") if G.has_node(node) else 0
+        try:
+            student_count = int(raw_count) if raw_count is not None else 0
+        except (ValueError, TypeError):
+            student_count = 0
+
         shift_details[shift]["courses"].append(node)
         shift_details[shift]["course_count"] += 1
         shift_details[shift]["total_students"] += student_count
@@ -125,7 +140,7 @@ def get_schedule_summary(G: nx.Graph, color_map: Dict[str, int]) -> Dict[str, An
     max_count = max(students_per_shift) if students_per_shift else 0
     max_shift = next(
         (s for s, d in sorted_details.items() if d["total_students"] == max_count), 0
-    )
+    ) if max_count > 0 else 0
     total_students_all = sum(students_per_shift)
     total_shifts = len(sorted_details)
     avg_students = (
@@ -134,6 +149,7 @@ def get_schedule_summary(G: nx.Graph, color_map: Dict[str, int]) -> Dict[str, An
 
     return {
         "total_courses": len(color_map),
+        "total_students": total_students_all,
         "total_shifts": total_shifts,
         "max_students_shift": max_shift,
         "max_students_count": max_count,
