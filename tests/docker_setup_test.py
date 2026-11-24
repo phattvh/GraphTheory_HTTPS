@@ -14,7 +14,10 @@ def get(path: str):
 def test_health_endpoint():
     status, body = get("/api/v1/health")
     assert status == 200
-    assert json.loads(body) == {"status": "ok", "service": "fastapi"}
+    data = json.loads(body)
+    assert data["status"] == "ok"
+    assert data["service"] == "fastapi"
+    assert data["database"] == "connected"
 
 
 def test_swagger_docs():
