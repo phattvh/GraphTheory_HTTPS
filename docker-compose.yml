@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-exam_user}:${POSTGRES_PASSWORD:-exam_pass}@postgres:5432/${POSTGRES_DB:-graphtheory_db}
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-at-least-32-bytes}
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

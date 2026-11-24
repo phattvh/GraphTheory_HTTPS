@@ -9,7 +9,9 @@ class Settings(BaseModel):
         "DATABASE_URL",
         "postgresql://exam_user:exam_pass@postgres:5432/graphtheory_db",
     )
-    JWT_SECRET: str = os.getenv("JWT_SECRET", "dev-secret-change-me")
+    JWT_SECRET: str = os.getenv(
+        "JWT_SECRET", "dev-secret-change-me-at-least-32-bytes"
+    )
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 4  # 4 giờ
 
