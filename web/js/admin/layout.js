@@ -72,21 +72,30 @@ function toggleRightDrawer() {
   }
 }
 
+const CRUD_ENTITIES = [
+  { key: "ky_thi", icon: "🗓️", label: "Kỳ thi (UC02)" },
+  { key: "mon_hoc", icon: "📚", label: "Môn học (UC04)" },
+  { key: "sinh_vien", icon: "👨‍🎓", label: "Quản lý Sinh viên (UC03)" },
+  { key: "phong_thi", icon: "🏫", label: "Phòng thi (UC06)" },
+  { key: "dang_ky_thi", icon: "📝", label: "Đăng ký thi (UC05)" },
+];
+
 function initAdminShell(activePage) {
   const mount = document.getElementById("admin-shell-mount");
   if (!mount) return;
 
-  const page = ADMIN_PAGES[activePage] || ADMIN_PAGES.crud;
+  const activeEntity = new URLSearchParams(window.location.search).get("entity") || (activePage === "crud" ? "mon_hoc" : "");
 
-  const horizontalLinks = Object.entries(ADMIN_PAGES)
-    .map(([key, cfg]) => {
-      const isActive = key === activePage;
-      const cls = isActive
-        ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
-        : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
-      return `<a href="${cfg.href}" class="${cls}"><span>${cfg.icon}</span><span>${cfg.navLabel}</span></a>`;
-    })
-    .join("\n");
+  const horizontalLinks = CRUD_ENTITIES.map((ent) => {
+    const isActive = activePage === "crud" && ent.key === activeEntity;
+    const cls = isActive
+      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
+      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
+    if (activePage === "crud") {
+      return `<button type="button" data-crud-nav="${ent.key}" onclick="switchCrudEntity('${ent.key}')" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></button>`;
+    }
+    return `<a href="/index.html?entity=${ent.key}" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></a>`;
+  }).join("\n");
 
   const drawerLinks = Object.entries(ADMIN_PAGES)
     .map(([key, cfg]) => {

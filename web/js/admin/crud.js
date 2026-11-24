@@ -30,6 +30,13 @@ function switchCrudEntity(entity) {
       : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700";
   });
 
+  document.querySelectorAll("[data-crud-nav]").forEach((btn) => {
+    const isActive = btn.getAttribute("data-crud-nav") === entity;
+    btn.className = isActive
+      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
+      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
+  });
+
   if (entity === "sinh_vien") {
     renderStudentTable();
   }
@@ -143,5 +150,10 @@ function deleteStudent(mssv) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderStudentTable();
+  const entity = new URLSearchParams(window.location.search).get("entity");
+  if (entity === "sinh_vien" || entity === "mon_hoc") {
+    switchCrudEntity(entity);
+  } else {
+    renderStudentTable();
+  }
 });
