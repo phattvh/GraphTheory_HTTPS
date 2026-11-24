@@ -150,13 +150,83 @@ def test_realistic_10_course_exam_dataset():
     summary = get_schedule_summary(G, result["color_map"])
     assert summary["total_courses"] == 10
     assert summary["total_shifts"] == result["total_colors"]
+    assert summary["total_students"] == 33  # Tổng lượt đăng ký thực tế
     assert summary["max_students_count"] > 0
     assert summary["avg_students_per_shift"] > 0
+    assert result["conflict_pairs"] == []
 
     print(f"✓ DSatur xếp 10 môn học vào {result['total_colors']} ca thi (0% xung đột).")
     for shift_id, course_list in result["shifts"].items():
         total_sv = summary["shift_details"][shift_id]["total_students"]
         print(f"  - Ca thi {shift_id}: {course_list} (Tổng: {total_sv} lượt thi)")
+
+
+def test_dirty_size_attributes():
+    """Kiểm tra xử lý thuộc tính size bẩn (None, string, không khai báo)."""
+    G = nx.Graph()
+    G.add_node("MON_1", size=None)
+    G.add_node("MON_2", size="45")
+    G.add_node("MON_3")  # Không có thuộc tính size
+    G.add_edge("MON_1", "MON_2")
+
+    result = dsatur_coloring(G)
+    assert result["is_valid"] is True
+    assert result["conflicts_count"] == 0
+    assert result["total_colors"] == 2
+
+    summary = get_schedule_summary(G, result["color_map"])
+    assert summary["total_courses"] == 3
+    assert summary["total_students"] == 45
+    assert summary["total_shifts"] == 2
+
+
+def test_single_node_graph():
+    """Kiểm tra đồ thị chỉ có 1 môn thi duy nhất."""
+    G = nx.Graph()
+    G.add_node("CS101", size=50)
+
+    result = dsatur_coloring(G)
+    assert result["total_colors"] == 1
+    assert result["is_valid"] is True
+    assert result["color_map"]["CS101"] == 1
+    assert result["shifts"][1] == ["CS101"]
+
+    summary = get_schedule_summary(G, result["color_map"])
+    assert summary["total_courses"] == 1
+    assert summary["total_students"] == 50
+    assert summary["total_shifts"] == 1
+    assert summary["max_students_shift"] == 1
+
+
+def test_hybrid_connected_and_isolated():
+    """Kiểm tra đồ thị kết hợp: một cụm xung đột (tam giác K3) và 2 môn cô lập."""
+    G = nx.Graph()
+    # Cụm K3: A - B - C
+    G.add_edges_from([("A", "B"), ("B", "C"), ("C", "A")])
+    # 2 đỉnh cô lập: D, E
+    G.add_node("D", size=10)
+    G.add_node("E", size=20)
+
+    result = dsatur_coloring(G)
+    assert result["total_colors"] == 3
+    assert result["is_valid"] is True
+    assert result["conflicts_count"] == 0
+
+    # Các đỉnh cô lập phải được tái sử dụng các ca thi đã có (1, 2 hoặc 3)
+    assert result["color_map"]["D"] in [1, 2, 3]
+    assert result["color_map"]["E"] in [1, 2, 3]
+
+
+def test_none_input_graph():
+    """Kiểm tra khi truyền đồ thị None hoặc sai kiểu dữ liệu."""
+    result = dsatur_coloring(None)
+    assert result["is_valid"] is True
+    assert result["total_colors"] == 0
+    assert result["color_map"] == {}
+
+    summary = get_schedule_summary(None, {})
+    assert summary["total_courses"] == 0
+    assert summary["total_students"] == 0
 
 
 if __name__ == "__main__":
@@ -165,4 +235,8 @@ if __name__ == "__main__":
     test_complete_graph_k5()
     test_odd_cycle_c5()
     test_realistic_10_course_exam_dataset()
+    test_dirty_size_attributes()
+    test_single_node_graph()
+    test_hybrid_connected_and_isolated()
+    test_none_input_graph()
     print("\nALL DSATUR TESTS PASSED!")
