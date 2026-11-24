@@ -100,7 +100,7 @@ function initAdminShell(activePage) {
 
   mount.innerHTML = `
     <header id="admin-header" class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm no-print">
-      <div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-3">
+      <div class="w-full px-6 h-16 flex items-center justify-between gap-3">
         <div class="flex items-center gap-4 min-w-0">
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
             <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">G</div>
@@ -151,7 +151,7 @@ function initAdminShell(activePage) {
         </div>
       </div>
 
-      <div class="max-w-[1440px] mx-auto px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
+      <div class="w-full px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
         <nav aria-label="Persistent Horizontal Menu" class="flex items-center gap-1">
           ${horizontalLinks}
         </nav>
