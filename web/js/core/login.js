@@ -1,7 +1,38 @@
 /**
- * Xử lý tương tác màn hình Đăng nhập (UC01 UI) — web/js/core/login.js
- * Tái chế cơ chế validation, ẩn/hiện mật khẩu, cảnh báo Caps Lock và hiệu ứng che mắt từ login-page-08.
+ * Xử lý tương tác màn hình Đăng nhập & bắt sự kiện submit form gửi payload JSON (UC01 UI)
+ * File: web/js/core/login.js
  */
+
+/**
+ * Trích xuất và chuẩn hóa payload JSON từ form đăng nhập.
+ * @param {HTMLFormElement} formEl
+ * @returns {{ ten_dang_nhap: string, mat_khau: string }}
+ */
+function buildLoginPayload(formEl) {
+  const usernameEl = formEl && formEl.elements && formEl.elements.ten_dang_nhap;
+  const passwordEl = formEl && formEl.elements && formEl.elements.mat_khau;
+  return {
+    ten_dang_nhap: usernameEl ? String(usernameEl.value || "").trim() : "",
+    mat_khau: passwordEl ? String(passwordEl.value || "") : "",
+  };
+}
+
+/**
+ * Gửi HTTP POST với payload JSON tới endpoint xác thực /api/v1/auth/login.
+ * @param {{ ten_dang_nhap: string, mat_khau: string }} payload
+ * @returns {Promise<Response>}
+ */
+async function sendLoginJsonPayload(payload) {
+  return fetch("/api/v1/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 (() => {
   "use strict";
 
@@ -104,8 +135,8 @@
   pw.addEventListener("keydown", checkCaps);
   pw.addEventListener("keyup", checkCaps);
 
-  // Submit form tới POST /api/v1/auth/login (sẵn sàng cho TV3/TV4 nối JWT)
-  form.addEventListener("submit", async (e) => {
+  // Bắt sự kiện submit form gửi payload JSON tới POST /api/v1/auth/login (TV4 Ngày 2)
+  const handleLoginFormSubmit = async (e) => {
     e.preventDefault();
     showAlert("");
     fields.forEach((f) => {
@@ -119,18 +150,26 @@
       return;
     }
 
-    const payload = {
-      ten_dang_nhap: form.elements.ten_dang_nhap.value.trim(),
-      mat_khau: form.elements.mat_khau.value,
-    };
+    const payload = buildLoginPayload(form);
 
-    if (submitBtn) submitBtn.disabled = true;
+    // Phát sự kiện CustomEvent mang thông tin payload JSON đã chuẩn bị gửi đi
+    form.dispatchEvent(
+      new CustomEvent("https:login-submit", {
+        bubbles: true,
+        detail: {
+          endpoint: "/api/v1/auth/login",
+          method: "POST",
+          payload: { ten_dang_nhap: payload.ten_dang_nhap },
+        },
+      })
+    );
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.setAttribute("aria-busy", "true");
+    }
     try {
-      const resp = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const resp = await sendLoginJsonPayload(payload);
 
       if (resp.ok) {
         const data = await resp.json();
@@ -144,18 +183,31 @@
         return;
       }
 
+      let errorDetail = "";
+      try {
+        const errBody = await resp.json();
+        if (errBody && typeof errBody.detail === "string") {
+          errorDetail = errBody.detail;
+        }
+      } catch (_) {}
+
       if (resp.status === 404 || resp.status === 405) {
         showAlert(
           "Giao diện Đăng nhập đã sẵn sàng. API POST /api/v1/auth/login đang chờ TV3 hoàn thiện ở Ngày 3.",
           true
         );
       } else {
-        showAlert("Tên đăng nhập hoặc mật khẩu không chính xác. Vui lòng thử lại.");
+        showAlert(errorDetail || "Tên đăng nhập hoặc mật khẩu không chính xác. Vui lòng thử lại.");
       }
     } catch (_) {
       showAlert("Không thể kết nối tới máy chủ xác thực HTTPS. Vui lòng kiểm tra lại kết nối.");
     } finally {
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute("aria-busy");
+      }
     }
-  });
+  };
+
+  form.addEventListener("submit", handleLoginFormSubmit);
 })();

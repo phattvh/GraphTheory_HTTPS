@@ -49,6 +49,24 @@ def test_login_page_structure_and_security():
     assert "innerHTML" not in js, "web/js/core/login.js không được dùng innerHTML để tránh XSS"
 
 
+def test_login_form_submit_json_payload():
+    """Kiểm tra mã JS bắt sự kiện submit form gửi payload JSON (TV4 Ngày 2 — UC01 UI)."""
+    js = (WEB_DIR / "js" / "core" / "login.js").read_text(encoding="utf-8")
+
+    for required_token in [
+        "function buildLoginPayload",
+        "function sendLoginJsonPayload",
+        "handleLoginFormSubmit",
+        "ten_dang_nhap:",
+        "mat_khau:",
+        'method: "POST"',
+        '"Content-Type": "application/json"',
+        "JSON.stringify(payload)",
+        'form.addEventListener("submit", handleLoginFormSubmit)',
+    ]:
+        assert required_token in js, f"web/js/core/login.js thiếu logic submit JSON: {required_token}"
+
+
 def test_cytoscape_cdn_configuration():
     """Kiểm tra cấu hình nhúng CDN thư viện cytoscape.js trên web/graph.html (TV5 Ngày 1)."""
     graph_html = (WEB_DIR / "graph.html").read_text(encoding="utf-8")
@@ -68,7 +86,7 @@ def test_caddy_serves_login_and_graph_assets():
         for path, marker in [
             ("/login.html", 'id="login-form"'),
             ("/css/login.css", ".https-login-card"),
-            ("/js/core/login.js", "/api/v1/auth/login"),
+            ("/js/core/login.js", "sendLoginJsonPayload"),
             ("/graph.html", "cytoscape.min.js"),
             ("/js/admin/graph.js", "initConflictGraph"),
         ]:
@@ -85,6 +103,7 @@ def test_caddy_serves_login_and_graph_assets():
 if __name__ == "__main__":
     test_login_files_exist()
     test_login_page_structure_and_security()
+    test_login_form_submit_json_payload()
     test_cytoscape_cdn_configuration()
     test_caddy_serves_login_and_graph_assets()
     print("ALL LOGIN & CYTOSCAPE TESTS PASSED!")
