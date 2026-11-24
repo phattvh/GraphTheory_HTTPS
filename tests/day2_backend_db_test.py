@@ -5,6 +5,11 @@ Chạy trong container: docker compose exec fastapi python -m tests.day2_backend
 """
 
 import sys
+from pathlib import Path
+
+# Thêm thư mục gốc vào PYTHONPATH để có thể import backend khi chạy trực tiếp
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from datetime import date
 from sqlalchemy import text
 from backend.core.database import SessionLocal
