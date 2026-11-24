@@ -27,7 +27,7 @@ class NguoiDung(Base):
     __tablename__ = "nguoi_dung"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    ten_dang_nhap = Column(String(50), nullable=False, unique=True, index=True)
+    ten_dang_nhap = Column(String(50), nullable=False, unique=True)
     mat_khau_hash = Column(String(255), nullable=False)
     vai_tro = Column(String(20), nullable=False)  # 'admin' hoặc 'sinh_vien'
     mssv = Column(
@@ -50,7 +50,7 @@ class KyThi(Base):
     __tablename__ = "ky_thi"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    ma_ky_thi = Column(String(50), nullable=False, unique=True, index=True)
+    ma_ky_thi = Column(String(50), nullable=False, unique=True)
     ten_ky_thi = Column(String(255), nullable=False)
     ngay_bat_dau = Column(Date, nullable=False)
     ngay_ket_thuc = Column(Date, nullable=False)
@@ -73,7 +73,7 @@ class MonHoc(Base):
     __tablename__ = "mon_hoc"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    ma_mon = Column(String(20), nullable=False, unique=True, index=True)
+    ma_mon = Column(String(20), nullable=False, unique=True)
     ten_mon = Column(String(255), nullable=False)
     thoi_luong_phut = Column(Integer, nullable=False, default=90)
     so_tin_chi = Column(Integer, nullable=True, default=3)
@@ -93,7 +93,7 @@ class SinhVien(Base):
     __tablename__ = "sinh_vien"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    mssv = Column(String(20), nullable=False, unique=True, index=True)
+    mssv = Column(String(20), nullable=False, unique=True)
     ho_ten = Column(String(100), nullable=False)
     email = Column(String(100), nullable=True)
     lop_sinh_hoat = Column(String(50), nullable=True)
@@ -111,7 +111,7 @@ class PhongThi(Base):
     __tablename__ = "phong_thi"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    ma_phong = Column(String(50), nullable=False, unique=True, index=True)
+    ma_phong = Column(String(50), nullable=False, unique=True)
     ten_phong = Column(String(100), nullable=False)
     suc_chua = Column(Integer, nullable=False)
     toa_nha = Column(String(50), nullable=True)
