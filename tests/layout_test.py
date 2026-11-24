@@ -47,6 +47,7 @@ def test_admin_pages_and_student_structure():
     assert "📥 Import Excel" not in layout_js, "Không còn nút Import Excel trên header"
     assert "⚡ Xếp lịch DSatur" not in layout_js, "Không còn nút Xếp lịch DSatur trên header"
     assert "CRUD_ENTITIES" in layout_js and '"Kỳ thi"' in layout_js and '"Quản lý Sinh viên"' in layout_js
+    assert 'activePage === "crud"' in layout_js and 'id="crud-entity-menubar"' in layout_js
     assert "(UC" not in layout_js, "Không còn nhãn (UC...) trên giao diện"
     assert "max-w-[1440px]" not in layout_js, "Header Admin phải dùng full-width"
     assert layout_js.index('id="btn-open-right-drawer"') < layout_js.index(">HTTPS<"), "Nút Menu phải nằm cùng chỗ bên trái với logo HTTPS"
