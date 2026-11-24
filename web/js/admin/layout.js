@@ -155,11 +155,6 @@ function initAdminShell(activePage) {
         <nav aria-label="Persistent Horizontal Menu" class="flex items-center gap-1">
           ${horizontalLinks}
         </nav>
-
-        <div class="hidden xl:flex items-center gap-2 text-xs text-slate-500 py-1.5">
-          <span>Đang xem:</span>
-          <strong id="admin-page-title" class="text-slate-800 font-semibold">${page.title}</strong>
-        </div>
       </div>
     </header>
 
