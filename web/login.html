@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTTPS — Đăng nhập Hệ thống Xếp lịch thi (UC01)</title>
+  <link rel="stylesheet" href="/css/login.css" />
+</head>
+<body class="login-body">
+  <main class="https-login-wrap">
+    <section id="login-card" class="https-login-card" aria-labelledby="login-title">
+      <!-- Cột trái: Minh họa đồ thị tô màu tương tác (che mắt khi nhập mật khẩu) -->
+      <div class="https-login__art" aria-hidden="true">
+        <svg class="https-login__scene" viewBox="0 0 360 360" width="360" height="360" xmlns="http://www.w3.org/2000/svg">
+          <!-- Các cạnh xung đột nền -->
+          <g stroke="#475569" stroke-width="3" stroke-linecap="round" opacity="0.75">
+            <line x1="180" y1="185" x2="78" y2="92" />
+            <line x1="180" y1="185" x2="282" y2="92" />
+            <line x1="180" y1="185" x2="72" y2="275" />
+            <line x1="180" y1="185" x2="288" y2="275" />
+            <line x1="78" y1="92" x2="282" y2="92" stroke-dasharray="6 6" />
+            <line x1="72" y1="275" x2="288" y2="275" stroke-dasharray="6 6" />
+          </g>
+
+          <!-- Các đỉnh vệ tinh đã tô màu ca thi (4 màu sắc số) -->
+          <circle cx="78" cy="92" r="24" fill="#10b981" stroke="#a7f3d0" stroke-width="3" />
+          <text x="78" y="96" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="800">Ca 2</text>
+
+          <circle cx="282" cy="92" r="24" fill="#f59e0b" stroke="#fde68a" stroke-width="3" />
+          <text x="282" y="96" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="800">Ca 3</text>
+
+          <circle cx="72" cy="275" r="24" fill="#8b5cf6" stroke="#ddd6fe" stroke-width="3" />
+          <text x="72" y="279" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="800">Ca 4</text>
+
+          <circle cx="288" cy="275" r="24" fill="#10b981" stroke="#a7f3d0" stroke-width="3" />
+          <text x="288" y="279" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="800">Ca 2</text>
+
+          <!-- Đỉnh trung tâm (Nhân vật linh vật HTTPS có mắt mở/nhắm) -->
+          <circle cx="180" cy="185" r="66" fill="#2563eb" stroke="#93c5fd" stroke-width="5" />
+          <circle cx="180" cy="185" r="56" fill="#3b82f6" opacity="0.45" />
+
+          <!-- Mắt mở -->
+          <g class="https-login__eyes-open">
+            <circle cx="158" cy="176" r="8.5" fill="#0f172a" />
+            <circle cx="202" cy="176" r="8.5" fill="#0f172a" />
+            <circle cx="161" cy="173" r="3" fill="#ffffff" />
+            <circle cx="205" cy="173" r="3" fill="#ffffff" />
+          </g>
+
+          <!-- Mắt nhắm khi người dùng nhập mật khẩu ẩn -->
+          <g class="https-login__eyes-shut" fill="none" stroke="#0f172a" stroke-width="4.5" stroke-linecap="round">
+            <path d="M148 178c6 6 14 6 20 0M192 178c6 6 14 6 20 0" />
+          </g>
+
+          <!-- Má hồng & miệng cười -->
+          <circle cx="143" cy="196" r="7" fill="#93c5fd" opacity="0.7" />
+          <circle cx="217" cy="196" r="7" fill="#93c5fd" opacity="0.7" />
+          <path d="M168 198c6 8 18 8 24 0" fill="none" stroke="#0f172a" stroke-width="4.5" stroke-linecap="round" />
+        </svg>
+
+        <p class="https-login__tag">Xếp lịch thi 0% xung đột • DSatur &amp; FFD</p>
+      </div>
+
+      <!-- Cột phải: Form Đăng nhập UC01 -->
+      <div class="https-login__panel">
+        <p class="https-login__brand">
+          <span class="https-login__logo" aria-hidden="true">H</span>
+          <span>HTTPS</span>
+        </p>
+
+        <h1 class="https-login__title" id="login-title">Đăng nhập hệ thống</h1>
+        <p class="https-login__sub">
+          Cổng quản trị xếp lịch thi (Admin) &amp; Tra cứu lịch thi cá nhân (Sinh viên).
+        </p>
+
+        <div class="https-login__alert" role="alert" data-login-alert hidden></div>
+
+        <form id="login-form" class="https-login__form" data-login-form novalidate>
+          <div class="https-login__field" data-field>
+            <label class="https-login__label" for="login-username">Tên đăng nhập hoặc MSSV</label>
+            <input
+              class="https-login__input"
+              id="login-username"
+              name="ten_dang_nhap"
+              type="text"
+              placeholder="VD: admin hoặc 22110399"
+              autocomplete="username"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+              minlength="3"
+              data-msg="Vui lòng nhập tên đăng nhập hoặc mã số sinh viên."
+              aria-describedby="login-username-err"
+            />
+            <p class="https-login__error" id="login-username-err" data-error></p>
+          </div>
+
+          <div class="https-login__field" data-field>
+            <label class="https-login__label" for="login-password">Mật khẩu</label>
+            <div class="https-login__pw">
+              <input
+                class="https-login__input"
+                id="login-password"
+                name="mat_khau"
+                type="password"
+                placeholder="Nhập mật khẩu của bạn"
+                autocomplete="current-password"
+                required
+                minlength="6"
+                data-msg="Vui lòng nhập mật khẩu."
+                aria-describedby="login-caps login-password-err"
+              />
+              <button
+                class="https-login__eye"
+                type="button"
+                aria-label="Hiện mật khẩu"
+                aria-pressed="false"
+                aria-controls="login-password"
+                data-pw-toggle
+              >
+                <svg class="https-login__eye-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="https-login__eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 3l18 18M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                </svg>
+              </button>
+            </div>
+            <p class="https-login__caps" id="login-caps" data-caps hidden>
+              ⚠ Đang bật Caps Lock
+            </p>
+            <p class="https-login__error" id="login-password-err" data-error></p>
+          </div>
+
+          <div class="https-login__row">
+            <label class="https-login__check">
+              <input type="checkbox" name="remember" />
+              <span>Ghi nhớ phiên làm việc</span>
+            </label>
+            <span class="https-login__hint">Cấp tài khoản bởi Phòng Đào tạo</span>
+          </div>
+
+          <button class="https-login__submit" type="submit" data-login-submit>
+            Đăng nhập <span aria-hidden="true">&rarr;</span>
+          </button>
+        </form>
+
+        <div class="https-login__vh" role="status" aria-live="polite" data-live></div>
+        <p class="https-login__security">
+          🔒 Kết nối mã hóa TLS/HTTPS • Xác thực Native JWT (HS256)
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/login.js"></script>
+</body>
+</html>
