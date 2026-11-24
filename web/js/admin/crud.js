@@ -42,6 +42,8 @@ function switchCrudEntity(entity) {
     renderStudentTable();
   } else if (validEntity === "ky_thi") {
     renderExamTable();
+  } else if (validEntity === "mon_hoc") {
+    renderCourseTable();
   }
 }
 
@@ -66,7 +68,7 @@ function renderStudentTable() {
     countEl.textContent = `Danh sách Sinh viên (${filtered.length} sinh viên)`;
   }
 
-  tbody.innerHTML = "";
+  tbody.replaceChildren();
   filtered.forEach((sv) => {
     const tr = document.createElement("tr");
     tr.className = "hover:bg-slate-50";
@@ -337,11 +339,154 @@ function deleteExam(maKyThi) {
   renderExamTable();
 }
 
+let courseRecords = [
+  { ma_mon: "IT001", ten_mon: "Lý thuyết Đồ thị (Graph Theory)", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT002", ten_mon: "Cấu trúc Dữ liệu & Giải thuật", thoi_luong_phut: 90, so_tin_chi: 4 },
+  { ma_mon: "IT003", ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT004", ten_mon: "Lập trình Web (FastAPI & Python)", thoi_luong_phut: 120, so_tin_chi: 4 },
+  { ma_mon: "IT005", ten_mon: "An toàn & Bảo mật Thông tin (HTTPS/JWT)", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT006", ten_mon: "Trí tuệ Nhân tạo (AI Foundations)", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT007", ten_mon: "Mạng Máy tính & Truyền thông", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT008", ten_mon: "Toán Rời rạc & Tổ hợp", thoi_luong_phut: 90, so_tin_chi: 3 },
+];
+
+let editingCourseCode = null;
+
+function renderCourseTable() {
+  const tbody = document.getElementById("course-table-body");
+  const countEl = document.getElementById("course-count-label");
+  const searchEl = document.getElementById("course-search-input");
+  if (!tbody) return;
+
+  const q = (searchEl ? searchEl.value : "").trim().toLowerCase();
+  const filtered = q
+    ? courseRecords.filter(
+        (mh) =>
+          mh.ma_mon.toLowerCase().includes(q) ||
+          mh.ten_mon.toLowerCase().includes(q)
+      )
+    : courseRecords;
+
+  if (countEl) {
+    countEl.textContent = `Danh mục Học phần / Môn thi (${filtered.length} môn học)`;
+  }
+
+  tbody.replaceChildren();
+  filtered.forEach((mh) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-slate-50";
+
+    const tdCode = document.createElement("td");
+    tdCode.className = "py-2.5 px-3 font-semibold text-slate-900 font-mono";
+    tdCode.textContent = mh.ma_mon;
+
+    const tdName = document.createElement("td");
+    tdName.className = "py-2.5 px-3";
+    tdName.textContent = mh.ten_mon;
+
+    const tdDuration = document.createElement("td");
+    tdDuration.className = "py-2.5 px-3 text-slate-600";
+    tdDuration.textContent = `${mh.thoi_luong_phut} phút`;
+
+    const tdCredits = document.createElement("td");
+    tdCredits.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
+    tdCredits.textContent = `${mh.so_tin_chi} TC`;
+
+    const tdAct = document.createElement("td");
+    tdAct.className = "py-2.5 px-3 text-right space-x-2";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.type = "button";
+    btnEdit.className = "font-medium text-blue-600 hover:underline";
+    btnEdit.textContent = "Sửa";
+    btnEdit.onclick = () => startEditCourse(mh.ma_mon);
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "font-medium text-red-600 hover:underline";
+    btnDel.textContent = "Xóa";
+    btnDel.onclick = () => deleteCourse(mh.ma_mon);
+
+    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    tr.append(tdCode, tdName, tdDuration, tdCredits, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+
+function resetCourseForm() {
+  editingCourseCode = null;
+  const form = document.getElementById("course-crud-form");
+  const codeInput = document.getElementById("course-form-ma");
+  const errEl = document.getElementById("course-form-error");
+  if (form) form.reset();
+  if (codeInput) codeInput.readOnly = false;
+  if (errEl) errEl.textContent = "";
+}
+
+function saveCourseForm(event) {
+  event.preventDefault();
+  const codeInput = document.getElementById("course-form-ma");
+  const nameInput = document.getElementById("course-form-ten");
+  const durationInput = document.getElementById("course-form-duration");
+  const creditsInput = document.getElementById("course-form-credits");
+  const errEl = document.getElementById("course-form-error");
+
+  const ma_mon = codeInput.value.trim().toUpperCase();
+  const ten_mon = nameInput.value.trim();
+  const thoi_luong_phut = Number.parseInt(durationInput.value, 10);
+  const so_tin_chi = Number.parseInt(creditsInput.value, 10);
+
+  if (!ma_mon || !ten_mon) {
+    if (errEl) errEl.textContent = "Vui lòng nhập đầy đủ mã môn và tên học phần.";
+    return;
+  }
+  if (!Number.isInteger(thoi_luong_phut) || thoi_luong_phut <= 0) {
+    if (errEl) errEl.textContent = "Thời lượng thi phải là số nguyên dương.";
+    return;
+  }
+  if (!Number.isInteger(so_tin_chi) || so_tin_chi <= 0) {
+    if (errEl) errEl.textContent = "Số tín chỉ phải là số nguyên dương.";
+    return;
+  }
+
+  const record = { ma_mon, ten_mon, thoi_luong_phut, so_tin_chi };
+  const existingIdx = courseRecords.findIndex((c) => c.ma_mon === (editingCourseCode || ma_mon));
+  if (existingIdx >= 0) {
+    courseRecords[existingIdx] = record;
+  } else {
+    courseRecords.unshift(record);
+  }
+
+  resetCourseForm();
+  renderCourseTable();
+}
+
+function startEditCourse(maMon) {
+  const mh = courseRecords.find((c) => c.ma_mon === maMon);
+  if (!mh) return;
+  editingCourseCode = maMon;
+  const codeInput = document.getElementById("course-form-ma");
+  codeInput.value = mh.ma_mon;
+  codeInput.readOnly = true;
+  document.getElementById("course-form-ten").value = mh.ten_mon;
+  document.getElementById("course-form-duration").value = String(mh.thoi_luong_phut);
+  document.getElementById("course-form-credits").value = String(mh.so_tin_chi);
+  const errEl = document.getElementById("course-form-error");
+  if (errEl) errEl.textContent = "";
+}
+
+function deleteCourse(maMon) {
+  courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
+  if (editingCourseCode === maMon) resetCourseForm();
+  renderCourseTable();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const entity = new URLSearchParams(window.location.search).get("entity");
   if (entity && CRUD_HEADINGS[entity]) {
     switchCrudEntity(entity);
   } else {
+    renderCourseTable();
     renderStudentTable();
     renderExamTable();
   }

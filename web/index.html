@@ -35,13 +35,39 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div id="crud-panel-mon_hoc" class="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
-              <h3 class="text-sm font-bold text-slate-900">Danh mục Học phần / Môn thi (15 môn trong kỳ thi)</h3>
+              <h3 id="course-count-label" class="text-sm font-bold text-slate-900">Danh mục Học phần / Môn thi</h3>
               <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-64 text-xs">
-                <input type="text" placeholder="Tìm mã môn, tên môn học..."
+                <input id="course-search-input" type="text" oninput="renderCourseTable()"
+                  placeholder="Tìm mã môn, tên môn học..."
                   class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full" />
                 <span class="text-slate-400">🔍</span>
               </div>
             </div>
+
+            <form id="course-crud-form" onsubmit="saveCourseForm(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <input id="course-form-ma" type="text" placeholder="Mã môn (VD: IT009)" required
+                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
+              <input id="course-form-ten" type="text" placeholder="Tên học phần / Môn thi" required
+                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 sm:col-span-2" />
+              <input id="course-form-duration" type="number" min="15" max="300" value="90" placeholder="Phút" required
+                aria-label="Thời lượng thi (phút)"
+                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
+              <input id="course-form-credits" type="number" min="1" max="10" value="3" placeholder="Tín chỉ" required
+                aria-label="Số tín chỉ"
+                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
+              <div class="sm:col-span-2 lg:col-span-5 flex flex-wrap items-center justify-between gap-2">
+                <p id="course-form-error" class="text-xs font-medium text-red-600 min-h-[1rem]"></p>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="resetCourseForm()"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
+                    Hủy
+                  </button>
+                  <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                    + Lưu Môn học
+                  </button>
+                </div>
+              </div>
+            </form>
 
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
@@ -50,77 +76,11 @@
                     <th class="py-2.5 px-3">Mã môn</th>
                     <th class="py-2.5 px-3">Tên học phần / Môn thi</th>
                     <th class="py-2.5 px-3">Thời lượng</th>
-                    <th class="py-2.5 px-3">Số SV ĐK</th>
-                    <th class="py-2.5 px-3">Bậc deg(v)</th>
+                    <th class="py-2.5 px-3">Số tín chỉ</th>
                     <th class="py-2.5 px-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 text-slate-700">
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT001</td>
-                    <td class="py-2.5 px-3">Lý thuyết Đồ thị (Graph Theory)</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">145 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 8</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT002</td>
-                    <td class="py-2.5 px-3">Cấu trúc Dữ liệu &amp; Giải thuật</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">180 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 11</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT003</td>
-                    <td class="py-2.5 px-3">Hệ Quản trị Cơ sở Dữ liệu PostgreSQL</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">132 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 7</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT004</td>
-                    <td class="py-2.5 px-3">Lập trình Web (FastAPI &amp; Python)</td>
-                    <td class="py-2.5 px-3">120 phút</td>
-                    <td class="py-2.5 px-3">110 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 6</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT005</td>
-                    <td class="py-2.5 px-3">An toàn &amp; Bảo mật Thông tin (HTTPS/JWT)</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">95 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 5</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT006</td>
-                    <td class="py-2.5 px-3">Trí tuệ Nhân tạo (AI Foundations)</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">160 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 9</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT007</td>
-                    <td class="py-2.5 px-3">Mạng Máy tính &amp; Truyền thông</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">125 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 6</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">IT008</td>
-                    <td class="py-2.5 px-3">Toán Rời rạc &amp; Tổ hợp</td>
-                    <td class="py-2.5 px-3">90 phút</td>
-                    <td class="py-2.5 px-3">175 SV</td>
-                    <td class="py-2.5 px-3 font-mono text-blue-700 font-semibold">deg = 10</td>
-                    <td class="py-2.5 px-3 text-right font-medium text-blue-600 cursor-pointer">Sửa • Xóa</td>
-                  </tr>
-                </tbody>
+                <tbody id="course-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
               </table>
             </div>
           </div>
