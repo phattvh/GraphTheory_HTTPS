@@ -1,49 +1,240 @@
 /**
- * Điều khiển Layout Shell chuẩn Figma cho Admin Dashboard (web/js/admin/layout.js)
+ * Dùng chung Header 2 tầng & Right Collapsible Drawer cho 4 trang Admin
+ * (index.html, graph.html, calendar.html, stats.html)
  */
 
-const TAB_TITLES = {
-  "tab-crud": "02. Quản lý Dữ liệu & Import Excel (UC02-07)",
-  "tab-graph": "03. Đồ thị Xung đột & Xếp lịch DSatur (UC08-09)",
-  "tab-calendar": "04. Lịch thi Toàn trường FullCalendar (UC10)",
-  "tab-stats": "05. Thống kê & Phân tích Đồ thị (UC13-14)",
+const ADMIN_PAGES = {
+  crud: {
+    href: "/index.html",
+    icon: "🗂️",
+    navLabel: "1. Quản lý dữ liệu (UC02-07)",
+    title: "02. Quản lý Dữ liệu & Import Excel (UC02 - UC07)",
+  },
+  graph: {
+    href: "/graph.html",
+    icon: "🕸️",
+    navLabel: "2. Đồ thị & Xếp lịch (UC08-09)",
+    title: "03. Đồ thị Xung đột & Xếp lịch DSatur (UC08 - UC09)",
+  },
+  calendar: {
+    href: "/calendar.html",
+    icon: "📅",
+    navLabel: "3. Lịch thi toàn trường (UC10)",
+    title: "04. Lịch thi Toàn trường FullCalendar (UC10)",
+  },
+  stats: {
+    href: "/stats.html",
+    icon: "📊",
+    navLabel: "4. Thống kê & Phân tích (UC13-14)",
+    title: "05. Thống kê & Phân tích Đồ thị (UC13 - UC14)",
+  },
 };
 
 function switchAdminTab(tabId) {
-  const sections = document.querySelectorAll(".admin-tab-section");
-  if (!sections.length) return;
-
-  sections.forEach((sec) => {
-    if (sec.id === tabId) {
-      sec.classList.remove("hidden");
-    } else {
-      sec.classList.add("hidden");
-    }
-  });
-
-  const navButtons = document.querySelectorAll(".admin-nav-btn");
-  navButtons.forEach((btn) => {
-    if (btn.getAttribute("data-tab") === tabId) {
-      btn.className =
-        "admin-nav-btn w-full flex items-center px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-slate-100 text-slate-900 transition text-left";
-    } else {
-      btn.className =
-        "admin-nav-btn w-full flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition text-left";
-    }
-  });
-
-  const titleEl = document.getElementById("admin-page-title");
-  if (titleEl && TAB_TITLES[tabId]) {
-    titleEl.textContent = TAB_TITLES[tabId];
+  const map = {
+    "tab-crud": "/index.html",
+    "tab-graph": "/graph.html",
+    "tab-calendar": "/calendar.html",
+    "tab-stats": "/stats.html",
+  };
+  if (map[tabId]) {
+    window.location.href = map[tabId];
   }
 }
 
-function applyHashTab() {
-  const hash = window.location.hash.replace("#", "");
-  if (hash && TAB_TITLES[hash]) {
-    switchAdminTab(hash);
+function openRightDrawer() {
+  const sidebar = document.getElementById("admin-sidebar");
+  const backdrop = document.getElementById("right-drawer-backdrop");
+  const trigger = document.getElementById("btn-open-right-drawer");
+  if (!sidebar || !backdrop) return;
+  sidebar.classList.remove("translate-x-full");
+  backdrop.classList.remove("hidden");
+  if (trigger) trigger.setAttribute("aria-expanded", "true");
+}
+
+function closeRightDrawer() {
+  const sidebar = document.getElementById("admin-sidebar");
+  const backdrop = document.getElementById("right-drawer-backdrop");
+  const trigger = document.getElementById("btn-open-right-drawer");
+  if (!sidebar || !backdrop) return;
+  sidebar.classList.add("translate-x-full");
+  backdrop.classList.add("hidden");
+  if (trigger) trigger.setAttribute("aria-expanded", "false");
+}
+
+function toggleRightDrawer() {
+  const sidebar = document.getElementById("admin-sidebar");
+  if (!sidebar) return;
+  if (sidebar.classList.contains("translate-x-full")) {
+    openRightDrawer();
+  } else {
+    closeRightDrawer();
   }
 }
 
-window.addEventListener("hashchange", applyHashTab);
-document.addEventListener("DOMContentLoaded", applyHashTab);
+function initAdminShell(activePage) {
+  const mount = document.getElementById("admin-shell-mount");
+  if (!mount) return;
+
+  const page = ADMIN_PAGES[activePage] || ADMIN_PAGES.crud;
+
+  const horizontalLinks = Object.entries(ADMIN_PAGES)
+    .map(([key, cfg]) => {
+      const isActive = key === activePage;
+      const cls = isActive
+        ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
+        : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
+      return `<a href="${cfg.href}" class="${cls}"><span>${cfg.icon}</span><span>${cfg.navLabel}</span></a>`;
+    })
+    .join("\n");
+
+  const drawerLinks = Object.entries(ADMIN_PAGES)
+    .map(([key, cfg]) => {
+      const isActive = key === activePage;
+      const cls = isActive
+        ? "drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 transition text-left"
+        : "drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition text-left";
+      return `<a href="${cfg.href}" class="${cls}"><span>${cfg.icon}</span><span>${cfg.navLabel}</span></a>`;
+    })
+    .join("\n");
+
+  mount.innerHTML = `
+    <header id="admin-header" class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm no-print">
+      <div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-4 min-w-0">
+          <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
+            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">G</div>
+            <div>
+              <h1 class="text-base font-bold text-slate-900 leading-tight">GraphSchedule</h1>
+              <p class="text-[11px] text-slate-500">DSatur &amp; Welsh–Powell Engine</p>
+            </div>
+          </a>
+
+          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition">
+            <span class="mr-2 text-slate-400">🔍</span>
+            <input id="global-search-input" type="text" placeholder="Tìm nhanh môn, phòng, SV (/)..."
+              class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full text-xs" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 shrink-0">
+          <span class="hidden lg:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+            0% Xung đột SV • χ(G) = 4 Ca thi
+          </span>
+
+          <a href="/index.html"
+            class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
+            📥 Import Excel
+          </a>
+
+          <a href="/graph.html"
+            class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-sm transition">
+            ⚡ Xếp lịch DSatur
+          </a>
+
+          <div class="hidden md:block text-xs font-semibold text-slate-800 pl-1" id="header-user-display">
+            Admin: Phòng Đào Tạo
+          </div>
+
+          <button type="button" id="btn-admin-logout" onclick="handleLogout()"
+            class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
+            Đăng xuất
+          </button>
+
+          <button id="btn-open-right-drawer" type="button" onclick="toggleRightDrawer()"
+            aria-expanded="false" aria-controls="admin-sidebar"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition"
+            title="Mở Menu điều hướng bên phải">
+            <span>☰</span>
+            <span class="hidden sm:inline">Menu</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="max-w-[1440px] mx-auto px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
+        <nav aria-label="Persistent Horizontal Menu" class="flex items-center gap-1">
+          ${horizontalLinks}
+          <a href="/student.html"
+            class="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap">
+            <span>🎓</span>
+            <span>5. Cổng Sinh viên (UC11-12)</span>
+          </a>
+        </nav>
+
+        <div class="hidden xl:flex items-center gap-2 text-xs text-slate-500 py-1.5">
+          <span>Đang xem:</span>
+          <strong id="admin-page-title" class="text-slate-800 font-semibold">${page.title}</strong>
+        </div>
+      </div>
+    </header>
+
+    <div id="right-drawer-backdrop" onclick="closeRightDrawer()"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-40 hidden transition-opacity no-print"></div>
+
+    <aside id="admin-sidebar" aria-label="Right Collapsible Sidebar Menu"
+      class="fixed top-0 right-0 h-full w-80 bg-white border-l border-slate-200 z-50 transform translate-x-full transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-2xl no-print">
+      <div class="p-5 overflow-y-auto space-y-5">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">G</div>
+            <div>
+              <div class="text-sm font-bold text-slate-900">GraphSchedule</div>
+              <div class="text-xs text-slate-500">Admin: Phòng Đào Tạo</div>
+            </div>
+          </div>
+          <button id="btn-close-right-drawer" type="button" onclick="closeRightDrawer()"
+            class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-blue-600 flex items-center justify-center text-sm font-bold transition"
+            title="Đóng menu (Esc)">✕</button>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="px-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Các phân hệ chức năng</div>
+          ${drawerLinks}
+          <a href="/student.html"
+            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition">
+            <span>🎓</span>
+            <span>5. Cổng Sinh viên (UC11-12)</span>
+          </a>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 space-y-2">
+          <div class="px-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Danh sách Kỳ thi gần đây</div>
+          <div class="space-y-1 text-xs">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-900 font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Thi Cuối Kỳ HK1 (2026 - 2027)</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>Thi Cuối Kỳ HK2 (2025 - 2026)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
+        <div class="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 space-y-1">
+          <div class="font-bold text-slate-800">Trạng thái Engine</div>
+          <div>• Thuật toán: <span class="font-semibold text-blue-700">DSatur + FFD</span></div>
+          <div>• Sắc số đạt được: <span class="font-semibold text-emerald-700">χ(G) = 4 ca thi</span></div>
+          <div>• Xung đột lịch SV: <span class="font-bold text-emerald-700">0.0%</span></div>
+        </div>
+        <button type="button" onclick="handleLogout()"
+          class="w-full py-2 px-3 rounded-lg border border-slate-300 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-xs font-semibold text-slate-700 transition">
+          🚪 Đăng xuất khỏi hệ thống
+        </button>
+      </div>
+    </aside>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeRightDrawer();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const activePage = document.body.getAttribute("data-admin-page");
+  if (activePage) {
+    initAdminShell(activePage);
+  }
+});
