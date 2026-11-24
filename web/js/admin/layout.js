@@ -132,10 +132,6 @@ function initAdminShell(activePage) {
         </div>
 
         <div class="flex items-center gap-2.5 shrink-0">
-          <span class="hidden lg:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
-            0% Xung đột SV • χ(G) = 4 Ca thi
-          </span>
-
           <a href="/index.html"
             class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
             📥 Import Excel
