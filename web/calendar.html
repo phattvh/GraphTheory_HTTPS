@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphSchedule — Lịch thi Toàn trường FullCalendar (UC10)</title>
+  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/layout.css" />
+</head>
+<body data-admin-page="calendar" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+
+  <div id="admin-layout-shell" class="flex-1 flex flex-col min-h-screen">
+    <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
+    <div id="admin-shell-mount"></div>
+
+    <main id="admin-main-content" class="flex-1 max-w-[1440px] w-full mx-auto p-6 space-y-6">
+      <!-- MÀN HÌNH FIGMA 04: LỊCH THI TOÀN TRƯỜNG FULLCALENDAR (UC10, UC10.1) -->
+      <section id="tab-calendar" class="admin-tab-section hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+              Lọc Môn học: Tất cả 15 môn ▾
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+              Lọc Phòng thi: Tất cả 10 phòng ▾
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+              Lọc Ca thi: Tất cả các ca ▾
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
+              Tuần (Week)
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+              Tháng (Month)
+            </button>
+            <button type="button" onclick="window.print()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
+              🖨️ In Lịch Toàn Trường (PDF)
+            </button>
+          </div>
+        </div>
+
+        <div id="admin-fullcalendar-shell" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="grid grid-cols-6 gap-2 text-xs font-bold text-slate-800 text-center">
+            <div class="p-3 rounded-lg bg-slate-100">Khung giờ / Ca thi</div>
+            <div class="p-3 rounded-lg bg-slate-100">Thứ Hai (15/12)</div>
+            <div class="p-3 rounded-lg bg-slate-100">Thứ Ba (16/12)</div>
+            <div class="p-3 rounded-lg bg-slate-100">Thứ Tư (17/12)</div>
+            <div class="p-3 rounded-lg bg-slate-100">Thứ Năm (18/12)</div>
+            <div class="p-3 rounded-lg bg-slate-100">Thứ Sáu (19/12)</div>
+          </div>
+
+          <div class="grid grid-cols-6 gap-2 text-xs">
+            <div class="p-3 rounded-lg bg-slate-100 font-bold text-slate-800">Ca 1 (07:30 - 09:00)<br/><span class="font-normal text-slate-500">[Màu 1]</span></div>
+            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
+              <div class="font-bold text-blue-900">🔵 IT002 - CTDL &amp; GT</div>
+              <div class="text-slate-600">Phòng: A101, A102 (180 SV)</div>
+              <div class="font-bold text-blue-900 pt-1">🔵 IT005 - An toàn TT</div>
+              <div class="text-slate-600">Phòng: B201 (95 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
+              <div class="font-bold text-blue-900">🔵 IT009 - Giải tích 1</div>
+              <div class="text-slate-600">Phòng: A101, A103 (190 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
+              <div class="font-bold text-blue-900">🔵 IT012 - Lập trình OOP</div>
+              <div class="text-slate-600">Phòng: B202, B203 (150 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
+              <div class="font-bold text-blue-900">🔵 IT014 - Hệ điều hành</div>
+              <div class="text-slate-600">Phòng: A101 (110 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống (Dự phòng)</div>
+          </div>
+
+          <div class="grid grid-cols-6 gap-2 text-xs">
+            <div class="p-3 rounded-lg bg-slate-100 font-bold text-slate-800">Ca 2 (09:30 - 11:00)<br/><span class="font-normal text-slate-500">[Màu 2]</span></div>
+            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+              <div class="font-bold text-emerald-900">🟢 IT001 - Lý thuyết Đồ thị</div>
+              <div class="text-slate-600">Phòng: A101, A102 (145 SV)</div>
+              <div class="font-bold text-emerald-900 pt-1">🟢 IT006 - Trí tuệ Nhân tạo</div>
+              <div class="text-slate-600">Phòng: B201, B202 (160 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+              <div class="font-bold text-emerald-900">🟢 IT010 - Đại số Tuyến tính</div>
+              <div class="text-slate-600">Phòng: A101 (120 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+              <div class="font-bold text-emerald-900">🟢 IT013 - Công nghệ PM</div>
+              <div class="text-slate-600">Phòng: B201 (135 SV)</div>
+            </div>
+            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống</div>
+            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/admin/layout.js"></script>
+</body>
+</html>

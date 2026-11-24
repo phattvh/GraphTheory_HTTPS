@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphSchedule — Đồ thị Xung đột & Xếp lịch DSatur (UC08 - UC09)</title>
+  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/layout.css" />
+</head>
+<body data-admin-page="graph" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+
+  <div id="admin-layout-shell" class="flex-1 flex flex-col min-h-screen">
+    <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
+    <div id="admin-shell-mount"></div>
+
+    <main id="admin-main-content" class="flex-1 max-w-[1440px] w-full mx-auto p-6 space-y-6">
+      <!-- MÀN HÌNH FIGMA 03: ĐỒ THỊ XUNG ĐỘT & XẾP LỊCH DSATUR (UC08, UC09) -->
+      <section id="tab-graph" class="admin-tab-section hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
+              Thuật toán: DSatur (Đang chọn)
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
+              Đối chứng: Welsh–Powell
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
+              Layout: CoSE Force-Directed ▾
+            </button>
+          </div>
+          <button type="button" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white shadow-sm">
+            ⚡ Chạy Xếp lịch Tự động (DSatur + FFD)
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div id="cytoscape-container-shell" class="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">
+              Đồ thị Xung đột G = (V, E, W) • Đỉnh = Môn thi • Cạnh = Số SV thi chung • Màu = Ca thi
+            </h3>
+
+            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center">
+              <svg class="w-full max-h-[420px]" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="360" y1="220" x2="200" y2="110" stroke="#94A3B8" stroke-width="3"/>
+                <line x1="360" y1="220" x2="520" y2="110" stroke="#94A3B8" stroke-width="2.5"/>
+                <line x1="360" y1="220" x2="180" y2="340" stroke="#94A3B8" stroke-width="2"/>
+                <line x1="360" y1="220" x2="540" y2="340" stroke="#94A3B8" stroke-width="3"/>
+                <line x1="200" y1="110" x2="520" y2="110" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="200" y1="110" x2="180" y2="340" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="520" y1="110" x2="540" y2="340" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="180" y1="340" x2="360" y2="410" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="540" y1="340" x2="360" y2="410" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="200" y1="110" x2="90" y2="220" stroke="#CBD5E1" stroke-width="1.5"/>
+                <line x1="520" y1="110" x2="630" y2="220" stroke="#CBD5E1" stroke-width="1.5"/>
+                <circle cx="360" cy="220" r="40" fill="#2563EB" stroke="#1E3A8A" stroke-width="4"/>
+                <text x="360" y="224" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="bold">IT002</text>
+                <circle cx="200" cy="110" r="33" fill="#10B981" stroke="#065F46" stroke-width="2"/>
+                <text x="200" y="114" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">IT001</text>
+                <circle cx="520" cy="110" r="33" fill="#F59E0B" stroke="#92400E" stroke-width="2"/>
+                <text x="520" y="114" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">IT008</text>
+                <circle cx="180" cy="340" r="31" fill="#8B5CF6" stroke="#5B21B6" stroke-width="2"/>
+                <text x="180" y="344" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">IT003</text>
+                <circle cx="540" cy="340" r="33" fill="#10B981" stroke="#065F46" stroke-width="2"/>
+                <text x="540" y="344" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">IT006</text>
+                <circle cx="360" cy="410" r="28" fill="#F59E0B" stroke="#92400E" stroke-width="2"/>
+                <text x="360" y="414" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">IT004</text>
+                <circle cx="90" cy="220" r="27" fill="#2563EB" stroke="#1E3A8A" stroke-width="2"/>
+                <text x="90" y="224" text-anchor="middle" fill="#FFFFFF" font-size="10" font-weight="bold">IT005</text>
+                <circle cx="630" cy="220" r="27" fill="#8B5CF6" stroke="#5B21B6" stroke-width="2"/>
+                <text x="630" y="224" text-anchor="middle" fill="#FFFFFF" font-size="10" font-weight="bold">IT007</text>
+              </svg>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-3 mt-3 border-t border-slate-100 font-medium">
+              <span>🔵 Ca 1: IT002, IT005</span>
+              <span>🟢 Ca 2: IT001, IT006</span>
+              <span>🟡 Ca 3: IT008, IT004</span>
+              <span>🟣 Ca 4: IT003, IT007</span>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">Chi tiết Đỉnh đang chọn (Node Inspector)</h3>
+            <div>
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+                Đỉnh: IT002 • Màu 1 (Ca thi số 1)
+              </span>
+            </div>
+
+            <ul class="text-xs text-slate-700 space-y-2 leading-relaxed">
+              <li>• <strong>Tên môn:</strong> Cấu trúc Dữ liệu &amp; Giải thuật</li>
+              <li>• <strong>Số sinh viên đăng ký:</strong> 180 SV</li>
+              <li>• <strong>Độ bão hòa DSatur (Saturation):</strong> 3</li>
+              <li>• <strong>Bậc của đỉnh deg(v):</strong> 11 môn xung đột</li>
+              <li>• <strong>Xung đột mạnh nhất:</strong> IT001 (42 SV chung), IT008 (38 SV chung)</li>
+              <li>• <strong>Phân phòng (First-Fit Decreasing):</strong>
+                <div class="pl-3 mt-1 text-slate-600 space-y-0.5">
+                  <div>- Phòng A101 (Sức chứa 100): 100 SV</div>
+                  <div>- Phòng A102 (Sức chứa 80): 80 SV</div>
+                </div>
+              </li>
+            </ul>
+
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
+              <div class="font-bold text-sm">✅ Schedule Verifier: HỢP LỆ 100%</div>
+              <div>• Sắc số đạt được: χ(G) = 4 ca thi (DSatur)</div>
+              <div>• Kiểm chứng cạnh: 0 cạnh nối 2 đỉnh cùng màu</div>
+              <div>• Kiểm chứng phòng: 100% ca thi đủ sức chứa</div>
+              <div>• Thời gian chạy NetworkX: 12.4 ms</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/admin/layout.js"></script>
+</body>
+</html>
