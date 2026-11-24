@@ -80,10 +80,23 @@ def test_admin_pages_and_student_structure():
         'id="crud-panel-sinh_vien"',
         'id="crud-panel-phong_thi"',
         'id="crud-panel-dang_ky_thi"',
+        'id="exam-crud-form"',
+        'id="exam-table-body"',
+        'id="course-crud-form"',
+        'id="course-table-body"',
     ]:
-        assert panel_id in index_html, f"index.html thiếu panel {panel_id}"
+        assert panel_id in index_html, f"index.html thiếu thành phần {panel_id}"
     assert 'src="/js/admin/crud.js"' in index_html
-    assert "switchCrudEntity" in crud_js and "saveStudentForm" in crud_js
+    for fn in [
+        "switchCrudEntity",
+        "saveStudentForm",
+        "renderExamTable",
+        "saveExamForm",
+        "renderCourseTable",
+        "saveCourseForm",
+    ]:
+        assert fn in crud_js, f"web/js/admin/crud.js thiếu hàm {fn}"
+    assert "innerHTML" not in crud_js, "web/js/admin/crud.js không được dùng innerHTML để tránh XSS"
 
     # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS/link của Admin
     student_html = (WEB_DIR / "student.html").read_text(encoding="utf-8")
