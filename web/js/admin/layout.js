@@ -132,11 +132,6 @@ function initAdminShell(activePage) {
         </div>
 
         <div class="flex items-center gap-2.5 shrink-0">
-          <a href="/index.html"
-            class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
-            📥 Import Excel
-          </a>
-
           <a href="/graph.html"
             class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-sm transition">
             ⚡ Xếp lịch DSatur
