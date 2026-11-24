@@ -7,26 +7,26 @@ const ADMIN_PAGES = {
   crud: {
     href: "/index.html",
     icon: "🗂️",
-    navLabel: "1. Quản lý dữ liệu (UC02-07)",
-    title: "02. Quản lý Dữ liệu & Import Excel (UC02 - UC07)",
+    navLabel: "1. Quản lý dữ liệu",
+    title: "02. Quản lý Dữ liệu & Import Excel",
   },
   graph: {
     href: "/graph.html",
     icon: "🕸️",
-    navLabel: "2. Đồ thị & Xếp lịch (UC08-09)",
-    title: "03. Đồ thị Xung đột & Xếp lịch DSatur (UC08 - UC09)",
+    navLabel: "2. Đồ thị & Xếp lịch",
+    title: "03. Đồ thị Xung đột & Xếp lịch DSatur",
   },
   calendar: {
     href: "/calendar.html",
     icon: "📅",
-    navLabel: "3. Lịch thi toàn trường (UC10)",
-    title: "04. Lịch thi Toàn trường FullCalendar (UC10)",
+    navLabel: "3. Lịch thi toàn trường",
+    title: "04. Lịch thi Toàn trường FullCalendar",
   },
   stats: {
     href: "/stats.html",
     icon: "📊",
-    navLabel: "4. Thống kê & Phân tích (UC13-14)",
-    title: "05. Thống kê & Phân tích Đồ thị (UC13 - UC14)",
+    navLabel: "4. Thống kê & Phân tích",
+    title: "05. Thống kê & Phân tích Đồ thị",
   },
 };
 
@@ -73,11 +73,11 @@ function toggleRightDrawer() {
 }
 
 const CRUD_ENTITIES = [
-  { key: "ky_thi", icon: "🗓️", label: "Kỳ thi (UC02)" },
-  { key: "mon_hoc", icon: "📚", label: "Môn học (UC04)" },
-  { key: "sinh_vien", icon: "👨‍🎓", label: "Quản lý Sinh viên (UC03)" },
-  { key: "phong_thi", icon: "🏫", label: "Phòng thi (UC06)" },
-  { key: "dang_ky_thi", icon: "📝", label: "Đăng ký thi (UC05)" },
+  { key: "ky_thi", icon: "🗓️", label: "Kỳ thi" },
+  { key: "mon_hoc", icon: "📚", label: "Môn học" },
+  { key: "sinh_vien", icon: "👨‍🎓", label: "Quản lý Sinh viên" },
+  { key: "phong_thi", icon: "🏫", label: "Phòng thi" },
+  { key: "dang_ky_thi", icon: "📝", label: "Đăng ký thi" },
 ];
 
 function initAdminShell(activePage) {

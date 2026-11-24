@@ -14,11 +14,11 @@ let studentRecords = [
 let editingMssv = null;
 
 const CRUD_HEADINGS = {
-  ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi (UC02)",
-  mon_hoc: "Quản lý Dữ liệu Đầu vào • Môn học (UC04)",
-  sinh_vien: "Quản lý Dữ liệu Đầu vào • Quản lý Sinh viên (UC03)",
-  phong_thi: "Quản lý Dữ liệu Đầu vào • Phòng thi (UC06)",
-  dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi (UC05)",
+  ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi",
+  mon_hoc: "Quản lý Dữ liệu Đầu vào • Môn học",
+  sinh_vien: "Quản lý Dữ liệu Đầu vào • Quản lý Sinh viên",
+  phong_thi: "Quản lý Dữ liệu Đầu vào • Phòng thi",
+  dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi",
 };
 
 function switchCrudEntity(entity) {

@@ -45,7 +45,9 @@ def test_admin_pages_and_student_structure():
     assert "DSatur &amp; Welsh–Powell Engine" not in layout_js, "Không còn hiển thị dòng Engine dưới logo"
     assert "0% Xung đột SV • χ(G) = 4 Ca thi" not in layout_js, "Không còn hiển thị badge xung đột trên header"
     assert "📥 Import Excel" not in layout_js, "Không còn nút Import Excel trên header"
-    assert "CRUD_ENTITIES" in layout_js and "Kỳ thi (UC02)" in layout_js and "Quản lý Sinh viên (UC03)" in layout_js
+    assert "⚡ Xếp lịch DSatur" not in layout_js, "Không còn nút Xếp lịch DSatur trên header"
+    assert "CRUD_ENTITIES" in layout_js and '"Kỳ thi"' in layout_js and '"Quản lý Sinh viên"' in layout_js
+    assert "(UC" not in layout_js, "Không còn nhãn (UC...) trên giao diện"
     assert "max-w-[1440px]" not in layout_js, "Header Admin phải dùng full-width"
     assert layout_js.index('id="btn-open-right-drawer"') < layout_js.index(">HTTPS<"), "Nút Menu phải nằm cùng chỗ bên trái với logo HTTPS"
 
