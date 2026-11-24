@@ -67,17 +67,27 @@ def test_admin_pages_and_student_structure():
         assert 'src="/js/admin/layout.js"' in html
         assert 'href="/login.html"' not in html
 
-    # Kiểm tra Quản lý Sinh viên (UC03) trên index.html & crud.js
+    # Kiểm tra đủ 5 CRUD panels (UC02-UC06) trên index.html & crud.js
     index_html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
     crud_js = (WEB_DIR / "js" / "admin" / "crud.js").read_text(encoding="utf-8")
-    assert 'id="crud-panel-sinh_vien"' in index_html
+    for panel_id in [
+        'id="crud-active-heading"',
+        'id="crud-panel-ky_thi"',
+        'id="crud-panel-mon_hoc"',
+        'id="crud-panel-sinh_vien"',
+        'id="crud-panel-phong_thi"',
+        'id="crud-panel-dang_ky_thi"',
+    ]:
+        assert panel_id in index_html, f"index.html thiếu panel {panel_id}"
     assert 'src="/js/admin/crud.js"' in index_html
     assert "switchCrudEntity" in crud_js and "saveStudentForm" in crud_js
 
-    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS của Admin
+    # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS/link của Admin
     student_html = (WEB_DIR / "student.html").read_text(encoding="utf-8")
     assert "https://cdn.tailwindcss.com" in student_html
+    assert 'href="/css/layout.css"' in student_html
     assert 'src="/js/admin/layout.js"' not in student_html
+    assert "index.html#tab-crud" not in student_html, "student.html không được chứa link điều hướng sang trang Admin"
     for marker in [
         'id="student-header"',
         'id="student-main-content"',

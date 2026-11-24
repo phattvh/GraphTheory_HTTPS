@@ -31,8 +31,19 @@ def test_static_web():
     assert status == 200
 
 
+def test_security_headers():
+    with urllib.request.urlopen(BASE_URL + "/", context=SSL_CTX) as resp:
+        headers = {k.lower(): v for k, v in resp.headers.items()}
+        assert "max-age=" in headers.get("strict-transport-security", "")
+        assert headers.get("x-content-type-options") == "nosniff"
+        assert headers.get("x-frame-options") == "DENY"
+        assert headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+        assert "server" not in headers, f"Server header should be stripped, got: {headers.get('server')}"
+
+
 if __name__ == "__main__":
     test_health_endpoint()
     test_swagger_docs()
     test_static_web()
+    test_security_headers()
     print("ALL TESTS PASSED!")
