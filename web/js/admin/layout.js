@@ -103,9 +103,9 @@ function initAdminShell(activePage) {
       <div class="w-full px-6 h-16 flex items-center justify-between gap-3">
         <div class="flex items-center gap-4 min-w-0">
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
-            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">G</div>
+            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">H</div>
             <div>
-              <h1 class="text-base font-bold text-slate-900 leading-tight">GraphSchedule</h1>
+              <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
               <p class="text-[11px] text-slate-500">DSatur &amp; Welsh–Powell Engine</p>
             </div>
           </a>
@@ -166,9 +166,9 @@ function initAdminShell(activePage) {
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">G</div>
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">H</div>
             <div>
-              <div class="text-sm font-bold text-slate-900">GraphSchedule</div>
+              <div class="text-sm font-bold text-slate-900">HTTPS</div>
               <div class="text-xs text-slate-500">Admin: Phòng Đào Tạo</div>
             </div>
           </div>
