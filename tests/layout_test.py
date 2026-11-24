@@ -38,8 +38,14 @@ def test_admin_pages_and_student_structure():
     auth_js = (WEB_DIR / "js" / "core" / "auth.js").read_text(encoding="utf-8")
 
     # Kiểm tra các hàm dùng chung trong layout.js và auth.js
-    for marker in ["initAdminShell", "toggleRightDrawer", "closeRightDrawer", 'id="admin-header"', 'id="admin-sidebar"']:
+    for marker in ["initAdminShell", "toggleRightDrawer", "closeRightDrawer", 'id="admin-header"', 'id="admin-sidebar"', ">HTTPS<"]:
         assert marker in layout_js, f"Thiếu thành phần shell dùng chung trong layout.js: {marker}"
+    assert "Cổng Sinh viên" not in layout_js, "Không còn hiển thị Cổng Sinh viên trên thanh Admin"
+    assert "Đang xem:" not in layout_js, "Không còn hiển thị nhãn 'Đang xem:'"
+    assert "DSatur &amp; Welsh–Powell Engine" not in layout_js, "Không còn hiển thị dòng Engine dưới logo"
+    assert "max-w-[1440px]" not in layout_js, "Header Admin phải dùng full-width"
+    assert layout_js.index('id="btn-open-right-drawer"') < layout_js.index(">HTTPS<"), "Nút Menu phải nằm cùng chỗ bên trái với logo HTTPS"
+
     for marker in ["navigateByRole", "handleLogout"]:
         assert marker in auth_js, f"Thiếu hàm điều khiển trong auth.js: {marker}"
 
@@ -51,10 +57,19 @@ def test_admin_pages_and_student_structure():
         assert 'id="admin-layout-shell"' in html, f"{filename} thiếu admin-layout-shell"
         assert 'id="admin-shell-mount"' in html, f"{filename} thiếu admin-shell-mount"
         assert 'id="admin-main-content"' in html, f"{filename} thiếu admin-main-content"
+        assert "max-w-[1440px]" not in html, f"{filename} phải dùng full-width flex"
+        assert "GraphSchedule" not in html, f"{filename} phải đổi tên thành HTTPS"
         assert section_id in html, f"{filename} thiếu section chính {section_id}"
         assert 'src="/js/core/auth.js"' in html
         assert 'src="/js/admin/layout.js"' in html
         assert 'href="/login.html"' not in html
+
+    # Kiểm tra Quản lý Sinh viên (UC03) trên index.html & crud.js
+    index_html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    crud_js = (WEB_DIR / "js" / "admin" / "crud.js").read_text(encoding="utf-8")
+    assert 'id="crud-panel-sinh_vien"' in index_html
+    assert 'src="/js/admin/crud.js"' in index_html
+    assert "switchCrudEntity" in crud_js and "saveStudentForm" in crud_js
 
     # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS của Admin
     student_html = (WEB_DIR / "student.html").read_text(encoding="utf-8")
@@ -103,6 +118,11 @@ def test_caddy_serves_all_pages_if_running():
             assert resp.status == 200
             assert "initAdminShell" in layout_js
             assert "toggleRightDrawer" in layout_js
+
+        with urllib.request.urlopen(BASE_URL + "/js/admin/crud.js", context=SSL_CTX, timeout=3) as resp:
+            crud_js = resp.read().decode("utf-8")
+            assert resp.status == 200
+            assert "switchCrudEntity" in crud_js
     except urllib.error.HTTPError:
         # Không được nuốt lỗi 404/502 khi Caddy đang chạy
         raise
