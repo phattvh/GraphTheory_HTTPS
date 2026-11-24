@@ -91,6 +91,7 @@ def test_admin_pages_and_student_structure():
     assert 'href="/css/layout.css"' in student_html
     assert 'src="/js/admin/layout.js"' not in student_html
     assert "index.html#tab-crud" not in student_html, "student.html không được chứa link điều hướng sang trang Admin"
+    assert "GraphSchedule" not in student_html, "student.html phải đổi tên thành HTTPS"
     for marker in [
         'id="student-header"',
         'id="student-main-content"',
