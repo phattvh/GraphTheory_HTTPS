@@ -154,11 +154,6 @@ function initAdminShell(activePage) {
       <div class="max-w-[1440px] mx-auto px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
         <nav aria-label="Persistent Horizontal Menu" class="flex items-center gap-1">
           ${horizontalLinks}
-          <a href="/student.html"
-            class="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap">
-            <span>🎓</span>
-            <span>5. Cổng Sinh viên (UC11-12)</span>
-          </a>
         </nav>
 
         <div class="hidden xl:flex items-center gap-2 text-xs text-slate-500 py-1.5">
@@ -190,11 +185,6 @@ function initAdminShell(activePage) {
         <div class="space-y-1.5">
           <div class="px-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Các phân hệ chức năng</div>
           ${drawerLinks}
-          <a href="/student.html"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition">
-            <span>🎓</span>
-            <span>5. Cổng Sinh viên (UC11-12)</span>
-          </a>
         </div>
 
         <div class="pt-4 border-t border-slate-200 space-y-2">
