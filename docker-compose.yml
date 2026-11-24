@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-exam_pass}
       POSTGRES_DB: ${POSTGRES_DB:-graphtheory_db}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
@@ -32,7 +32,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-exam_user}:${POSTGRES_PASSWORD:-exam_pass}@postgres:5432/${POSTGRES_DB:-graphtheory_db}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app/backend
       - ./tests:/app/tests:ro
