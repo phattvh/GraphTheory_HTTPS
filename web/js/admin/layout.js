@@ -104,10 +104,7 @@ function initAdminShell(activePage) {
         <div class="flex items-center gap-4 min-w-0">
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
             <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">H</div>
-            <div>
-              <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
-              <p class="text-[11px] text-slate-500">DSatur &amp; Welsh–Powell Engine</p>
-            </div>
+            <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
           </a>
 
           <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition">
