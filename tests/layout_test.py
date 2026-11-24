@@ -89,12 +89,14 @@ def test_caddy_serves_layout_if_running():
         with urllib.request.urlopen(BASE_URL + "/js/core/auth.js", context=SSL_CTX, timeout=3) as resp:
             auth_js = resp.read().decode("utf-8")
             assert resp.status == 200
+            assert "navigateByRole" in auth_js
             assert "handleLogout" in auth_js
 
         with urllib.request.urlopen(BASE_URL + "/js/admin/layout.js", context=SSL_CTX, timeout=3) as resp:
             layout_js = resp.read().decode("utf-8")
             assert resp.status == 200
             assert "switchAdminTab" in layout_js
+            assert "applyHashTab" in layout_js
     except urllib.error.HTTPError:
         # Không được nuốt lỗi 404/502 khi Caddy đang chạy
         raise

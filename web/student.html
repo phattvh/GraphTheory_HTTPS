@@ -4,92 +4,166 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cổng Sinh viên — Lịch thi Cá nhân (GraphSchedule)</title>
+  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="css/layout.css" />
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
-  <!-- STUDENT TOP NAVBAR -->
-  <header id="student-header" class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-        🎓
-      </div>
-      <div>
-        <h1 class="text-base font-bold text-slate-900">Cổng Thông tin Lịch thi Sinh viên (Student Portal - UC11)</h1>
-        <p class="text-xs text-slate-500">Hệ thống Xếp lịch thi Tập trung • Kiểm soát truy cập cá nhân bằng JWT</p>
-      </div>
+  <!-- 1. TOP HEADER CỔNG SINH VIÊN (KHỚP 100% ẢNH MẪU) -->
+  <header id="student-header" class="bg-white border-b border-slate-200 px-8 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20 no-print">
+    <div class="flex items-center gap-2.5">
+      <span class="text-xl">🎓</span>
+      <h1 class="text-lg font-bold text-slate-900">
+        Cổng Thông tin Lịch thi Sinh viên (Student Portal - UC11)
+      </h1>
     </div>
 
-    <div class="flex items-center gap-3">
-      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
-        JWT Role: sinh_vien • MSSV: 22110399
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
+        JWT Role: sinh_vien • MSSV: 22110399 (Chống IDOR)
       </span>
       <span class="text-sm font-semibold text-slate-800" id="student-user-display">
         Bùi Thiên Phúc (22110399)
       </span>
-      <a href="/index.html" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 no-print">
-        ← Về trang chính
-      </a>
-      <button type="button" id="btn-student-logout" onclick="handleLogout()" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 no-print">
+      <button type="button" onclick="handleLogout()"
+        class="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-800 transition">
         Đăng xuất
       </button>
     </div>
   </header>
 
-  <!-- STUDENT MAIN CONTENT -->
-  <main id="student-main-content" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+  <!-- 2. NỘI DUNG CHÍNH CỔNG SINH VIÊN (KHỚP 100% ẢNH MẪU) -->
+  <main id="student-main-content" class="flex-1 max-w-[1440px] w-full mx-auto px-8 py-5 space-y-5">
 
-    <!-- Action Banner (UC12) -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <!-- Thanh nút điều hướng ngang giống hệt ảnh mẫu -->
+    <div class="flex flex-wrap items-center gap-2 no-print">
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Kỳ thi (UC02)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition">
+        Môn học (UC04 - Đang chọn)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Sinh viên (UC03)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Phòng thi (UC06)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        Đăng ký thi (UC05)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        📥 Import CSV / Excel (UC07)
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/80 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+        📤 Export Excel
+      </a>
+      <a href="index.html#tab-crud" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition">
+        + Thêm Môn thi mới
+      </a>
+    </div>
+
+    <!-- Thanh Action Banner (UC12) -->
+    <div class="bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-sm font-bold text-slate-900">Lịch thi Học kỳ 1 (Năm học 2026 - 2027) • Đã đăng ký: 4 Học phần</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Cam kết từ thuật toán DSatur: 0% trùng ca thi • Các môn được phân vào 4 ca riêng biệt</p>
+        <p class="text-xs text-slate-500 mt-1">Cam kết từ thuật toán DSatur: 0% trùng ca thi • Các môn đã được phân vào 4 ca riêng biệt</p>
       </div>
       <div class="flex items-center gap-2.5 no-print">
-        <button type="button" class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700">
+        <button type="button" class="px-4 py-2 rounded-lg border border-slate-300 bg-slate-200/70 hover:bg-slate-200 text-xs font-semibold text-slate-800 transition">
           📥 Tải Lịch thi CSV / Excel (UTF-8 BOM)
         </button>
-        <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">
+        <button type="button" onclick="window.print()" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white transition">
           🖨️ In Phiếu Dự Thi / Lưu PDF (UC12)
         </button>
       </div>
     </div>
 
-    <!-- Two-column Split: Left Registered Exam Cards + Right Personal FullCalendar -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <section class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="text-sm font-bold text-slate-900">Danh sách Môn thi Cá nhân (UC11)</h3>
-        <div class="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs space-y-1">
-          <div class="text-slate-600">🔵 Ca 1 • Thứ Hai 15/12/2026 (07:30 - 09:00)</div>
+    <!-- Bố cục 2 cột đúng Ảnh mẫu: Danh sách 4 môn thi cá nhân (Trái) + Lịch Tuần FullCalendar (Phải) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+      <!-- Cột trái (5/12): 4 Thẻ Môn thi Cá nhân -->
+      <section class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
+        <h3 class="text-sm font-bold text-slate-900">Danh sách Môn thi Cá nhân (Chỉ hiển thị môn của MSSV 22110399)</h3>
+
+        <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs space-y-1">
+          <div class="text-slate-500">🔵 Ca 1 • Thứ Hai 15/12/2026 (07:30 - 09:00)</div>
           <div class="font-bold text-slate-900 text-sm">IT002 - Cấu trúc Dữ liệu &amp; Giải thuật</div>
           <div class="text-slate-700">Phòng thi: A101 • Thời lượng: 90 phút • Ghế: 14</div>
         </div>
-        <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs space-y-1">
-          <div class="text-slate-600">🟢 Ca 2 • Thứ Hai 15/12/2026 (09:30 - 11:00)</div>
+
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1">
+          <div class="text-slate-500">🟢 Ca 2 • Thứ Hai 15/12/2026 (09:30 - 11:00)</div>
           <div class="font-bold text-slate-900 text-sm">IT001 - Lý thuyết Đồ thị (Graph Theory)</div>
           <div class="text-slate-700">Phòng thi: A102 • Thời lượng: 90 phút • Ghế: 08</div>
         </div>
-        <div class="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs space-y-1">
-          <div class="text-slate-600">🟡 Ca 3 • Thứ Hai 15/12/2026 (13:30 - 15:00)</div>
+
+        <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1">
+          <div class="text-slate-500">🟡 Ca 3 • Thứ Hai 15/12/2026 (13:30 - 15:00)</div>
           <div class="font-bold text-slate-900 text-sm">IT008 - Toán Rời rạc &amp; Tổ hợp</div>
           <div class="text-slate-700">Phòng thi: A101 • Thời lượng: 90 phút • Ghế: 22</div>
         </div>
-        <div class="p-3.5 rounded-lg bg-purple-50 border border-purple-200 text-xs space-y-1">
+
+        <div class="p-4 rounded-xl bg-slate-200/80 border border-slate-300 text-xs space-y-1">
           <div class="text-slate-600">🟣 Ca 4 • Thứ Hai 15/12/2026 (15:30 - 17:00)</div>
           <div class="font-bold text-slate-900 text-sm">IT003 - Hệ Quản trị CSDL PostgreSQL</div>
           <div class="text-slate-700">Phòng thi: B201 • Thời lượng: 90 phút • Ghế: 05</div>
         </div>
       </section>
 
-      <section id="student-fullcalendar-shell" class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[380px]">
-        <h3 class="text-sm font-bold text-slate-900 mb-3">Lịch Tuần Cá nhân trên FullCalendar (UC11)</h3>
-        <div class="border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500">
-          Khung hiển thị FullCalendar cá nhân của sinh viên
+      <!-- Cột phải (7/12): Lịch Tuần Cá nhân trên FullCalendar (Khớp lưới 4 ô màu của Ảnh mẫu) -->
+      <section id="student-fullcalendar-shell" class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <h3 class="text-sm font-bold text-slate-900 mb-4">Lịch Tuần Cá nhân trên FullCalendar (Tháng 12/2026)</h3>
+        <div class="flex-1 rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex items-center justify-center">
+          <div class="w-full grid grid-cols-5 border border-slate-200 bg-white rounded-lg overflow-hidden text-xs">
+            <!-- Hàng tiêu đề -->
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-r border-slate-200 bg-slate-50"></div>
+            <div class="h-10 border-b border-slate-200 bg-slate-50"></div>
+
+            <!-- Ca 1 -->
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200 p-1.5">
+              <div class="w-full h-full rounded-md bg-blue-100 border-2 border-blue-500"></div>
+            </div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-slate-200"></div>
+
+            <!-- Ca 2 -->
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200 p-1.5">
+              <div class="w-full h-full rounded-md bg-emerald-100 border-2 border-emerald-500"></div>
+            </div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-slate-200"></div>
+
+            <!-- Ca 3 -->
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200 p-1.5">
+              <div class="w-full h-full rounded-md bg-amber-100 border-2 border-amber-500"></div>
+            </div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-r border-slate-200"></div>
+            <div class="h-24 border-b border-slate-200"></div>
+
+            <!-- Ca 4 -->
+            <div class="h-24 border-r border-slate-200"></div>
+            <div class="h-24 border-r border-slate-200 p-1.5">
+              <div class="w-full h-full rounded-md bg-purple-100 border-2 border-purple-500"></div>
+            </div>
+            <div class="h-24 border-r border-slate-200"></div>
+            <div class="h-24 border-r border-slate-200"></div>
+            <div class="h-24"></div>
+          </div>
         </div>
       </section>
-    </div>
 
+    </div>
   </main>
 
   <script src="/js/core/auth.js"></script>
