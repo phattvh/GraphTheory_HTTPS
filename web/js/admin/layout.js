@@ -47,7 +47,7 @@ function openRightDrawer() {
   const backdrop = document.getElementById("right-drawer-backdrop");
   const trigger = document.getElementById("btn-open-right-drawer");
   if (!sidebar || !backdrop) return;
-  sidebar.classList.remove("translate-x-full");
+  sidebar.classList.remove("-translate-x-full");
   backdrop.classList.remove("hidden");
   if (trigger) trigger.setAttribute("aria-expanded", "true");
 }
@@ -57,7 +57,7 @@ function closeRightDrawer() {
   const backdrop = document.getElementById("right-drawer-backdrop");
   const trigger = document.getElementById("btn-open-right-drawer");
   if (!sidebar || !backdrop) return;
-  sidebar.classList.add("translate-x-full");
+  sidebar.classList.add("-translate-x-full");
   backdrop.classList.add("hidden");
   if (trigger) trigger.setAttribute("aria-expanded", "false");
 }
@@ -65,7 +65,7 @@ function closeRightDrawer() {
 function toggleRightDrawer() {
   const sidebar = document.getElementById("admin-sidebar");
   if (!sidebar) return;
-  if (sidebar.classList.contains("translate-x-full")) {
+  if (sidebar.classList.contains("-translate-x-full")) {
     openRightDrawer();
   } else {
     closeRightDrawer();
@@ -101,13 +101,21 @@ function initAdminShell(activePage) {
   mount.innerHTML = `
     <header id="admin-header" class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm no-print">
       <div class="w-full px-6 h-16 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-4 min-w-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="btn-open-right-drawer" type="button" onclick="toggleRightDrawer()"
+            aria-expanded="false" aria-controls="admin-sidebar"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition shrink-0"
+            title="Mở Menu điều hướng">
+            <span>☰</span>
+            <span class="hidden sm:inline">Menu</span>
+          </button>
+
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
             <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">H</div>
             <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
           </a>
 
-          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition">
+          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition ml-1">
             <span class="mr-2 text-slate-400">🔍</span>
             <input id="global-search-input" type="text" placeholder="Tìm nhanh môn, phòng, SV (/)..."
               class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full text-xs" />
@@ -137,14 +145,6 @@ function initAdminShell(activePage) {
             class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition">
             Đăng xuất
           </button>
-
-          <button id="btn-open-right-drawer" type="button" onclick="toggleRightDrawer()"
-            aria-expanded="false" aria-controls="admin-sidebar"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition"
-            title="Mở Menu điều hướng bên phải">
-            <span>☰</span>
-            <span class="hidden sm:inline">Menu</span>
-          </button>
         </div>
       </div>
 
@@ -158,8 +158,8 @@ function initAdminShell(activePage) {
     <div id="right-drawer-backdrop" onclick="closeRightDrawer()"
       class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-40 hidden transition-opacity no-print"></div>
 
-    <aside id="admin-sidebar" aria-label="Right Collapsible Sidebar Menu"
-      class="fixed top-0 right-0 h-full w-80 bg-white border-l border-slate-200 z-50 transform translate-x-full transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-2xl no-print">
+    <aside id="admin-sidebar" aria-label="Collapsible Sidebar Menu"
+      class="fixed top-0 left-0 h-full w-80 bg-white border-r border-slate-200 z-50 transform -translate-x-full transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-2xl no-print">
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
           <div class="flex items-center gap-2.5">
