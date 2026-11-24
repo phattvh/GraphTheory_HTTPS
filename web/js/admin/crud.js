@@ -13,31 +13,32 @@ let studentRecords = [
 
 let editingMssv = null;
 
+const CRUD_HEADINGS = {
+  ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi (UC02)",
+  mon_hoc: "Quản lý Dữ liệu Đầu vào • Môn học (UC04)",
+  sinh_vien: "Quản lý Dữ liệu Đầu vào • Quản lý Sinh viên (UC03)",
+  phong_thi: "Quản lý Dữ liệu Đầu vào • Phòng thi (UC06)",
+  dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi (UC05)",
+};
+
 function switchCrudEntity(entity) {
-  const panels = {
-    mon_hoc: document.getElementById("crud-panel-mon_hoc"),
-    sinh_vien: document.getElementById("crud-panel-sinh_vien"),
-  };
-  Object.entries(panels).forEach(([key, el]) => {
-    if (!el) return;
-    el.classList.toggle("hidden", key !== entity);
+  const validEntity = CRUD_HEADINGS[entity] ? entity : "mon_hoc";
+  Object.keys(CRUD_HEADINGS).forEach((key) => {
+    const el = document.getElementById(`crud-panel-${key}`);
+    if (el) el.classList.toggle("hidden", key !== validEntity);
   });
 
-  document.querySelectorAll("[data-crud-tab]").forEach((btn) => {
-    const isActive = btn.getAttribute("data-crud-tab") === entity;
-    btn.className = isActive
-      ? "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white"
-      : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700";
-  });
+  const headingEl = document.getElementById("crud-active-heading");
+  if (headingEl) headingEl.textContent = CRUD_HEADINGS[validEntity];
 
   document.querySelectorAll("[data-crud-nav]").forEach((btn) => {
-    const isActive = btn.getAttribute("data-crud-nav") === entity;
+    const isActive = btn.getAttribute("data-crud-nav") === validEntity;
     btn.className = isActive
       ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
       : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
   });
 
-  if (entity === "sinh_vien") {
+  if (validEntity === "sinh_vien") {
     renderStudentTable();
   }
 }
@@ -151,7 +152,7 @@ function deleteStudent(mssv) {
 
 document.addEventListener("DOMContentLoaded", () => {
   const entity = new URLSearchParams(window.location.search).get("entity");
-  if (entity === "sinh_vien" || entity === "mon_hoc") {
+  if (entity && CRUD_HEADINGS[entity]) {
     switchCrudEntity(entity);
   } else {
     renderStudentTable();

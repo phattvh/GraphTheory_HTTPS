@@ -18,24 +18,9 @@
       <!-- MÀN HÌNH FIGMA 02: QUẢN LÝ DỮ LIỆU & IMPORT CSV/EXCEL (UC02 - UC07) -->
       <section id="tab-crud" class="admin-tab-section space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700">
-              Kỳ thi (UC02)
-            </button>
-            <button type="button" data-crud-tab="mon_hoc" onclick="switchCrudEntity('mon_hoc')"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
-              Môn học (UC04)
-            </button>
-            <button type="button" data-crud-tab="sinh_vien" onclick="switchCrudEntity('sinh_vien')"
-              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700">
-              Quản lý Sinh viên (UC03)
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700">
-              Phòng thi (UC06)
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700">
-              Đăng ký thi (UC05)
-            </button>
+          <div>
+            <h2 id="crud-active-heading" class="text-sm font-bold text-slate-900">Quản lý Dữ liệu Đầu vào • Môn học (UC04)</h2>
+            <p class="text-xs text-slate-500">Chọn danh mục ở thanh ngang phía trên để chuyển nhanh giữa Kỳ thi, Môn học, Sinh viên, Phòng thi và Đăng ký thi</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
@@ -182,6 +167,105 @@
                   </tr>
                 </thead>
                 <tbody id="student-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- QUẢN LÝ KỲ THI (UC02) -->
+          <div id="crud-panel-ky_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">Danh sách Kỳ thi (UC02)</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                    <th class="py-2.5 px-3">Mã kỳ thi</th>
+                    <th class="py-2.5 px-3">Tên kỳ thi</th>
+                    <th class="py-2.5 px-3">Thời gian</th>
+                    <th class="py-2.5 px-3">Số ca/ngày</th>
+                    <th class="py-2.5 px-3">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-slate-700">
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">KTHK1_2026</td>
+                    <td class="py-2.5 px-3">Thi Cuối Kỳ HK1 (2026 - 2027)</td>
+                    <td class="py-2.5 px-3">15/12/2026 - 22/12/2026</td>
+                    <td class="py-2.5 px-3">4 ca/ngày</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">cong_bo</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- QUẢN LÝ PHÒNG THI (UC06) -->
+          <div id="crud-panel-phong_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">Danh mục Phòng thi &amp; Sức chứa (UC06)</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                    <th class="py-2.5 px-3">Mã phòng</th>
+                    <th class="py-2.5 px-3">Tên phòng</th>
+                    <th class="py-2.5 px-3">Sức chứa</th>
+                    <th class="py-2.5 px-3">Tòa nhà</th>
+                    <th class="py-2.5 px-3">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-slate-700">
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">A101</td>
+                    <td class="py-2.5 px-3">Phòng thi A101</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">60 chỗ</td>
+                    <td class="py-2.5 px-3">Nhà A</td>
+                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
+                  </tr>
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">A102</td>
+                    <td class="py-2.5 px-3">Phòng thi A102</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">60 chỗ</td>
+                    <td class="py-2.5 px-3">Nhà A</td>
+                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
+                  </tr>
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">B201</td>
+                    <td class="py-2.5 px-3">Phòng thi B201</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">45 chỗ</td>
+                    <td class="py-2.5 px-3">Nhà B</td>
+                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- QUẢN LÝ ĐĂNG KÝ THI (UC05) -->
+          <div id="crud-panel-dang_ky_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">Danh sách Đăng ký dự thi (UC05 — Đầu vào dựng đồ thị)</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                    <th class="py-2.5 px-3">MSSV</th>
+                    <th class="py-2.5 px-3">Họ tên sinh viên</th>
+                    <th class="py-2.5 px-3">Mã môn</th>
+                    <th class="py-2.5 px-3">Tên học phần</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-slate-700">
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">22110399</td>
+                    <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">IT001</td>
+                    <td class="py-2.5 px-3">Lý thuyết Đồ thị</td>
+                  </tr>
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">22110399</td>
+                    <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">IT002</td>
+                    <td class="py-2.5 px-3">Cấu trúc Dữ liệu &amp; Giải thuật</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </div>
