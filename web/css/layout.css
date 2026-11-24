@@ -1,4 +1,10 @@
 /* Styles bổ trợ cho khung giao diện Admin & Sinh viên (UI Shell) */
+/* Kích thước chuẩn khung đồ thị Cytoscape.js (#cy) theo 09. Project structure.md */
+#cy {
+  width: 100%;
+  min-height: 440px;
+}
+
 @media print {
   .no-print {
     display: none !important;

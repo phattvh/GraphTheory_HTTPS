@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HTTPS — Đồ thị Xung đột & Xếp lịch DSatur (UC08 - UC09)</title>
-  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <!-- Tailwind CSS & Cytoscape.js CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js" defer></script>
   <link rel="stylesheet" href="/css/layout.css" />
 </head>
 <body data-admin-page="graph" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
@@ -40,8 +41,9 @@
               Đồ thị Xung đột G = (V, E, W) • Đỉnh = Môn thi • Cạnh = Số SV thi chung • Màu = Ca thi
             </h3>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center">
-              <svg class="w-full max-h-[420px]" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-center relative">
+              <div id="cy" class="w-full h-[440px]"></div>
+              <svg id="cy-fallback-svg" class="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] pointer-events-none" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <line x1="360" y1="220" x2="200" y2="110" stroke="#94A3B8" stroke-width="3"/>
                 <line x1="360" y1="220" x2="520" y2="110" stroke="#94A3B8" stroke-width="2.5"/>
                 <line x1="360" y1="220" x2="180" y2="340" stroke="#94A3B8" stroke-width="2"/>
@@ -117,5 +119,6 @@
 
   <script src="/js/core/auth.js"></script>
   <script src="/js/admin/layout.js"></script>
+  <script src="/js/admin/graph.js" defer></script>
 </body>
 </html>
