@@ -1,5 +1,7 @@
 from pathlib import Path
+import shutil
 import ssl
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -90,6 +92,9 @@ def test_admin_pages_and_student_structure():
         'id="student-crud-modal"',
         'id="exam-crud-modal"',
         'id="import-data-modal"',
+        'id="delete-confirm-modal"',
+        'role="alertdialog"',
+        'id="btn-confirm-delete"',
         'id="btn-open-course-modal"',
         'id="btn-open-student-modal"',
         'id="btn-open-exam-modal"',
@@ -110,7 +115,11 @@ def test_admin_pages_and_student_structure():
         "openStudentModal",
         "openExamModal",
         "openImportModal",
+        "openDeleteAlert",
+        "closeDeleteAlert",
+        "confirmPendingDelete",
         "exportSelectedEntityData",
+        "sanitizeCsvCell",
         "closeAllCrudModals",
         "saveStudentForm",
         "renderExamTable",
@@ -192,8 +201,98 @@ def test_caddy_serves_all_pages_if_running():
         pass
 
 
+def test_crud_modals_and_delete_alert_runtime():
+    """Chạy thực tế web/js/admin/crud.js bằng Node.js để kiểm chứng alert xác nhận xóa và chống Formula Injection."""
+    if not shutil.which("node"):
+        return
+
+    script = r"""
+const fs = require("fs");
+const vm = require("vm");
+const assert = require("assert");
+
+const makeClassList = (initial = []) => {
+  const set = new Set(initial);
+  return {
+    add: (...cls) => cls.forEach((c) => set.add(c)),
+    remove: (...cls) => cls.forEach((c) => set.delete(c)),
+    toggle: (c, force) => (force === undefined ? (set.has(c) ? set.delete(c) : set.add(c)) : (force ? set.add(c) : set.delete(c))),
+    contains: (c) => set.has(c),
+  };
+};
+
+const makeEl = (initialClasses = []) => ({
+  classList: makeClassList(initialClasses),
+  textContent: "",
+  value: "",
+  readOnly: false,
+  focus: () => {},
+  reset: () => {},
+  replaceChildren: () => {},
+  appendChild: () => {},
+});
+
+const elements = {
+  "delete-confirm-modal": makeEl(["hidden"]),
+  "delete-alert-title": makeEl(),
+  "delete-alert-message": makeEl(),
+  "btn-cancel-delete": makeEl(),
+  "course-crud-modal": makeEl(["hidden"]),
+  "student-crud-modal": makeEl(["hidden"]),
+  "exam-crud-modal": makeEl(["hidden"]),
+  "import-data-modal": makeEl(["hidden"]),
+};
+
+const sandbox = {
+  document: {
+    body: { classList: makeClassList() },
+    getElementById: (id) => elements[id] || null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+  },
+  window: { location: { search: "" } },
+  URLSearchParams,
+};
+vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync("web/js/admin/crud.js", "utf8"), sandbox);
+
+// 1. Click Delete must open alert dialog and NOT delete immediately
+const beforeCount = vm.runInContext("courseRecords.length", sandbox);
+sandbox.deleteCourse("IT001");
+assert.strictEqual(elements["delete-confirm-modal"].classList.contains("hidden"), false);
+assert.ok(elements["delete-alert-message"].textContent.includes("IT001"));
+assert.strictEqual(vm.runInContext("courseRecords.length", sandbox), beforeCount);
+
+// 2. Cancelling alert must keep record untouched
+sandbox.closeDeleteAlert();
+assert.strictEqual(elements["delete-confirm-modal"].classList.contains("hidden"), true);
+assert.strictEqual(vm.runInContext("courseRecords.length", sandbox), beforeCount);
+
+// 3. Confirming alert must delete the record and close dialog
+sandbox.deleteCourse("IT001");
+sandbox.confirmPendingDelete();
+assert.strictEqual(elements["delete-confirm-modal"].classList.contains("hidden"), true);
+assert.strictEqual(vm.runInContext("courseRecords.length", sandbox), beforeCount - 1);
+
+// 4. CSV export cell sanitizer blocks Formula Injection (=, +, -, @)
+assert.strictEqual(sandbox.sanitizeCsvCell("=SUM(A1:A2)"), `"'=SUM(A1:A2)"`);
+assert.strictEqual(sandbox.sanitizeCsvCell("+1+2"), `"'+1+2"`);
+assert.strictEqual(sandbox.sanitizeCsvCell("@cmd"), `"'@cmd"`);
+assert.strictEqual(sandbox.sanitizeCsvCell("IT002"), `"IT002"`);
+"""
+    res = subprocess.run(
+        ["node", "-e", script],
+        cwd=str(ROOT_DIR),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert res.returncode == 0, f"Node runtime CRUD test failed:\n{res.stderr or res.stdout}"
+
+
 if __name__ == "__main__":
     test_layout_files_exist()
     test_admin_pages_and_student_structure()
+    test_crud_modals_and_delete_alert_runtime()
     test_caddy_serves_all_pages_if_running()
     print("ALL LAYOUT TESTS PASSED!")
