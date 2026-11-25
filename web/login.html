@@ -14,139 +14,355 @@
         class="https-login-card"
         aria-labelledby="login-title"
       >
-        <!-- Cột trái: Minh họa đồ thị tô màu tương tác (che mắt khi nhập mật khẩu) -->
+        <!-- Cột trái: Minh họa đồ thị tô màu tương tác (mắt hướng chuột & nhắm mắt khi nhập mật khẩu) -->
         <div class="https-login__art" aria-hidden="true">
           <svg
             class="https-login__scene"
-            viewBox="0 0 360 360"
-            width="360"
-            height="360"
+            viewBox="0 0 380 420"
+            width="380"
+            height="420"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <!-- Các cạnh xung đột nền -->
-            <g
-              stroke="#475569"
-              stroke-width="3"
-              stroke-linecap="round"
-              opacity="0.75"
-            >
-              <line x1="180" y1="185" x2="78" y2="92" />
-              <line x1="180" y1="185" x2="282" y2="92" />
-              <line x1="180" y1="185" x2="72" y2="275" />
-              <line x1="180" y1="185" x2="288" y2="275" />
-              <line x1="78" y1="92" x2="282" y2="92" stroke-dasharray="6 6" />
-              <line x1="72" y1="275" x2="288" y2="275" stroke-dasharray="6 6" />
+            <defs>
+              <radialGradient id="hero-aura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.34" />
+                <stop offset="60%" stop-color="#2563eb" stop-opacity="0.12" />
+                <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+              </radialGradient>
+              <linearGradient
+                id="hero-sphere"
+                x1="18%"
+                y1="12%"
+                x2="85%"
+                y2="90%"
+              >
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="48%" stop-color="#2563eb" />
+                <stop offset="100%" stop-color="#1d4ed8" />
+              </linearGradient>
+              <linearGradient
+                id="edge-glow"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.7" />
+                <stop offset="100%" stop-color="#94a3b8" stop-opacity="0.45" />
+              </linearGradient>
+            </defs>
+
+            <!-- Quầng sáng & quỹ đạo đồ thị nền -->
+            <circle cx="190" cy="212" r="158" fill="url(#hero-aura)" />
+            <circle
+              cx="190"
+              cy="212"
+              r="116"
+              fill="none"
+              stroke="#334155"
+              stroke-width="1.5"
+              stroke-dasharray="4 7"
+              opacity="0.65"
+            />
+            <circle
+              cx="190"
+              cy="212"
+              r="164"
+              fill="none"
+              stroke="#1e293b"
+              stroke-width="1.2"
+              stroke-dasharray="3 8"
+              opacity="0.7"
+            />
+
+            <!-- Các chấm sao / đỉnh nền lấp lánh -->
+            <g fill="#7dd3fc" opacity="0.65">
+              <circle cx="44" cy="56" r="2.5" />
+              <circle cx="336" cy="64" r="3" />
+              <circle cx="348" cy="214" r="2.2" />
+              <circle cx="34" cy="222" r="2.2" />
+              <circle cx="52" cy="368" r="2.8" />
+              <circle cx="332" cy="362" r="2.5" />
+            </g>
+            <g fill="#38bdf8" opacity="0.75">
+              <path d="M320 42l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5Z" />
+              <path d="M58 176l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" />
+              <path d="M326 266l2 4.5 4.5 2-4.5 2-2 4.5-2-4.5-4.5-2 4.5-2Z" />
             </g>
 
-            <!-- Các đỉnh vệ tinh đã tô màu ca thi (4 màu sắc số) -->
-            <circle
-              cx="78"
-              cy="92"
-              r="24"
-              fill="#10b981"
-              stroke="#a7f3d0"
-              stroke-width="3"
-            />
-            <text
-              x="78"
-              y="96"
-              text-anchor="middle"
-              fill="#ffffff"
-              font-size="11"
-              font-weight="800"
+            <!-- Các cạnh xung đột G = (V, E, W) (không có 2 đỉnh nối nhau trùng màu) -->
+            <g
+              stroke="url(#edge-glow)"
+              stroke-width="2.6"
+              stroke-linecap="round"
             >
-              Ca 2
-            </text>
-
-            <circle
-              cx="282"
-              cy="92"
-              r="24"
-              fill="#f59e0b"
-              stroke="#fde68a"
-              stroke-width="3"
-            />
-            <text
-              x="282"
-              y="96"
-              text-anchor="middle"
-              fill="#ffffff"
-              font-size="11"
-              font-weight="800"
+              <line x1="190" y1="212" x2="82" y2="112" />
+              <line x1="190" y1="212" x2="298" y2="112" />
+              <line x1="190" y1="212" x2="76" y2="314" />
+              <line x1="190" y1="212" x2="304" y2="314" />
+              <line x1="190" y1="212" x2="190" y2="62" />
+              <line x1="190" y1="212" x2="190" y2="362" />
+            </g>
+            <g
+              stroke="#475569"
+              stroke-width="1.8"
+              stroke-dasharray="5 6"
+              opacity="0.75"
             >
-              Ca 3
-            </text>
+              <line x1="82" y1="112" x2="190" y2="62" />
+              <line x1="190" y1="62" x2="298" y2="112" />
+              <line x1="82" y1="112" x2="76" y2="314" />
+              <line x1="298" y1="112" x2="304" y2="314" />
+              <line x1="76" y1="314" x2="190" y2="362" />
+              <line x1="190" y1="362" x2="304" y2="314" />
+            </g>
 
-            <circle
-              cx="72"
-              cy="275"
-              r="24"
-              fill="#8b5cf6"
-              stroke="#ddd6fe"
-              stroke-width="3"
-            />
-            <text
-              x="72"
-              y="279"
-              text-anchor="middle"
-              fill="#ffffff"
-              font-size="11"
-              font-weight="800"
-            >
-              Ca 4
-            </text>
+            <!-- Nhãn trọng số cạnh (số SV trùng lịch) -->
+            <g font-size="9.5" font-weight="700" text-anchor="middle">
+              <rect
+                x="114"
+                y="143"
+                width="32"
+                height="16"
+                rx="8"
+                fill="#0f172a"
+                stroke="#334155"
+                stroke-width="1"
+              />
+              <text x="130" y="154" fill="#94a3b8">14 SV</text>
 
-            <circle
-              cx="288"
-              cy="275"
-              r="24"
-              fill="#10b981"
-              stroke="#a7f3d0"
-              stroke-width="3"
-            />
-            <text
-              x="288"
-              y="279"
-              text-anchor="middle"
-              fill="#ffffff"
-              font-size="11"
-              font-weight="800"
-            >
-              Ca 2
-            </text>
+              <rect
+                x="234"
+                y="143"
+                width="32"
+                height="16"
+                rx="8"
+                fill="#0f172a"
+                stroke="#334155"
+                stroke-width="1"
+              />
+              <text x="250" y="154" fill="#94a3b8">19 SV</text>
 
-            <!-- Đỉnh trung tâm (Nhân vật linh vật HTTPS có mắt mở/nhắm) -->
+              <rect
+                x="110"
+                y="260"
+                width="32"
+                height="16"
+                rx="8"
+                fill="#0f172a"
+                stroke="#334155"
+                stroke-width="1"
+              />
+              <text x="126" y="271" fill="#94a3b8">8 SV</text>
+
+              <rect
+                x="238"
+                y="260"
+                width="32"
+                height="16"
+                rx="8"
+                fill="#0f172a"
+                stroke="#334155"
+                stroke-width="1"
+              />
+              <text x="254" y="271" fill="#94a3b8">11 SV</text>
+            </g>
+
+            <!-- 6 đỉnh vệ tinh đã tô màu ca thi (Ca 2, Ca 3, Ca 4 — khác màu Ca 1 trung tâm) -->
+            <g class="https-login__node-float">
+              <circle
+                cx="190"
+                cy="62"
+                r="22"
+                fill="#8b5cf6"
+                stroke="#ddd6fe"
+                stroke-width="2.8"
+              />
+              <text
+                x="190"
+                y="66"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="10.5"
+                font-weight="800"
+              >
+                Ca 4
+              </text>
+            </g>
+
+            <g class="https-login__node-float https-login__node-float--delay">
+              <circle
+                cx="82"
+                cy="112"
+                r="24"
+                fill="#10b981"
+                stroke="#a7f3d0"
+                stroke-width="3"
+              />
+              <text
+                x="82"
+                y="116"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="11"
+                font-weight="800"
+              >
+                Ca 2
+              </text>
+            </g>
+
+            <g class="https-login__node-float">
+              <circle
+                cx="298"
+                cy="112"
+                r="24"
+                fill="#f59e0b"
+                stroke="#fde68a"
+                stroke-width="3"
+              />
+              <text
+                x="298"
+                y="116"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="11"
+                font-weight="800"
+              >
+                Ca 3
+              </text>
+            </g>
+
+            <g class="https-login__node-float https-login__node-float--delay">
+              <circle
+                cx="76"
+                cy="314"
+                r="24"
+                fill="#8b5cf6"
+                stroke="#ddd6fe"
+                stroke-width="3"
+              />
+              <text
+                x="76"
+                y="318"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="11"
+                font-weight="800"
+              >
+                Ca 4
+              </text>
+            </g>
+
+            <g class="https-login__node-float">
+              <circle
+                cx="304"
+                cy="314"
+                r="24"
+                fill="#10b981"
+                stroke="#a7f3d0"
+                stroke-width="3"
+              />
+              <text
+                x="304"
+                y="318"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="11"
+                font-weight="800"
+              >
+                Ca 2
+              </text>
+            </g>
+
+            <g class="https-login__node-float https-login__node-float--delay">
+              <circle
+                cx="190"
+                cy="362"
+                r="22"
+                fill="#f59e0b"
+                stroke="#fde68a"
+                stroke-width="2.8"
+              />
+              <text
+                x="190"
+                y="366"
+                text-anchor="middle"
+                fill="#ffffff"
+                font-size="10.5"
+                font-weight="800"
+              >
+                Ca 3
+              </text>
+            </g>
+
+            <!-- Đỉnh trung tâm Ca 1 (Nhân vật linh vật HTTPS có mắt hướng chuột & nhắm mắt) -->
+            <circle cx="190" cy="212" r="72" fill="#38bdf8" opacity="0.16" />
             <circle
-              cx="180"
-              cy="185"
-              r="66"
-              fill="#2563eb"
-              stroke="#93c5fd"
-              stroke-width="5"
+              cx="190"
+              cy="212"
+              r="64"
+              fill="url(#hero-sphere)"
+              stroke="#bae6fd"
+              stroke-width="4.5"
             />
-            <circle cx="180" cy="185" r="56" fill="#3b82f6" opacity="0.45" />
+            <!-- Ánh sáng bóng nhẹ trên đỉnh cầu -->
+            <path
+              d="M150 170a48 48 0 0 1 68-10"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              opacity="0.32"
+            />
+
+            <!-- Mũ tốt nghiệp nhỏ biểu tượng học thuật -->
+            <g transform="translate(190 148)">
+              <polygon
+                points="0,-16 32,-5 0,6 -32,-5"
+                fill="#0f172a"
+                stroke="#7dd3fc"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M-16,-1v10c0 4 32 4 32 0V-1"
+                fill="#1e293b"
+                stroke="#7dd3fc"
+                stroke-width="1.5"
+              />
+              <line
+                x1="28"
+                y1="-4"
+                x2="32"
+                y2="12"
+                stroke="#fbbf24"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+              <circle cx="32" cy="14" r="3" fill="#fbbf24" />
+            </g>
 
             <!-- Mắt mở (tròng trắng + đồng tử di chuyển theo con trỏ chuột) -->
             <g class="https-login__eyes-open">
-              <circle cx="158" cy="176" r="13" fill="#ffffff" />
-              <circle cx="202" cy="176" r="13" fill="#ffffff" />
+              <circle cx="168" cy="204" r="13" fill="#ffffff" />
+              <circle cx="212" cy="204" r="13" fill="#ffffff" />
               <g
                 class="https-login__pupil"
-                data-eye-cx="158"
-                data-eye-cy="176"
+                data-eye-cx="168"
+                data-eye-cy="204"
                 data-eye-max="5.2"
               >
-                <circle cx="158" cy="176" r="7" fill="#0f172a" />
-                <circle cx="160.5" cy="173.5" r="2.4" fill="#ffffff" />
+                <circle cx="168" cy="204" r="7" fill="#0f172a" />
+                <circle cx="170.5" cy="201.5" r="2.4" fill="#ffffff" />
               </g>
               <g
                 class="https-login__pupil"
-                data-eye-cx="202"
-                data-eye-cy="176"
+                data-eye-cx="212"
+                data-eye-cy="204"
                 data-eye-max="5.2"
               >
-                <circle cx="202" cy="176" r="7" fill="#0f172a" />
-                <circle cx="204.5" cy="173.5" r="2.4" fill="#ffffff" />
+                <circle cx="212" cy="204" r="7" fill="#0f172a" />
+                <circle cx="214.5" cy="201.5" r="2.4" fill="#ffffff" />
               </g>
             </g>
 
@@ -158,14 +374,14 @@
               stroke-width="4.5"
               stroke-linecap="round"
             >
-              <path d="M148 178c6 6 14 6 20 0M192 178c6 6 14 6 20 0" />
+              <path d="M158 206c6 6 14 6 20 0M202 206c6 6 14 6 20 0" />
             </g>
 
             <!-- Má hồng & miệng cười -->
-            <circle cx="143" cy="196" r="7" fill="#93c5fd" opacity="0.7" />
-            <circle cx="217" cy="196" r="7" fill="#93c5fd" opacity="0.7" />
+            <circle cx="151" cy="224" r="7" fill="#93c5fd" opacity="0.72" />
+            <circle cx="229" cy="224" r="7" fill="#93c5fd" opacity="0.72" />
             <path
-              d="M168 198c6 8 18 8 24 0"
+              d="M178 226c6 8 18 8 24 0"
               fill="none"
               stroke="#0f172a"
               stroke-width="4.5"
@@ -312,7 +528,7 @@
             </div>
 
             <button class="https-login__submit" type="submit" data-login-submit>
-              Đăng nhập <span aria-hidden="true">&rarr;</span>
+              Đăng nhập
             </button>
           </form>
 
