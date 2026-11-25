@@ -41,7 +41,7 @@ async function sendLoginJsonPayload(payload) {
 function handleLoginSuccessResponse(data) {
   if (typeof saveAuthSession === "function") {
     const session = saveAuthSession(data);
-    if (!session || !session.token) {
+    if (!session || !session.token || !session.vai_tro) {
       return null;
     }
     if (typeof navigateByRole === "function") {
@@ -53,14 +53,12 @@ function handleLoginSuccessResponse(data) {
   }
 
   const token = String((data && data.access_token) || "").trim();
-  if (!token || token.split(".").length !== 3) {
+  const roleRaw = (data && data.vai_tro) || (data && data.user && data.user.vai_tro);
+  const role = roleRaw === "admin" || roleRaw === "sinh_vien" ? roleRaw : null;
+  if (!token || token.split(".").length !== 3 || !role) {
     return null;
   }
   localStorage.setItem("access_token", token);
-  const role =
-    (data && data.vai_tro) ||
-    (data && data.user && data.user.vai_tro) ||
-    "admin";
   if (typeof navigateByRole === "function") {
     navigateByRole(role);
   } else {

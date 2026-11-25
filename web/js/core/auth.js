@@ -42,9 +42,21 @@ function isTokenExpired(tokenOrPayload) {
 }
 
 /**
+ * Chuẩn hóa vai trò hợp lệ ('admin' hoặc 'sinh_vien'), trả về null nếu không hợp lệ (fail-closed).
+ * @param {any} role
+ * @returns {"admin" | "sinh_vien" | null}
+ */
+function normalizeRole(role) {
+  if (role === "admin" || role === "sinh_vien") {
+    return role;
+  }
+  return null;
+}
+
+/**
  * Lưu JWT access_token và thông tin người dùng vào localStorage sau khi đăng nhập thành công.
  * @param {Record<string, any> | string} authData
- * @returns {{ token: string, vai_tro: string, sub: string, mssv: string | null, ho_ten: string | null }}
+ * @returns {{ token: string, vai_tro: "admin" | "sinh_vien", sub: string, mssv: string | null, ho_ten: string | null } | null}
  */
 function saveAuthSession(authData) {
   const data =
@@ -58,9 +70,11 @@ function saveAuthSession(authData) {
 
   const userObj = (data.user && typeof data.user === "object" ? data.user : {}) || {};
 
-  const roleRaw =
-    data.vai_tro || userObj.vai_tro || jwtClaims.vai_tro || "admin";
-  const vai_tro = roleRaw === "sinh_vien" ? "sinh_vien" : "admin";
+  const vai_tro = normalizeRole(data.vai_tro || userObj.vai_tro || jwtClaims.vai_tro);
+  if (!vai_tro) {
+    clearAuthSession();
+    return null;
+  }
   const sub =
     data.ten_dang_nhap ||
     userObj.ten_dang_nhap ||
@@ -121,14 +135,18 @@ function getCurrentUser() {
     const rawUser = localStorage.getItem(AUTH_USER_KEY);
     if (rawUser) {
       const parsed = JSON.parse(rawUser);
-      if (parsed && parsed.vai_tro) return parsed;
+      const validRole = normalizeRole(parsed && parsed.vai_tro);
+      if (parsed && validRole) {
+        return { ...parsed, vai_tro: validRole };
+      }
     }
 
     const claims = parseJwtPayload(token);
-    if (!claims) return null;
+    const claimRole = normalizeRole(claims && claims.vai_tro);
+    if (!claims || !claimRole) return null;
     return {
       ten_dang_nhap: claims.sub || "",
-      vai_tro: claims.vai_tro === "sinh_vien" ? "sinh_vien" : "admin",
+      vai_tro: claimRole,
       mssv: claims.mssv || null,
       ho_ten: claims.ho_ten || null,
     };
@@ -167,7 +185,8 @@ function clearAuthSession() {
  * @param {string} role
  */
 function navigateByRole(role) {
-  const normalizedRole = role === "sinh_vien" ? "sinh_vien" : "admin";
+  const normalizedRole = normalizeRole(role);
+  if (!normalizedRole) return;
   const path = window.location.pathname || "";
   const isStudentPage = path.endsWith("/student.html");
   const isLoginPage = path.endsWith("/login.html");
