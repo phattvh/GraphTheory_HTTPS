@@ -34,8 +34,9 @@ function switchCrudEntity(entity) {
   document.querySelectorAll("[data-crud-nav]").forEach((btn) => {
     const isActive = btn.getAttribute("data-crud-nav") === validEntity;
     btn.className = isActive
-      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
-      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
+      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-700 border-b-2 border-blue-700 bg-white transition whitespace-nowrap"
+      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:border-slate-300 border-b-2 border-transparent bg-white transition whitespace-nowrap";
+    btn.setAttribute("aria-current", isActive ? "page" : "false");
   });
 
   if (validEntity === "sinh_vien") {

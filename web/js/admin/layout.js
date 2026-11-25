@@ -89,14 +89,14 @@ function initAdminShell(activePage) {
   const crudSubNav =
     activePage === "crud"
       ? `
-      <div id="crud-entity-menubar" class="w-full px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
+      <div id="crud-entity-menubar" class="w-full px-6 bg-white flex items-center justify-between overflow-x-auto">
         <nav aria-label="Data Management Entity Menu" class="flex items-center gap-1">
           ${CRUD_ENTITIES.map((ent) => {
             const isActive = ent.key === activeEntity;
             const cls = isActive
-              ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
-              : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
-            return `<button type="button" data-crud-nav="${ent.key}" onclick="switchCrudEntity('${ent.key}')" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></button>`;
+              ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-700 border-b-2 border-blue-700 bg-white transition whitespace-nowrap"
+              : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:border-slate-300 border-b-2 border-transparent bg-white transition whitespace-nowrap";
+            return `<button type="button" data-crud-nav="${ent.key}" aria-current="${isActive ? "page" : "false"}" onclick="switchCrudEntity('${ent.key}')" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></button>`;
           }).join("\n")}
         </nav>
       </div>`
