@@ -50,7 +50,12 @@ function saveAuthSession(authData) {
   const data =
     typeof authData === "string" ? { access_token: authData } : authData || {};
   const token = String(data.access_token || data.token || "").trim();
-  const jwtClaims = parseJwtPayload(token) || {};
+  const jwtClaims = parseJwtPayload(token);
+  if (!token || !jwtClaims || isTokenExpired(jwtClaims)) {
+    clearAuthSession();
+    return null;
+  }
+
   const userObj = (data.user && typeof data.user === "object" ? data.user : {}) || {};
 
   const roleRaw =
@@ -73,9 +78,7 @@ function saveAuthSession(authData) {
   };
 
   try {
-    if (token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
-    }
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(sessionUser));
   } catch (_) {}
 
@@ -89,14 +92,14 @@ function saveAuthSession(authData) {
 }
 
 /**
- * Đọc JWT access_token từ localStorage (trả về null nếu không có hoặc đã hết hạn).
+ * Đọc JWT access_token từ localStorage (xóa phiên và trả về null nếu không hợp lệ hoặc đã hết hạn).
  * @returns {string | null}
  */
 function getAccessToken() {
   try {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) return null;
-    if (token.split(".").length === 3 && isTokenExpired(token)) {
+    if (token.split(".").length !== 3 || isTokenExpired(token)) {
       clearAuthSession();
       return null;
     }
