@@ -5,10 +5,11 @@ Tham chiếu: docs/04. Database design.md & docs/09. Project structure.md
 """
 
 from datetime import date, datetime
-from typing import Annotated, Iterable, Literal, Optional
+from typing import Annotated, Any, Iterable, Literal, Optional
 
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
     StringConstraints,
@@ -18,6 +19,16 @@ from pydantic import (
 
 ExamStatus = Literal["khoi_tao", "da_xep_lich", "cong_bo"]
 MAX_PG_BIGINT = 9_223_372_036_854_775_807
+
+
+def _reject_bool_for_int(value: Any) -> Any:
+    """Chặn kiểu bool (True/False) bị ép ngầm sang int (1/0)."""
+    if isinstance(value, bool):
+        raise ValueError("Trường số nguyên không chấp nhận giá trị boolean.")
+    return value
+
+
+NonBoolInt = Annotated[int, BeforeValidator(_reject_bool_for_int)]
 
 
 def _required_str(max_length: int):
@@ -60,7 +71,7 @@ class KyThiBase(BaseModel):
     )
     ngay_bat_dau: date
     ngay_ket_thuc: date
-    so_ca_moi_ngay: int = Field(default=4, gt=0, le=20)
+    so_ca_moi_ngay: NonBoolInt = Field(default=4, gt=0, le=20)
     trang_thai: ExamStatus = "khoi_tao"
 
     @model_validator(mode="after")
@@ -78,7 +89,7 @@ class KyThiUpdate(BaseModel):
     ten_ky_thi: Optional[_required_str(255)] = None
     ngay_bat_dau: Optional[date] = None
     ngay_ket_thuc: Optional[date] = None
-    so_ca_moi_ngay: Optional[int] = Field(default=None, gt=0, le=20)
+    so_ca_moi_ngay: Optional[NonBoolInt] = Field(default=None, gt=0, le=20)
     trang_thai: Optional[ExamStatus] = None
 
     @model_validator(mode="after")
@@ -109,8 +120,8 @@ class KyThiOut(KyThiBase):
 class MonHocBase(BaseModel):
     ma_mon: _required_str(20) = Field(..., examples=["IT3010"])
     ten_mon: _required_str(255) = Field(..., examples=["Lý thuyết đồ thị"])
-    thoi_luong_phut: int = Field(default=90, gt=0, le=600)
-    so_tin_chi: Optional[int] = Field(default=3, gt=0, le=20)
+    thoi_luong_phut: NonBoolInt = Field(default=90, gt=0, le=600)
+    so_tin_chi: Optional[NonBoolInt] = Field(default=3, gt=0, le=20)
 
 
 class MonHocCreate(MonHocBase):
@@ -119,8 +130,8 @@ class MonHocCreate(MonHocBase):
 
 class MonHocUpdate(BaseModel):
     ten_mon: Optional[_required_str(255)] = None
-    thoi_luong_phut: Optional[int] = Field(default=None, gt=0, le=600)
-    so_tin_chi: Optional[int] = Field(default=None, gt=0, le=20)
+    thoi_luong_phut: Optional[NonBoolInt] = Field(default=None, gt=0, le=600)
+    so_tin_chi: Optional[NonBoolInt] = Field(default=None, gt=0, le=20)
 
     @model_validator(mode="after")
     def validate_update_fields(self) -> "MonHocUpdate":
@@ -181,7 +192,7 @@ class SinhVienOut(SinhVienBase):
 class PhongThiBase(BaseModel):
     ma_phong: _required_str(50) = Field(..., examples=["TC-301"])
     ten_phong: _required_str(100) = Field(..., examples=["Phòng thi Nhà TC - 301"])
-    suc_chua: int = Field(..., gt=0, le=10000, examples=[60])
+    suc_chua: NonBoolInt = Field(..., gt=0, le=10000, examples=[60])
     toa_nha: _optional_str(50) = Field(default=None, examples=["Nhà TC"])
     dang_su_dung: bool = True
 
@@ -197,7 +208,7 @@ class PhongThiCreate(PhongThiBase):
 
 class PhongThiUpdate(BaseModel):
     ten_phong: Optional[_required_str(100)] = None
-    suc_chua: Optional[int] = Field(default=None, gt=0, le=10000)
+    suc_chua: Optional[NonBoolInt] = Field(default=None, gt=0, le=10000)
     toa_nha: _optional_str(50) = None
     dang_su_dung: Optional[bool] = None
 
@@ -222,9 +233,9 @@ class PhongThiOut(PhongThiBase):
 # 5. ĐĂNG KÝ THI (UC05)
 # ---------------------------------------------------------------------------
 class DangKyThiBase(BaseModel):
-    ky_thi_id: int = Field(..., gt=0, le=MAX_PG_BIGINT)
-    sinh_vien_id: int = Field(..., gt=0, le=MAX_PG_BIGINT)
-    mon_hoc_id: int = Field(..., gt=0, le=MAX_PG_BIGINT)
+    ky_thi_id: NonBoolInt = Field(..., gt=0, le=MAX_PG_BIGINT)
+    sinh_vien_id: NonBoolInt = Field(..., gt=0, le=MAX_PG_BIGINT)
+    mon_hoc_id: NonBoolInt = Field(..., gt=0, le=MAX_PG_BIGINT)
 
 
 class DangKyThiCreate(DangKyThiBase):
