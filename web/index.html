@@ -932,6 +932,80 @@
           </form>
         </div>
       </div>
+
+      <!-- ALERT XÁC NHẬN XÓA DỮ LIỆU -->
+      <div
+        id="delete-confirm-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-alert-title"
+        aria-describedby="delete-alert-message"
+        onclick="handleCrudModalBackdropClick(event, 'delete-confirm-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div class="p-6 flex items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"
+              aria-hidden="true"
+            >
+              <svg
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div class="space-y-1.5 min-w-0">
+              <h3
+                id="delete-alert-title"
+                class="text-sm font-bold text-slate-900"
+              >
+                Xác nhận xóa dữ liệu
+              </h3>
+              <p
+                id="delete-alert-message"
+                class="text-xs text-slate-600 leading-relaxed"
+              >
+                Bạn có chắc chắn muốn xóa bản ghi này? Hành động này không thể
+                hoàn tác.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2"
+          >
+            <button
+              id="btn-cancel-delete"
+              type="button"
+              onclick="closeDeleteAlert()"
+              class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+            >
+              Hủy
+            </button>
+            <button
+              id="btn-confirm-delete"
+              type="button"
+              onclick="confirmPendingDelete()"
+              class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-sm transition"
+            >
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="/js/core/auth.js"></script>

@@ -13,12 +13,14 @@ let studentRecords = [
 
 let editingMssv = null;
 let activeCrudEntity = "mon_hoc";
+let pendingDeleteAction = null;
 
 const CRUD_MODAL_IDS = [
   "course-crud-modal",
   "student-crud-modal",
   "exam-crud-modal",
   "import-data-modal",
+  "delete-confirm-modal",
 ];
 
 const CRUD_HEADINGS = {
@@ -65,11 +67,34 @@ function closeCrudModal(modalId) {
 }
 
 function closeAllCrudModals() {
+  pendingDeleteAction = null;
   CRUD_MODAL_IDS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.add("hidden");
   });
   document.body.classList.remove("overflow-hidden");
+}
+
+function openDeleteAlert(title, message, onConfirm) {
+  const titleEl = document.getElementById("delete-alert-title");
+  const msgEl = document.getElementById("delete-alert-message");
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  pendingDeleteAction = typeof onConfirm === "function" ? onConfirm : null;
+  openCrudModal("delete-confirm-modal", "btn-cancel-delete");
+}
+
+function closeDeleteAlert() {
+  pendingDeleteAction = null;
+  closeCrudModal("delete-confirm-modal");
+}
+
+function confirmPendingDelete() {
+  const action = pendingDeleteAction;
+  closeDeleteAlert();
+  if (typeof action === "function") {
+    action();
+  }
 }
 
 function handleCrudModalBackdropClick(event, modalId) {
@@ -78,6 +103,7 @@ function handleCrudModalBackdropClick(event, modalId) {
     else if (modalId === "student-crud-modal") closeStudentModal();
     else if (modalId === "exam-crud-modal") closeExamModal();
     else if (modalId === "import-data-modal") closeImportModal();
+    else if (modalId === "delete-confirm-modal") closeDeleteAlert();
     else closeCrudModal(modalId);
   }
 }
@@ -260,9 +286,17 @@ function startEditStudent(mssv) {
 }
 
 function deleteStudent(mssv) {
-  studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
-  if (editingMssv === mssv) closeStudentModal();
-  renderStudentTable();
+  const sv = studentRecords.find((s) => s.mssv === mssv);
+  const label = sv ? `${sv.mssv} - ${sv.ho_ten}` : mssv;
+  openDeleteAlert(
+    "Xác nhận xóa Sinh viên",
+    `Bạn có chắc chắn muốn xóa sinh viên "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
+      if (editingMssv === mssv) closeStudentModal();
+      renderStudentTable();
+    }
+  );
 }
 
 let examRecords = [
@@ -452,9 +486,17 @@ function startEditExam(maKyThi) {
 }
 
 function deleteExam(maKyThi) {
-  examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
-  if (editingExamCode === maKyThi) closeExamModal();
-  renderExamTable();
+  const kt = examRecords.find((e) => e.ma_ky_thi === maKyThi);
+  const label = kt ? `${kt.ma_ky_thi} - ${kt.ten_ky_thi}` : maKyThi;
+  openDeleteAlert(
+    "Xác nhận xóa Kỳ thi",
+    `Bạn có chắc chắn muốn xóa kỳ thi "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
+      if (editingExamCode === maKyThi) closeExamModal();
+      renderExamTable();
+    }
+  );
 }
 
 let courseRecords = [
@@ -601,9 +643,17 @@ function startEditCourse(maMon) {
 }
 
 function deleteCourse(maMon) {
-  courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
-  if (editingCourseCode === maMon) closeCourseModal();
-  renderCourseTable();
+  const mh = courseRecords.find((c) => c.ma_mon === maMon);
+  const label = mh ? `${mh.ma_mon} - ${mh.ten_mon}` : maMon;
+  openDeleteAlert(
+    "Xác nhận xóa Môn học",
+    `Bạn có chắc chắn muốn xóa môn học "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
+      if (editingCourseCode === maMon) closeCourseModal();
+      renderCourseTable();
+    }
+  );
 }
 
 const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
