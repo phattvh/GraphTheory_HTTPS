@@ -1,6 +1,6 @@
 /**
- * Xử lý tương tác màn hình Đăng nhập & bắt sự kiện submit form gửi payload JSON (UC01 UI)
- * File: web/js/core/login.js
+ * Xử lý tương tác màn hình Đăng nhập, nối API login, lưu JWT & điều hướng theo vai_tro (UC01 UI)
+ * File: web/js/core/login.js (TV5 Ngày 1, TV4 Ngày 2 & Ngày 3)
  */
 
 /**
@@ -31,6 +31,38 @@ async function sendLoginJsonPayload(payload) {
     },
     body: JSON.stringify(payload),
   });
+}
+
+/**
+ * Xử lý dữ liệu phản hồi đăng nhập thành công: lưu JWT vào localStorage và điều hướng theo vai_tro.
+ * @param {Record<string, any>} data
+ * @returns {{ token: string, vai_tro: string }}
+ */
+function handleLoginSuccessResponse(data) {
+  if (typeof saveAuthSession === "function") {
+    const session = saveAuthSession(data);
+    if (typeof navigateByRole === "function") {
+      navigateByRole(session.vai_tro);
+    } else {
+      window.location.href = session.vai_tro === "sinh_vien" ? "/student.html" : "/index.html";
+    }
+    return session;
+  }
+
+  const token = String((data && data.access_token) || "").trim();
+  if (token) {
+    localStorage.setItem("access_token", token);
+  }
+  const role =
+    (data && data.vai_tro) ||
+    (data && data.user && data.user.vai_tro) ||
+    "admin";
+  if (typeof navigateByRole === "function") {
+    navigateByRole(role);
+  } else {
+    window.location.href = role === "sinh_vien" ? "/student.html" : "/index.html";
+  }
+  return { token, vai_tro: role };
 }
 
 (() => {
@@ -135,7 +167,7 @@ async function sendLoginJsonPayload(payload) {
   pw.addEventListener("keydown", checkCaps);
   pw.addEventListener("keyup", checkCaps);
 
-  // Bắt sự kiện submit form gửi payload JSON tới POST /api/v1/auth/login (TV4 Ngày 2)
+  // Bắt sự kiện submit form, gọi API POST /api/v1/auth/login, lưu JWT và điều hướng theo vai_tro (TV4 Ngày 2 & Ngày 3)
   const handleLoginFormSubmit = async (e) => {
     e.preventDefault();
     showAlert("");
@@ -173,13 +205,7 @@ async function sendLoginJsonPayload(payload) {
 
       if (resp.ok) {
         const data = await resp.json();
-        if (data.access_token) {
-          localStorage.setItem("access_token", data.access_token);
-        }
-        const role = data.vai_tro || (data.user && data.user.vai_tro) || "admin";
-        if (typeof navigateByRole === "function") {
-          window.location.href = role === "sinh_vien" ? "/student.html" : "/index.html";
-        }
+        handleLoginSuccessResponse(data);
         return;
       }
 
@@ -191,7 +217,9 @@ async function sendLoginJsonPayload(payload) {
         }
       } catch (_) {}
 
-      if (resp.status === 404 || resp.status === 405) {
+      if (resp.status === 401) {
+        showAlert(errorDetail || "Sai tên đăng nhập hoặc mật khẩu. Vui lòng thử lại.");
+      } else if (resp.status === 404 || resp.status === 405) {
         showAlert(
           "Giao diện Đăng nhập đã sẵn sàng. API POST /api/v1/auth/login đang chờ TV3 hoàn thiện ở Ngày 3.",
           true
