@@ -18,6 +18,7 @@ const CRUD_MODAL_IDS = [
   "course-crud-modal",
   "student-crud-modal",
   "exam-crud-modal",
+  "import-data-modal",
 ];
 
 const CRUD_HEADINGS = {
@@ -76,6 +77,7 @@ function handleCrudModalBackdropClick(event, modalId) {
     if (modalId === "course-crud-modal") closeCourseModal();
     else if (modalId === "student-crud-modal") closeStudentModal();
     else if (modalId === "exam-crud-modal") closeExamModal();
+    else if (modalId === "import-data-modal") closeImportModal();
     else closeCrudModal(modalId);
   }
 }
@@ -604,6 +606,173 @@ function deleteCourse(maMon) {
   renderCourseTable();
 }
 
+const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+let selectedImportFile = null;
+
+function resetImportModalState() {
+  selectedImportFile = null;
+  const form = document.getElementById("import-data-form");
+  const fileInput = document.getElementById("import-file-input");
+  const selectedEl = document.getElementById("import-selected-file");
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  if (form) form.reset();
+  if (fileInput) fileInput.value = "";
+  if (selectedEl) {
+    selectedEl.textContent = "";
+    selectedEl.classList.add("hidden");
+  }
+  if (errEl) errEl.textContent = "";
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.add("hidden");
+  }
+}
+
+function openImportModal(entity) {
+  resetImportModalState();
+  const selectEl = document.getElementById("import-entity-select");
+  const target = entity && CRUD_HEADINGS[entity] ? entity : activeCrudEntity;
+  if (selectEl && CRUD_HEADINGS[target]) {
+    selectEl.value = target;
+  }
+  openCrudModal("import-data-modal", "import-entity-select");
+}
+
+function closeImportModal() {
+  resetImportModalState();
+  closeCrudModal("import-data-modal");
+}
+
+function triggerImportFilePicker() {
+  const fileInput = document.getElementById("import-file-input");
+  if (fileInput) fileInput.click();
+}
+
+function selectImportFile(file) {
+  const selectedEl = document.getElementById("import-selected-file");
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  if (errEl) errEl.textContent = "";
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.add("hidden");
+  }
+  if (!file) {
+    selectedImportFile = null;
+    if (selectedEl) {
+      selectedEl.textContent = "";
+      selectedEl.classList.add("hidden");
+    }
+    return;
+  }
+
+  const lowerName = String(file.name || "").toLowerCase();
+  if (!lowerName.endsWith(".xlsx") && !lowerName.endsWith(".csv")) {
+    selectedImportFile = null;
+    if (selectedEl) selectedEl.classList.add("hidden");
+    if (errEl) errEl.textContent = "Chỉ hỗ trợ định dạng tệp .xlsx hoặc .csv.";
+    return;
+  }
+  if (file.size > IMPORT_MAX_BYTES) {
+    selectedImportFile = null;
+    if (selectedEl) selectedEl.classList.add("hidden");
+    if (errEl) errEl.textContent = "Dung lượng tệp vượt quá giới hạn tối đa 5MB.";
+    return;
+  }
+
+  selectedImportFile = file;
+  if (selectedEl) {
+    const sizeKb = Math.max(1, Math.round(file.size / 1024));
+    selectedEl.textContent = `Đã chọn: ${file.name} (${sizeKb} KB)`;
+    selectedEl.classList.remove("hidden");
+  }
+}
+
+function handleImportFileInputChange(event) {
+  const file = event && event.target && event.target.files ? event.target.files[0] : null;
+  selectImportFile(file);
+}
+
+function submitImportForm(event) {
+  event.preventDefault();
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  const selectEl = document.getElementById("import-entity-select");
+  if (errEl) errEl.textContent = "";
+
+  if (!selectedImportFile) {
+    if (errEl) errEl.textContent = "Vui lòng chọn tệp .xlsx hoặc .csv trước khi nạp dữ liệu.";
+    return;
+  }
+
+  const entityLabel =
+    selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0]
+      ? selectEl.selectedOptions[0].textContent
+      : "Dữ liệu";
+  if (statusEl) {
+    statusEl.textContent = `Đã tiếp nhận tệp "${selectedImportFile.name}" cho danh mục ${entityLabel}. Sẵn sàng đồng bộ qua API Import Transaction ACID.`;
+    statusEl.classList.remove("hidden");
+  }
+}
+
+function sanitizeCsvCell(value) {
+  const str = String(value == null ? "" : value);
+  const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function exportSelectedEntityData() {
+  const selectEl = document.getElementById("import-entity-select");
+  const statusEl = document.getElementById("import-form-status");
+  const errEl = document.getElementById("import-form-error");
+  if (errEl) errEl.textContent = "";
+
+  const entity = (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+  let headers = [];
+  let rows = [];
+
+  if (entity === "mon_hoc") {
+    headers = ["ma_mon", "ten_mon", "thoi_luong_phut", "so_tin_chi"];
+    rows = courseRecords.map((r) => [r.ma_mon, r.ten_mon, r.thoi_luong_phut, r.so_tin_chi]);
+  } else if (entity === "sinh_vien") {
+    headers = ["mssv", "ho_ten", "email", "lop_sinh_hoat"];
+    rows = studentRecords.map((r) => [r.mssv, r.ho_ten, r.email, r.lop_sinh_hoat]);
+  } else if (entity === "ky_thi") {
+    headers = ["ma_ky_thi", "ten_ky_thi", "ngay_bat_dau", "ngay_ket_thuc", "so_ca_moi_ngay", "trang_thai"];
+    rows = examRecords.map((r) => [
+      r.ma_ky_thi,
+      r.ten_ky_thi,
+      r.ngay_bat_dau,
+      r.ngay_ket_thuc,
+      r.so_ca_moi_ngay,
+      r.trang_thai,
+    ]);
+  } else {
+    if (statusEl) {
+      statusEl.textContent = "Đã sẵn sàng xuất file Excel khi đồng bộ dữ liệu từ máy chủ.";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const csvLines = [headers, ...rows].map((row) => row.map(sanitizeCsvCell).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csvLines], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${entity}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  if (statusEl) {
+    statusEl.textContent = `Đã xuất tệp ${entity}.csv (${rows.length} bản ghi).`;
+    statusEl.classList.remove("hidden");
+  }
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeAllCrudModals();
@@ -618,5 +787,28 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCourseTable();
     renderStudentTable();
     renderExamTable();
+  }
+
+  const dropzone = document.getElementById("import-dropzone");
+  if (dropzone) {
+    dropzone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        triggerImportFilePicker();
+      }
+    });
+    dropzone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropzone.classList.add("border-blue-500", "bg-blue-100/60");
+    });
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-blue-500", "bg-blue-100/60");
+    });
+    dropzone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropzone.classList.remove("border-blue-500", "bg-blue-100/60");
+      const file = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files[0] : null;
+      selectImportFile(file);
+    });
   }
 });

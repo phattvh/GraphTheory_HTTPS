@@ -23,41 +23,10 @@
       >
         <!-- MÀN HÌNH FIGMA 02: QUẢN LÝ DỮ LIỆU & IMPORT CSV/EXCEL (UC02 - UC07) -->
         <section id="tab-crud" class="admin-tab-section space-y-5">
-          <div
-            class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm"
-          >
-            <div>
-              <h2
-                id="crud-active-heading"
-                class="text-sm font-bold text-slate-900"
-              >
-                Quản lý Dữ liệu Đầu vào • Môn học
-              </h2>
-              <p class="text-xs text-slate-500">
-                Chọn danh mục ở thanh ngang phía trên để chuyển nhanh giữa Kỳ
-                thi, Môn học, Sinh viên, Phòng thi và Đăng ký thi
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50"
-              >
-                📥 Import CSV / Excel
-              </button>
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50"
-              >
-                📤 Export Excel
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div
               id="crud-panel-mon_hoc"
-              class="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <h3
@@ -68,7 +37,7 @@
                 </h3>
                 <div class="flex flex-wrap items-center gap-2">
                   <div
-                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-60 text-xs"
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
                   >
                     <input
                       id="course-search-input"
@@ -79,6 +48,15 @@
                     />
                     <span class="text-slate-400">🔍</span>
                   </div>
+                  <button
+                    id="btn-open-import-modal"
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('mon_hoc')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
                   <button
                     id="btn-open-course-modal"
                     type="button"
@@ -114,7 +92,7 @@
             <!-- QUẢN LÝ SINH VIÊN (UC03) -->
             <div
               id="crud-panel-sinh_vien"
-              class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <h3
@@ -125,7 +103,7 @@
                 </h3>
                 <div class="flex flex-wrap items-center gap-2">
                   <div
-                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-60 text-xs"
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
                   >
                     <input
                       id="student-search-input"
@@ -136,6 +114,14 @@
                     />
                     <span class="text-slate-400">🔍</span>
                   </div>
+                  <button
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('sinh_vien')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
                   <button
                     id="btn-open-student-modal"
                     type="button"
@@ -171,7 +157,7 @@
             <!-- QUẢN LÝ KỲ THI (UC02) -->
             <div
               id="crud-panel-ky_thi"
-              class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <h3
@@ -182,7 +168,7 @@
                 </h3>
                 <div class="flex flex-wrap items-center gap-2">
                   <div
-                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-60 text-xs"
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
                   >
                     <input
                       id="exam-search-input"
@@ -193,6 +179,14 @@
                     />
                     <span class="text-slate-400">🔍</span>
                   </div>
+                  <button
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('ky_thi')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
                   <button
                     id="btn-open-exam-modal"
                     type="button"
@@ -229,11 +223,21 @@
             <!-- QUẢN LÝ PHÒNG THI (UC06) -->
             <div
               id="crud-panel-phong_thi"
-              class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
-              <h3 class="text-sm font-bold text-slate-900">
-                Danh mục Phòng thi &amp; Sức chứa
-              </h3>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-slate-900">
+                  Danh mục Phòng thi &amp; Sức chứa
+                </h3>
+                <button
+                  data-open-import-modal
+                  type="button"
+                  onclick="openImportModal('phong_thi')"
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                >
+                  📥 Nạp dữ liệu
+                </button>
+              </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
@@ -301,11 +305,21 @@
             <!-- QUẢN LÝ ĐĂNG KÝ THI (UC05) -->
             <div
               id="crud-panel-dang_ky_thi"
-              class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
-              <h3 class="text-sm font-bold text-slate-900">
-                Danh sách Đăng ký dự thi (Đầu vào dựng đồ thị)
-              </h3>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-slate-900">
+                  Danh sách Đăng ký dự thi (Đầu vào dựng đồ thị)
+                </h3>
+                <button
+                  data-open-import-modal
+                  type="button"
+                  onclick="openImportModal('dang_ky_thi')"
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                >
+                  📥 Nạp dữ liệu
+                </button>
+              </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
@@ -351,62 +365,39 @@
             </div>
 
             <div
-              class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+              class="lg:col-span-3 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3"
             >
+              <h4 class="text-sm font-bold text-slate-900">
+                Cấu hình Kỳ thi hiện tại
+              </h4>
               <div class="space-y-1">
-                <h3 class="text-sm font-bold text-slate-900">
-                  Nạp dữ liệu hàng loạt CSV/Excel
-                </h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                  Hỗ trợ openpyxl / csv. Tự động kiểm tra toàn vẹn Transaction
-                  ACID và chặn Formula Injection (=, +, -, @).
-                </p>
-              </div>
-
-              <div
-                class="border-2 border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-6 text-center space-y-1.5 transition cursor-pointer"
-              >
-                <div class="text-xs font-bold text-slate-800">
-                  📂 Kéo thả file .xlsx hoặc .csv vào đây
-                </div>
-                <div class="text-[11px] text-slate-500">
-                  sinh_vien.xlsx • mon_hoc.csv • dang_ky_thi.xlsx (Tối đa 5MB)
-                </div>
-              </div>
-
-              <div class="pt-3 border-t border-slate-100 space-y-3">
-                <h4 class="text-sm font-bold text-slate-900">
-                  Cấu hình Kỳ thi hiện tại
-                </h4>
-                <div class="space-y-1">
-                  <label class="text-xs font-medium text-slate-700"
-                    >Tên kỳ thi</label
-                  >
-                  <input
-                    type="text"
-                    value="Thi Cuối Kỳ HK1 (2026 - 2027)"
-                    readonly
-                    class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
-                  />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-medium text-slate-700"
-                    >Khoảng ngày thi &amp; Số ca/ngày</label
-                  >
-                  <input
-                    type="text"
-                    value="15/12/2026 - 22/12/2026 (4 ca/ngày)"
-                    readonly
-                    class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="w-full py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+                <label class="text-xs font-medium text-slate-700"
+                  >Tên kỳ thi</label
                 >
-                  Lưu cấu hình &amp; Công bố lịch thi
-                </button>
+                <input
+                  type="text"
+                  value="Thi Cuối Kỳ HK1 (2026 - 2027)"
+                  readonly
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
+                />
               </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700"
+                  >Khoảng ngày thi &amp; Số ca/ngày</label
+                >
+                <input
+                  type="text"
+                  value="15/12/2026 - 22/12/2026 (4 ca/ngày)"
+                  readonly
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
+                />
+              </div>
+              <button
+                type="button"
+                class="w-full py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+              >
+                Lưu cấu hình &amp; Công bố lịch thi
+              </button>
             </div>
           </div>
         </section>
@@ -810,6 +801,133 @@
               >
                 + Thêm Kỳ thi
               </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL NỔI: NẠP & XUẤT DỮ LIỆU CSV / EXCEL -->
+      <div
+        id="import-data-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'import-data-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <div>
+              <h3
+                id="import-modal-title"
+                class="text-sm font-bold text-slate-900"
+              >
+                Nạp &amp; Xuất dữ liệu CSV / Excel
+              </h3>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                Hỗ trợ openpyxl / csv. Tự động kiểm tra Transaction ACID và chặn
+                Formula Injection (=, +, -, @).
+              </p>
+            </div>
+            <button
+              type="button"
+              onclick="closeImportModal()"
+              aria-label="Đóng cửa sổ nạp dữ liệu"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="import-data-form"
+            onsubmit="submitImportForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="space-y-1">
+              <label
+                for="import-entity-select"
+                class="block text-xs font-semibold text-slate-700"
+                >Danh mục dữ liệu</label
+              >
+              <select
+                id="import-entity-select"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              >
+                <option value="ky_thi">Kỳ thi</option>
+                <option value="mon_hoc">Môn học</option>
+                <option value="sinh_vien">Quản lý Sinh viên</option>
+                <option value="phong_thi">Phòng thi</option>
+                <option value="dang_ky_thi">Đăng ký thi</option>
+              </select>
+            </div>
+
+            <div
+              id="import-dropzone"
+              role="button"
+              tabindex="0"
+              onclick="triggerImportFilePicker()"
+              class="border-2 border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-6 text-center space-y-1.5 transition cursor-pointer"
+            >
+              <input
+                id="import-file-input"
+                type="file"
+                accept=".xlsx,.csv"
+                onchange="handleImportFileInputChange(event)"
+                class="hidden"
+              />
+              <div class="text-xs font-bold text-slate-800">
+                📂 Nhấn để chọn hoặc kéo thả file .xlsx / .csv vào đây
+              </div>
+              <div class="text-[11px] text-slate-500">
+                sinh_vien.xlsx • mon_hoc.csv • dang_ky_thi.xlsx (Tối đa 5MB)
+              </div>
+              <p
+                id="import-selected-file"
+                class="hidden text-xs font-semibold text-blue-700 pt-1"
+              ></p>
+            </div>
+
+            <p
+              id="import-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
+            <p
+              id="import-form-status"
+              class="hidden text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2"
+            ></p>
+
+            <div
+              class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                id="btn-export-excel"
+                type="button"
+                onclick="exportSelectedEntityData()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+              >
+                📤 Export Excel
+              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick="closeImportModal()"
+                  class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+                >
+                  Đóng
+                </button>
+                <button
+                  id="import-modal-submit"
+                  type="submit"
+                  class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+                >
+                  📥 Import CSV / Excel
+                </button>
+              </div>
             </div>
           </form>
         </div>

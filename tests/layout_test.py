@@ -81,22 +81,37 @@ def test_admin_pages_and_student_structure():
     index_html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
     crud_js = (WEB_DIR / "js" / "admin" / "crud.js").read_text(encoding="utf-8")
     for panel_id in [
-        'id="crud-active-heading"',
         'id="crud-panel-ky_thi"',
         'id="crud-panel-mon_hoc"',
         'id="crud-panel-sinh_vien"',
         'id="crud-panel-phong_thi"',
         'id="crud-panel-dang_ky_thi"',
+        'id="course-crud-modal"',
+        'id="student-crud-modal"',
+        'id="exam-crud-modal"',
+        'id="import-data-modal"',
+        'id="btn-open-course-modal"',
+        'id="btn-open-student-modal"',
+        'id="btn-open-exam-modal"',
+        'id="btn-open-import-modal"',
+        'id="btn-export-excel"',
         'id="exam-crud-form"',
         'id="exam-table-body"',
         'id="course-crud-form"',
         'id="course-table-body"',
     ]:
         assert panel_id in index_html, f"index.html thiếu thành phần {panel_id}"
+    assert 'id="crud-active-heading"' not in index_html, "Đã bỏ banner tiêu đề thừa phía trên bảng CRUD"
     assert 'src="/js/admin/crud.js"' in index_html
     for fn in [
         "switchCrudEntity",
         "createTableActionCell",
+        "openCourseModal",
+        "openStudentModal",
+        "openExamModal",
+        "openImportModal",
+        "exportSelectedEntityData",
+        "closeAllCrudModals",
         "saveStudentForm",
         "renderExamTable",
         "saveExamForm",
