@@ -21,6 +21,8 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 INVALID_CREDENTIALS_MSG = "Tên đăng nhập hoặc mật khẩu không chính xác."
 UNAUTHORIZED_HEADERS = {"WWW-Authenticate": "Bearer"}
+# Hash bcrypt cost 12 giả lập dùng khi user không tồn tại để cân bằng thời gian phản hồi (chống timing attack)
+_DUMMY_BCRYPT_HASH = "$2b$12$000000000000000000000u6M0f2Q8nP5kS3xZ1vJ4wL7rT9yB2eG."
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -31,7 +33,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         .filter(NguoiDung.ten_dang_nhap == payload.ten_dang_nhap)
         .first()
     )
-    if user is None or not verify_password(payload.mat_khau, user.mat_khau_hash):
+    if user is None:
+        verify_password(payload.mat_khau, _DUMMY_BCRYPT_HASH)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=INVALID_CREDENTIALS_MSG,
+            headers=UNAUTHORIZED_HEADERS,
+        )
+    if not verify_password(payload.mat_khau, user.mat_khau_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INVALID_CREDENTIALS_MSG,
@@ -79,7 +88,7 @@ def get_me(
     username = claims.get("sub")
     user = (
         db.query(NguoiDung).filter(NguoiDung.ten_dang_nhap == username).first()
-        if username
+        if isinstance(username, str) and username
         else None
     )
     if user is None:
