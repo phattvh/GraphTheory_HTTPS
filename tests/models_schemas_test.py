@@ -1,7 +1,7 @@
 """Kiểm thử tự động Ngày 3 (TV2): Models MonHoc, SinhVien, PhongThi & Pydantic v2 Schemas.
 
 Chạy trong container fastapi:
-    docker compose exec fastapi python tests/day3_models_schemas_test.py
+    docker compose exec fastapi python tests/models_schemas_test.py
 """
 
 import sys
@@ -109,13 +109,46 @@ def test_schemas_validation_and_sanitization():
         lambda: DangKyThiCreate(ky_thi_id=0, sinh_vien_id=1, mon_hoc_id=1),
         "DangKyThi ky_thi_id=0",
     )
+
+    # Edge cases: tràn số nguyên INT/BIGINT, ép kiểu bool->int, sai định dạng email, truyền thừa trường lạ
+    _assert_raises_validation_error(
+        lambda: PhongThiCreate(ma_phong="P_HUGE", ten_phong="Huge", suc_chua=10**12),
+        "suc_chua overflow INT",
+    )
+    _assert_raises_validation_error(
+        lambda: DangKyThiCreate(ky_thi_id=10**25, sinh_vien_id=1, mon_hoc_id=1),
+        "ky_thi_id overflow BIGINT",
+    )
+    _assert_raises_validation_error(
+        lambda: PhongThiCreate(ma_phong="P_BOOL", ten_phong="Bool", suc_chua=True),
+        "bool as suc_chua",
+    )
+    _assert_raises_validation_error(
+        lambda: MonHocCreate(ma_mon="IT02", ten_mon="Môn", thoi_luong_phut=True),
+        "bool as thoi_luong_phut",
+    )
+    _assert_raises_validation_error(
+        lambda: SinhVienCreate(mssv="22110002", ho_ten="An", email="not-an-email"),
+        "invalid email format",
+    )
+    _assert_raises_validation_error(
+        lambda: SinhVienUpdate(email="bad@@domain"),
+        "invalid email in SinhVienUpdate",
+    )
+    _assert_raises_validation_error(
+        lambda: MonHocUpdate(ma_mon="IMMUTABLE"),
+        "extra forbidden field in MonHocUpdate",
+    )
+    _assert_raises_validation_error(
+        lambda: PhongThiCreate(ma_phong="P2", ten_phong="P2", suc_chua=50, unknown_field=1),
+        "extra forbidden field in PhongThiCreate",
+    )
     print("✓ Test 2: Toàn bộ Pydantic v2 schemas validate chuẩn xác (hợp lệ & chặn lỗi).")
 
 
 def test_orm_crud_and_pydantic_from_attributes():
     """Kiểm tra vòng đời ORM (Create -> Query -> Update -> Out serialization -> Cleanup) trên PostgreSQL."""
     db = SessionLocal()
-    created_objects = []
     try:
         # 1. MonHoc
         mh_payload = MonHocCreate(
@@ -127,7 +160,6 @@ def test_orm_crud_and_pydantic_from_attributes():
         mh_orm = MonHoc(**mh_payload.model_dump())
         db.add(mh_orm)
         db.flush()
-        created_objects.append(mh_orm)
 
         mh_upd = MonHocUpdate(thoi_luong_phut=120)
         for k, v in mh_upd.model_dump(exclude_unset=True).items():
@@ -146,7 +178,6 @@ def test_orm_crud_and_pydantic_from_attributes():
         sv_orm = SinhVien(**sv_payload.model_dump())
         db.add(sv_orm)
         db.flush()
-        created_objects.append(sv_orm)
 
         sv_upd = SinhVienUpdate(lop_sinh_hoat="22CNTT-UPDATED")
         for k, v in sv_upd.model_dump(exclude_unset=True).items():
@@ -166,7 +197,6 @@ def test_orm_crud_and_pydantic_from_attributes():
         pt_orm = PhongThi(**pt_payload.model_dump())
         db.add(pt_orm)
         db.flush()
-        created_objects.append(pt_orm)
 
         pt_upd = PhongThiUpdate(suc_chua=80, dang_su_dung=False)
         for k, v in pt_upd.model_dump(exclude_unset=True).items():
