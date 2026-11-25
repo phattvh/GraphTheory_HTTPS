@@ -24,6 +24,7 @@ def test_layout_files_exist():
         WEB_DIR / "calendar.html",
         WEB_DIR / "stats.html",
         WEB_DIR / "student.html",
+        WEB_DIR / "assets" / "logo.png",
         WEB_DIR / "css" / "layout.css",
         WEB_DIR / "js" / "core" / "auth.js",
         WEB_DIR / "js" / "admin" / "layout.js",
@@ -38,7 +39,7 @@ def test_admin_pages_and_student_structure():
     auth_js = (WEB_DIR / "js" / "core" / "auth.js").read_text(encoding="utf-8")
 
     # Kiểm tra các hàm dùng chung trong layout.js và auth.js
-    for marker in ["initAdminShell", "toggleRightDrawer", "closeRightDrawer", 'id="admin-header"', 'id="admin-sidebar"', ">HTTPS<"]:
+    for marker in ["initAdminShell", "toggleRightDrawer", "closeRightDrawer", 'id="admin-header"', 'id="admin-sidebar"', "/assets/logo.png", ">HTTPS<"]:
         assert marker in layout_js, f"Thiếu thành phần shell dùng chung trong layout.js: {marker}"
     assert "Cổng Sinh viên" not in layout_js, "Không còn hiển thị Cổng Sinh viên trên thanh Admin"
     assert "Đang xem:" not in layout_js, "Không còn hiển thị nhãn 'Đang xem:'"
