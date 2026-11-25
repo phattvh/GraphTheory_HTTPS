@@ -89,6 +89,42 @@ function validateLoginField(name, value, required, minLength, requiredMsg) {
   return "";
 }
 
+/**
+ * Tính toán trạng thái Caps Lock chính xác đa nền tảng (Windows, macOS, Linux X11/Wayland).
+ * Khắc phục lỗi X11/Chromium giữ nguyên getModifierState("CapsLock") === true ở cả keydown và keyup khi tắt Caps Lock.
+ * @param {{ capsOn: boolean, capsPending: { wasOn: boolean, downState: boolean } | null }} state
+ * @param {{ type: string, key?: string, code?: string, repeat?: boolean, modifierState: boolean }} evt
+ * @returns {{ capsOn: boolean, capsPending: { wasOn: boolean, downState: boolean } | null }}
+ */
+function resolveCapsLockState(state, evt) {
+  const prevOn = Boolean(state && state.capsOn);
+  const prevPending = (state && state.capsPending) || null;
+  const modState = Boolean(evt && evt.modifierState);
+  const isCapsKey = Boolean(evt && (evt.key === "CapsLock" || evt.code === "CapsLock"));
+
+  if (!isCapsKey) {
+    return { capsOn: modState, capsPending: prevPending };
+  }
+
+  if (evt.type === "keydown") {
+    if (evt.repeat) {
+      return { capsOn: prevOn, capsPending: prevPending };
+    }
+    const nextPending = { wasOn: prevOn, downState: modState };
+    const nextOn = modState !== prevOn ? modState : prevOn;
+    return { capsOn: nextOn, capsPending: nextPending };
+  }
+
+  if (evt.type === "keyup") {
+    if (prevPending && prevPending.wasOn && prevPending.downState && modState) {
+      return { capsOn: false, capsPending: null };
+    }
+    return { capsOn: modState, capsPending: null };
+  }
+
+  return { capsOn: modState, capsPending: null };
+}
+
 (() => {
   "use strict";
 
@@ -225,16 +261,55 @@ function validateLoginField(name, value, required, minLength, requiredMsg) {
     }
   }
 
+  // Cảnh báo bật Caps Lock (đồng bộ đa nền tảng, khắc phục lỗi kẹt trạng thái trên Linux X11/Chromium)
+  let capsState = { capsOn: false, capsPending: null };
+  let lastAnnouncedCaps = false;
+
+  const syncCapsUi = (forceHide = false) => {
+    if (!caps) return;
+    const visible = !forceHide && Boolean(capsState.capsOn && document.activeElement === pw);
+    caps.hidden = !visible;
+    if (visible !== lastAnnouncedCaps) {
+      lastAnnouncedCaps = visible;
+      if (live) live.textContent = visible ? "Đang bật Caps Lock." : "";
+    }
+  };
+
+  const handleCapsEvent = (e) => {
+    if (typeof e.getModifierState !== "function") return;
+    capsState = resolveCapsLockState(capsState, {
+      type: e.type,
+      key: e.key,
+      code: e.code,
+      repeat: Boolean(e.repeat),
+      modifierState: e.getModifierState("CapsLock"),
+    });
+    syncCapsUi();
+  };
+
+  document.addEventListener("keydown", handleCapsEvent);
+  document.addEventListener("keyup", handleCapsEvent);
+  document.addEventListener("mousedown", handleCapsEvent);
+  if (typeof window.addEventListener === "function") {
+    window.addEventListener("blur", () => {
+      capsState = { capsOn: capsState.capsOn, capsPending: null };
+      syncCapsUi(true);
+    });
+  }
+
   // Hiệu ứng che mắt nhân vật SVG khi đang nhập mật khẩu ở chế độ ẩn
   const updateShyState = () => {
     const isShy = document.activeElement === pw && pw.type === "password";
     root.classList.toggle("is-shy", isShy);
     if (isShy) resetPupils();
   };
-  pw.addEventListener("focus", updateShyState);
+  pw.addEventListener("focus", () => {
+    updateShyState();
+    syncCapsUi();
+  });
   pw.addEventListener("blur", () => {
     root.classList.remove("is-shy");
-    if (caps) caps.hidden = true;
+    syncCapsUi(true);
   });
 
   if (toggle) {
@@ -246,20 +321,6 @@ function validateLoginField(name, value, required, minLength, requiredMsg) {
       updateShyState();
     });
   }
-
-  // Cảnh báo bật Caps Lock
-  let capsOn = false;
-  const checkCaps = (e) => {
-    if (!caps || typeof e.getModifierState !== "function") return;
-    const on = e.getModifierState("CapsLock");
-    caps.hidden = !on;
-    if (on !== capsOn) {
-      capsOn = on;
-      if (live) live.textContent = on ? "Đang bật Caps Lock." : "";
-    }
-  };
-  pw.addEventListener("keydown", checkCaps);
-  pw.addEventListener("keyup", checkCaps);
 
   // Bắt sự kiện submit form, gọi API POST /api/v1/auth/login, lưu JWT và điều hướng theo vai_tro (TV4 Ngày 2 & Ngày 3)
   const handleLoginFormSubmit = async (e) => {
