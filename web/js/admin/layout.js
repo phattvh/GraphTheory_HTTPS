@@ -125,7 +125,7 @@ function initAdminShell(activePage) {
           </button>
 
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
-            <img src="/assets/logo.png" alt="HTTPS Logo" class="h-9 w-auto rounded-lg bg-[#06162b] px-1.5 py-1 object-contain shadow-sm" />
+            <img src="/assets/logo.svg" alt="HTTPS Logo" class="h-8 w-auto object-contain" />
             <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
           </a>
 
@@ -158,7 +158,7 @@ function initAdminShell(activePage) {
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
           <div class="flex items-center gap-2.5">
-            <img src="/assets/logo.png" alt="HTTPS Logo" class="h-8 w-auto rounded-lg bg-[#06162b] px-1.5 py-1 object-contain shadow-sm" />
+            <img src="/assets/logo.svg" alt="HTTPS Logo" class="h-7 w-auto object-contain" />
             <div>
               <div class="text-sm font-bold text-slate-900">HTTPS</div>
               <div class="text-xs text-slate-500">Admin: Phòng Đào Tạo</div>
