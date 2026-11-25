@@ -117,11 +117,14 @@ function initAdminShell(activePage) {
       <div class="w-full px-6 h-16 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <button id="btn-open-right-drawer" type="button" onclick="toggleRightDrawer()"
-            aria-expanded="false" aria-controls="admin-sidebar"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition shrink-0"
-            title="Mở Menu điều hướng">
-            <span>☰</span>
-            <span class="hidden sm:inline">Menu</span>
+            aria-expanded="false" aria-controls="admin-sidebar" aria-label="Mở menu điều hướng"
+            class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition shrink-0"
+            title="Mở menu điều hướng">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
           </button>
 
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
