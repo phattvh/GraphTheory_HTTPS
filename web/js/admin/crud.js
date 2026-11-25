@@ -12,6 +12,13 @@ let studentRecords = [
 ];
 
 let editingMssv = null;
+let activeCrudEntity = "mon_hoc";
+
+const CRUD_MODAL_IDS = [
+  "course-crud-modal",
+  "student-crud-modal",
+  "exam-crud-modal",
+];
 
 const CRUD_HEADINGS = {
   ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi",
@@ -21,8 +28,61 @@ const CRUD_HEADINGS = {
   dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi",
 };
 
+function setInputLockedState(inputEl, locked) {
+  if (!inputEl) return;
+  inputEl.readOnly = Boolean(locked);
+  inputEl.classList.toggle("bg-slate-100", Boolean(locked));
+  inputEl.classList.toggle("text-slate-500", Boolean(locked));
+  inputEl.classList.toggle("cursor-not-allowed", Boolean(locked));
+  inputEl.classList.toggle("bg-white", !locked);
+}
+
+function openCrudModal(modalId, focusInputId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
+  if (focusInputId) {
+    const focusEl = document.getElementById(focusInputId);
+    if (focusEl && typeof focusEl.focus === "function") {
+      focusEl.focus();
+    }
+  }
+}
+
+function closeCrudModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.classList.add("hidden");
+  const anyOpen = CRUD_MODAL_IDS.some((id) => {
+    const el = document.getElementById(id);
+    return el && !el.classList.contains("hidden");
+  });
+  if (!anyOpen) {
+    document.body.classList.remove("overflow-hidden");
+  }
+}
+
+function closeAllCrudModals() {
+  CRUD_MODAL_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+  });
+  document.body.classList.remove("overflow-hidden");
+}
+
+function handleCrudModalBackdropClick(event, modalId) {
+  if (event && event.target === event.currentTarget) {
+    if (modalId === "course-crud-modal") closeCourseModal();
+    else if (modalId === "student-crud-modal") closeStudentModal();
+    else if (modalId === "exam-crud-modal") closeExamModal();
+    else closeCrudModal(modalId);
+  }
+}
+
 function switchCrudEntity(entity) {
   const validEntity = CRUD_HEADINGS[entity] ? entity : "mon_hoc";
+  activeCrudEntity = validEntity;
   Object.keys(CRUD_HEADINGS).forEach((key) => {
     const el = document.getElementById(`crud-panel-${key}`);
     if (el) el.classList.toggle("hidden", key !== validEntity);
@@ -125,18 +185,46 @@ function renderStudentTable() {
   });
 }
 
+function resetStudentForm() {
+  editingMssv = null;
+  const form = document.getElementById("student-crud-form");
+  const mssvInput = document.getElementById("sv-form-mssv");
+  const errEl = document.getElementById("student-form-error");
+  if (form) form.reset();
+  setInputLockedState(mssvInput, false);
+  if (errEl) errEl.textContent = "";
+}
+
+function openStudentModal() {
+  resetStudentForm();
+  const titleEl = document.getElementById("student-modal-title");
+  const submitEl = document.getElementById("student-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Sinh viên mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Sinh viên";
+  openCrudModal("student-crud-modal", "sv-form-mssv");
+}
+
+function closeStudentModal() {
+  resetStudentForm();
+  closeCrudModal("student-crud-modal");
+}
+
 function saveStudentForm(event) {
   event.preventDefault();
   const mssvInput = document.getElementById("sv-form-mssv");
   const nameInput = document.getElementById("sv-form-hoten");
   const emailInput = document.getElementById("sv-form-email");
   const classInput = document.getElementById("sv-form-lop");
+  const errEl = document.getElementById("student-form-error");
 
   const mssv = mssvInput.value.trim().toUpperCase();
   const ho_ten = nameInput.value.trim();
   const email = emailInput.value.trim();
   const lop_sinh_hoat = classInput.value.trim().toUpperCase();
-  if (!mssv || !ho_ten) return;
+  if (!mssv || !ho_ten) {
+    if (errEl) errEl.textContent = "Vui lòng nhập đầy đủ MSSV và họ tên sinh viên.";
+    return;
+  }
 
   const existingIdx = studentRecords.findIndex((s) => s.mssv === (editingMssv || mssv));
   const record = { mssv, ho_ten, email, lop_sinh_hoat };
@@ -146,9 +234,7 @@ function saveStudentForm(event) {
     studentRecords.unshift(record);
   }
 
-  editingMssv = null;
-  mssvInput.readOnly = false;
-  event.target.reset();
+  closeStudentModal();
   renderStudentTable();
 }
 
@@ -158,14 +244,22 @@ function startEditStudent(mssv) {
   editingMssv = mssv;
   const mssvInput = document.getElementById("sv-form-mssv");
   mssvInput.value = sv.mssv;
-  mssvInput.readOnly = true;
+  setInputLockedState(mssvInput, true);
   document.getElementById("sv-form-hoten").value = sv.ho_ten;
   document.getElementById("sv-form-email").value = sv.email;
   document.getElementById("sv-form-lop").value = sv.lop_sinh_hoat;
+  const errEl = document.getElementById("student-form-error");
+  if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("student-modal-title");
+  const submitEl = document.getElementById("student-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Sinh viên";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("student-crud-modal", "sv-form-hoten");
 }
 
 function deleteStudent(mssv) {
   studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
+  if (editingMssv === mssv) closeStudentModal();
   renderStudentTable();
 }
 
@@ -266,8 +360,22 @@ function resetExamForm() {
   const codeInput = document.getElementById("exam-form-ma");
   const errEl = document.getElementById("exam-form-error");
   if (form) form.reset();
-  if (codeInput) codeInput.readOnly = false;
+  setInputLockedState(codeInput, false);
   if (errEl) errEl.textContent = "";
+}
+
+function openExamModal() {
+  resetExamForm();
+  const titleEl = document.getElementById("exam-modal-title");
+  const submitEl = document.getElementById("exam-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Kỳ thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Kỳ thi";
+  openCrudModal("exam-crud-modal", "exam-form-ma");
+}
+
+function closeExamModal() {
+  resetExamForm();
+  closeCrudModal("exam-crud-modal");
 }
 
 function saveExamForm(event) {
@@ -316,7 +424,7 @@ function saveExamForm(event) {
     examRecords.unshift(record);
   }
 
-  resetExamForm();
+  closeExamModal();
   renderExamTable();
 }
 
@@ -326,7 +434,7 @@ function startEditExam(maKyThi) {
   editingExamCode = maKyThi;
   const codeInput = document.getElementById("exam-form-ma");
   codeInput.value = kt.ma_ky_thi;
-  codeInput.readOnly = true;
+  setInputLockedState(codeInput, true);
   document.getElementById("exam-form-ten").value = kt.ten_ky_thi;
   document.getElementById("exam-form-start").value = kt.ngay_bat_dau;
   document.getElementById("exam-form-end").value = kt.ngay_ket_thuc;
@@ -334,11 +442,16 @@ function startEditExam(maKyThi) {
   document.getElementById("exam-form-status").value = kt.trang_thai;
   const errEl = document.getElementById("exam-form-error");
   if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("exam-modal-title");
+  const submitEl = document.getElementById("exam-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Kỳ thi";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("exam-crud-modal", "exam-form-ten");
 }
 
 function deleteExam(maKyThi) {
   examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
-  if (editingExamCode === maKyThi) resetExamForm();
+  if (editingExamCode === maKyThi) closeExamModal();
   renderExamTable();
 }
 
@@ -410,8 +523,22 @@ function resetCourseForm() {
   const codeInput = document.getElementById("course-form-ma");
   const errEl = document.getElementById("course-form-error");
   if (form) form.reset();
-  if (codeInput) codeInput.readOnly = false;
+  setInputLockedState(codeInput, false);
   if (errEl) errEl.textContent = "";
+}
+
+function openCourseModal() {
+  resetCourseForm();
+  const titleEl = document.getElementById("course-modal-title");
+  const submitEl = document.getElementById("course-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Môn học mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Môn học";
+  openCrudModal("course-crud-modal", "course-form-ma");
+}
+
+function closeCourseModal() {
+  resetCourseForm();
+  closeCrudModal("course-crud-modal");
 }
 
 function saveCourseForm(event) {
@@ -448,7 +575,7 @@ function saveCourseForm(event) {
     courseRecords.unshift(record);
   }
 
-  resetCourseForm();
+  closeCourseModal();
   renderCourseTable();
 }
 
@@ -458,19 +585,30 @@ function startEditCourse(maMon) {
   editingCourseCode = maMon;
   const codeInput = document.getElementById("course-form-ma");
   codeInput.value = mh.ma_mon;
-  codeInput.readOnly = true;
+  setInputLockedState(codeInput, true);
   document.getElementById("course-form-ten").value = mh.ten_mon;
   document.getElementById("course-form-duration").value = String(mh.thoi_luong_phut);
   document.getElementById("course-form-credits").value = String(mh.so_tin_chi);
   const errEl = document.getElementById("course-form-error");
   if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("course-modal-title");
+  const submitEl = document.getElementById("course-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Môn học";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("course-crud-modal", "course-form-ten");
 }
 
 function deleteCourse(maMon) {
   courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
-  if (editingCourseCode === maMon) resetCourseForm();
+  if (editingCourseCode === maMon) closeCourseModal();
   renderCourseTable();
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeAllCrudModals();
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   const entity = new URLSearchParams(window.location.search).get("entity");
