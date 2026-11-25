@@ -1,5 +1,10 @@
 """Pydantic v2 request and response schemas."""
 
+from backend.schemas.auth import (
+    LoginRequest,
+    TokenResponse,
+    UserOut,
+)
 from backend.schemas.master_data import (
     DangKyThiBase,
     DangKyThiCreate,
@@ -23,6 +28,9 @@ from backend.schemas.master_data import (
 )
 
 __all__ = [
+    "LoginRequest",
+    "TokenResponse",
+    "UserOut",
     "KyThiBase",
     "KyThiCreate",
     "KyThiUpdate",
