@@ -5,6 +5,7 @@ Tham chiếu: docs/04. Database design.md & docs/09. Project structure.md
 """
 
 from datetime import date, datetime
+import re
 from typing import Annotated, Any, Iterable, Literal, Optional
 
 from pydantic import (
@@ -19,6 +20,15 @@ from pydantic import (
 
 ExamStatus = Literal["khoi_tao", "da_xep_lich", "cong_bo"]
 MAX_PG_BIGINT = 9_223_372_036_854_775_807
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _validate_optional_email(value: Optional[str]) -> Optional[str]:
+    """Chuẩn hóa chuỗi rỗng thành None và kiểm tra định dạng email cơ bản khi có giá trị."""
+    normalized = _normalize_optional_blank(value)
+    if normalized is not None and not EMAIL_REGEX.match(normalized):
+        raise ValueError("Định dạng email không hợp lệ.")
+    return normalized
 
 
 def _reject_bool_for_int(value: Any) -> Any:
@@ -154,9 +164,14 @@ class SinhVienBase(BaseModel):
     email: _optional_str(100) = Field(default=None, examples=["an.nv@univ.edu.vn"])
     lop_sinh_hoat: _optional_str(50) = Field(default=None, examples=["22CNTT1"])
 
-    @field_validator("email", "lop_sinh_hoat", mode="after")
+    @field_validator("email", mode="after")
     @classmethod
-    def normalize_optional_fields(cls, value: Optional[str]) -> Optional[str]:
+    def validate_email_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_email(value)
+
+    @field_validator("lop_sinh_hoat", mode="after")
+    @classmethod
+    def normalize_lop_sinh_hoat(cls, value: Optional[str]) -> Optional[str]:
         return _normalize_optional_blank(value)
 
 
@@ -169,9 +184,14 @@ class SinhVienUpdate(BaseModel):
     email: _optional_str(100) = None
     lop_sinh_hoat: _optional_str(50) = None
 
-    @field_validator("email", "lop_sinh_hoat", mode="after")
+    @field_validator("email", mode="after")
     @classmethod
-    def normalize_optional_fields(cls, value: Optional[str]) -> Optional[str]:
+    def validate_email_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_email(value)
+
+    @field_validator("lop_sinh_hoat", mode="after")
+    @classmethod
+    def normalize_lop_sinh_hoat(cls, value: Optional[str]) -> Optional[str]:
         return _normalize_optional_blank(value)
 
     @model_validator(mode="after")
