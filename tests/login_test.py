@@ -1,5 +1,7 @@
 from pathlib import Path
+import shutil
 import ssl
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -76,6 +78,7 @@ def test_jwt_storage_and_role_redirection():
     login_js = (WEB_DIR / "js" / "core" / "login.js").read_text(encoding="utf-8")
 
     for auth_marker in [
+        "function normalizeRole",
         "function parseJwtPayload",
         "function isTokenExpired",
         "function saveAuthSession",
@@ -93,6 +96,7 @@ def test_jwt_storage_and_role_redirection():
         '"/index.html"',
     ]:
         assert auth_marker in auth_js, f"web/js/core/auth.js thiếu thành phần JWT/Role: {auth_marker}"
+    assert 'method: "HEAD"' not in auth_js, "handleLogout không được gửi request HEAD thừa"
 
     for login_marker in [
         "function handleLoginSuccessResponse",
@@ -102,6 +106,97 @@ def test_jwt_storage_and_role_redirection():
         "resp.status === 401",
     ]:
         assert login_marker in login_js, f"web/js/core/login.js thiếu logic nối JWT & điều hướng: {login_marker}"
+
+
+def test_auth_js_runtime_edge_cases():
+    """Chạy thực tế web/js/core/auth.js & login.js bằng Node.js (nếu có) để kiểm chứng mọi edge case."""
+    if not shutil.which("node"):
+        return
+
+    script = r"""
+const fs = require("fs");
+const vm = require("vm");
+const assert = require("assert");
+
+const store = new Map();
+const sandbox = {
+  localStorage: {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  },
+  window: { location: { pathname: "/login.html", search: "", href: "/login.html" } },
+  document: { addEventListener: () => {}, querySelector: () => null },
+  URLSearchParams,
+  atob: (b64) => Buffer.from(b64, "base64").toString("binary"),
+  TextDecoder,
+  Uint8Array,
+  fetch: () => { throw new Error("fetch should not be called on handleLogout"); },
+};
+vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync("web/js/core/auth.js", "utf8"), sandbox);
+vm.runInContext(fs.readFileSync("web/js/core/login.js", "utf8"), sandbox);
+
+const makeJwt = (payload) => {
+  const b64u = (obj) => Buffer.from(JSON.stringify(obj), "utf8").toString("base64url");
+  return `${b64u({ alg: "HS256", typ: "JWT" })}.${b64u(payload)}.sig`;
+};
+
+const now = Math.floor(Date.now() / 1000);
+
+// 1. Valid admin JWT with Vietnamese UTF-8 ho_ten
+const adminJwt = makeJwt({ sub: "admin", vai_tro: "admin", ho_ten: "Trần Vũ Hòa Phát", exp: now + 3600 });
+const adminRes = sandbox.handleLoginSuccessResponse({ access_token: adminJwt });
+assert.strictEqual(adminRes.vai_tro, "admin");
+assert.strictEqual(sandbox.getAccessToken(), adminJwt);
+assert.strictEqual(sandbox.getCurrentUser().ho_ten, "Trần Vũ Hòa Phát");
+assert.strictEqual(sandbox.window.location.href, "/index.html");
+
+// 2. Expired JWT must invalidate cached current_user in getCurrentUser()
+const expiredJwt = makeJwt({ sub: "admin", vai_tro: "admin", exp: now - 10 });
+store.set("access_token", expiredJwt);
+store.set("current_user", JSON.stringify({ ten_dang_nhap: "admin", vai_tro: "admin" }));
+assert.strictEqual(sandbox.getCurrentUser(), null);
+assert.strictEqual(store.has("access_token"), false);
+assert.strictEqual(store.has("current_user"), false);
+
+// 3. Malformed non-JWT string in localStorage must be cleared
+store.set("access_token", "corrupted-token");
+assert.strictEqual(sandbox.getAccessToken(), null);
+assert.strictEqual(store.has("access_token"), false);
+
+// 4. Missing access_token in login response must NOT save session or redirect
+sandbox.window.location = { pathname: "/login.html", search: "", href: "/login.html" };
+assert.strictEqual(sandbox.handleLoginSuccessResponse({ vai_tro: "admin" }), null);
+assert.strictEqual(store.has("current_user"), false);
+assert.strictEqual(sandbox.window.location.href, "/login.html");
+
+// 5. Unknown role must fail closed (never default to admin)
+const unknownRoleJwt = makeJwt({ sub: "hacker", vai_tro: "superadmin", exp: now + 3600 });
+assert.strictEqual(sandbox.handleLoginSuccessResponse({ access_token: unknownRoleJwt }), null);
+assert.strictEqual(sandbox.window.location.href, "/login.html");
+sandbox.navigateByRole("superadmin");
+assert.strictEqual(sandbox.window.location.href, "/login.html");
+
+// 6. Valid student JWT redirects to /student.html
+const svJwt = makeJwt({ sub: "22110399", vai_tro: "sinh_vien", mssv: "22110399", exp: now + 3600 });
+const svRes = sandbox.handleLoginSuccessResponse({ access_token: svJwt });
+assert.strictEqual(svRes.vai_tro, "sinh_vien");
+assert.strictEqual(sandbox.window.location.href, "/student.html");
+
+// 7. handleLogout clears session and redirects directly without fetch
+sandbox.handleLogout();
+assert.strictEqual(store.size, 0);
+assert.strictEqual(sandbox.window.location.href, "/login.html");
+"""
+    res = subprocess.run(
+        ["node", "-e", script],
+        cwd=str(ROOT_DIR),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert res.returncode == 0, f"Node runtime auth test failed:\n{res.stderr or res.stdout}"
 
 
 def test_cytoscape_cdn_configuration():
@@ -143,6 +238,7 @@ if __name__ == "__main__":
     test_login_page_structure_and_security()
     test_login_form_submit_json_payload()
     test_jwt_storage_and_role_redirection()
+    test_auth_js_runtime_edge_cases()
     test_cytoscape_cdn_configuration()
     test_caddy_serves_login_and_graph_assets()
     print("ALL LOGIN & CYTOSCAPE TESTS PASSED!")
