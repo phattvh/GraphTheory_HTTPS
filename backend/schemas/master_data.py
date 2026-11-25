@@ -92,10 +92,12 @@ class KyThiBase(BaseModel):
 
 
 class KyThiCreate(KyThiBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class KyThiUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     ten_ky_thi: Optional[_required_str(255)] = None
     ngay_bat_dau: Optional[date] = None
     ngay_ket_thuc: Optional[date] = None
@@ -135,10 +137,12 @@ class MonHocBase(BaseModel):
 
 
 class MonHocCreate(MonHocBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class MonHocUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     ten_mon: Optional[_required_str(255)] = None
     thoi_luong_phut: Optional[NonBoolInt] = Field(default=None, gt=0, le=600)
     so_tin_chi: Optional[NonBoolInt] = Field(default=None, gt=0, le=20)
@@ -176,10 +180,12 @@ class SinhVienBase(BaseModel):
 
 
 class SinhVienCreate(SinhVienBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class SinhVienUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     ho_ten: Optional[_required_str(100)] = None
     email: _optional_str(100) = None
     lop_sinh_hoat: _optional_str(50) = None
@@ -223,10 +229,12 @@ class PhongThiBase(BaseModel):
 
 
 class PhongThiCreate(PhongThiBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class PhongThiUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     ten_phong: Optional[_required_str(100)] = None
     suc_chua: Optional[NonBoolInt] = Field(default=None, gt=0, le=10000)
     toa_nha: _optional_str(50) = None
@@ -259,7 +267,7 @@ class DangKyThiBase(BaseModel):
 
 
 class DangKyThiCreate(DangKyThiBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class DangKyThiOut(DangKyThiBase):
