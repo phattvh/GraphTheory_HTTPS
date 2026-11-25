@@ -205,15 +205,8 @@ function navigateByRole(role) {
 /**
  * Đăng xuất người dùng: xóa JWT khỏi localStorage và quay về màn hình đăng nhập.
  */
-async function handleLogout() {
+function handleLogout() {
   clearAuthSession();
-  try {
-    const resp = await fetch("/login.html", { method: "HEAD" });
-    if (resp.ok) {
-      window.location.href = "/login.html";
-      return;
-    }
-  } catch (_) {}
   window.location.href = "/login.html";
 }
 
