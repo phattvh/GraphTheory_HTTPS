@@ -126,12 +126,28 @@
             />
             <circle cx="180" cy="185" r="56" fill="#3b82f6" opacity="0.45" />
 
-            <!-- Mắt mở -->
+            <!-- Mắt mở (tròng trắng + đồng tử di chuyển theo con trỏ chuột) -->
             <g class="https-login__eyes-open">
-              <circle cx="158" cy="176" r="8.5" fill="#0f172a" />
-              <circle cx="202" cy="176" r="8.5" fill="#0f172a" />
-              <circle cx="161" cy="173" r="3" fill="#ffffff" />
-              <circle cx="205" cy="173" r="3" fill="#ffffff" />
+              <circle cx="158" cy="176" r="13" fill="#ffffff" />
+              <circle cx="202" cy="176" r="13" fill="#ffffff" />
+              <g
+                class="https-login__pupil"
+                data-eye-cx="158"
+                data-eye-cy="176"
+                data-eye-max="5.2"
+              >
+                <circle cx="158" cy="176" r="7" fill="#0f172a" />
+                <circle cx="160.5" cy="173.5" r="2.4" fill="#ffffff" />
+              </g>
+              <g
+                class="https-login__pupil"
+                data-eye-cx="202"
+                data-eye-cy="176"
+                data-eye-max="5.2"
+              >
+                <circle cx="202" cy="176" r="7" fill="#0f172a" />
+                <circle cx="204.5" cy="173.5" r="2.4" fill="#ffffff" />
+              </g>
             </g>
 
             <!-- Mắt nhắm khi người dùng nhập mật khẩu ẩn -->
@@ -168,8 +184,6 @@
               height="28"
               class="https-login__logo-img"
             />
-            <span class="https-login__divider" aria-hidden="true"></span>
-            <span class="https-login__wordmark">HTTPS</span>
           </p>
 
           <h1 class="https-login__title" id="login-title">
@@ -201,7 +215,7 @@
                 id="login-username"
                 name="ten_dang_nhap"
                 type="text"
-                placeholder="VD: admin hoặc 22110399"
+                placeholder="example: 51.01.104.072"
                 autocomplete="username"
                 autocapitalize="off"
                 spellcheck="false"
@@ -308,9 +322,6 @@
             aria-live="polite"
             data-live
           ></div>
-          <p class="https-login__security">
-            🔒 Kết nối mã hóa TLS/HTTPS • Xác thực Native JWT (HS256)
-          </p>
         </div>
       </section>
     </main>

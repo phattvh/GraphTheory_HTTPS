@@ -100,6 +100,10 @@ body.login-body {
   transition: opacity 0.16s ease;
 }
 
+.https-login__pupil {
+  transition: transform 0.06s ease-out;
+}
+
 .https-login__tag {
   margin: 0;
   padding: 8px 16px;

@@ -41,7 +41,8 @@ def test_login_page_structure_and_security():
         'href="/css/login.css"',
         'src="/js/core/auth.js"',
         'src="/js/core/login.js"',
-        ">HTTPS<",
+        'src="/assets/logo.svg"',
+        'class="https-login__pupil"',
     ]:
         assert marker in html, f"web/login.html thiếu thành phần: {marker}"
 

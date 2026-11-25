@@ -135,9 +135,83 @@ function handleLoginSuccessResponse(data) {
     });
   });
 
+  // Hiệu ứng tròng mắt nhân vật SVG hướng theo con trỏ chuột
+  const sceneSvg = root.querySelector(".https-login__scene");
+  const pupils = Array.from(root.querySelectorAll(".https-login__pupil"));
+  const reducedMotionQuery =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+
+  const resetPupils = () => {
+    pupils.forEach((pupil) => {
+      pupil.setAttribute("transform", "translate(0, 0)");
+    });
+  };
+
+  if (sceneSvg && pupils.length) {
+    let rafId = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const updatePupils = () => {
+      rafId = null;
+      if (
+        root.classList.contains("is-shy") ||
+        (reducedMotionQuery && reducedMotionQuery.matches)
+      ) {
+        return;
+      }
+      const rect = sceneSvg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const viewBox = sceneSvg.viewBox && sceneSvg.viewBox.baseVal;
+      const vbW = viewBox && viewBox.width ? viewBox.width : 360;
+      const vbH = viewBox && viewBox.height ? viewBox.height : 360;
+
+      pupils.forEach((pupil) => {
+        const cx = Number.parseFloat(pupil.dataset.eyeCx || "180");
+        const cy = Number.parseFloat(pupil.dataset.eyeCy || "180");
+        const maxOffset = Number.parseFloat(pupil.dataset.eyeMax || "5");
+        const eyeScreenX = rect.left + (cx / vbW) * rect.width;
+        const eyeScreenY = rect.top + (cy / vbH) * rect.height;
+
+        const dx = pointerX - eyeScreenX;
+        const dy = pointerY - eyeScreenY;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 1) {
+          pupil.setAttribute("transform", "translate(0, 0)");
+          return;
+        }
+        const angle = Math.atan2(dy, dx);
+        const mag = Math.min(maxOffset, dist / 26);
+        const tx = Math.cos(angle) * mag;
+        const ty = Math.sin(angle) * mag;
+        pupil.setAttribute("transform", `translate(${tx.toFixed(2)}, ${ty.toFixed(2)})`);
+      });
+    };
+
+    document.addEventListener(
+      "pointermove",
+      (e) => {
+        pointerX = e.clientX;
+        pointerY = e.clientY;
+        if (!rafId) {
+          rafId = window.requestAnimationFrame(updatePupils);
+        }
+      },
+      { passive: true }
+    );
+
+    if (document.documentElement) {
+      document.documentElement.addEventListener("mouseleave", resetPupils);
+    }
+  }
+
   // Hiệu ứng che mắt nhân vật SVG khi đang nhập mật khẩu ở chế độ ẩn
   const updateShyState = () => {
-    root.classList.toggle("is-shy", document.activeElement === pw && pw.type === "password");
+    const isShy = document.activeElement === pw && pw.type === "password";
+    root.classList.toggle("is-shy", isShy);
+    if (isShy) resetPupils();
   };
   pw.addEventListener("focus", updateShyState);
   pw.addEventListener("blur", () => {
