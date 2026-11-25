@@ -15,6 +15,7 @@ def test_login_files_exist():
         WEB_DIR / "login.html",
         WEB_DIR / "css" / "login.css",
         WEB_DIR / "js" / "core" / "login.js",
+        WEB_DIR / "js" / "core" / "auth.js",
     ]:
         assert file_path.exists(), f"Thiếu file đăng nhập bắt buộc: {file_path}"
 
@@ -24,6 +25,7 @@ def test_login_page_structure_and_security():
     html = (WEB_DIR / "login.html").read_text(encoding="utf-8")
     css = (WEB_DIR / "css" / "login.css").read_text(encoding="utf-8")
     js = (WEB_DIR / "js" / "core" / "login.js").read_text(encoding="utf-8")
+    auth_js = (WEB_DIR / "js" / "core" / "auth.js").read_text(encoding="utf-8")
 
     for marker in [
         'id="login-card"',
@@ -47,6 +49,7 @@ def test_login_page_structure_and_security():
     assert ".https-login-card" in css and ".is-shy" in css
     assert "/api/v1/auth/login" in js and "CapsLock" in js
     assert "innerHTML" not in js, "web/js/core/login.js không được dùng innerHTML để tránh XSS"
+    assert "innerHTML" not in auth_js, "web/js/core/auth.js không được dùng innerHTML để tránh XSS"
 
 
 def test_login_form_submit_json_payload():
@@ -65,6 +68,40 @@ def test_login_form_submit_json_payload():
         'form.addEventListener("submit", handleLoginFormSubmit)',
     ]:
         assert required_token in js, f"web/js/core/login.js thiếu logic submit JSON: {required_token}"
+
+
+def test_jwt_storage_and_role_redirection():
+    """Kiểm tra nối API login, lưu JWT vào localStorage và điều hướng theo vai_tro (TV4 Ngày 3 — UC01 UI)."""
+    auth_js = (WEB_DIR / "js" / "core" / "auth.js").read_text(encoding="utf-8")
+    login_js = (WEB_DIR / "js" / "core" / "login.js").read_text(encoding="utf-8")
+
+    for auth_marker in [
+        "function parseJwtPayload",
+        "function isTokenExpired",
+        "function saveAuthSession",
+        "function getAccessToken",
+        "function getCurrentUser",
+        "function getAuthHeaders",
+        "function clearAuthSession",
+        "function navigateByRole",
+        "function handleLogout",
+        "localStorage.setItem",
+        "localStorage.getItem",
+        "localStorage.removeItem",
+        "Bearer ",
+        '"/student.html"',
+        '"/index.html"',
+    ]:
+        assert auth_marker in auth_js, f"web/js/core/auth.js thiếu thành phần JWT/Role: {auth_marker}"
+
+    for login_marker in [
+        "function handleLoginSuccessResponse",
+        "saveAuthSession(data)",
+        "navigateByRole(",
+        "handleLoginSuccessResponse(data)",
+        "resp.status === 401",
+    ]:
+        assert login_marker in login_js, f"web/js/core/login.js thiếu logic nối JWT & điều hướng: {login_marker}"
 
 
 def test_cytoscape_cdn_configuration():
@@ -86,7 +123,8 @@ def test_caddy_serves_login_and_graph_assets():
         for path, marker in [
             ("/login.html", 'id="login-form"'),
             ("/css/login.css", ".https-login-card"),
-            ("/js/core/login.js", "sendLoginJsonPayload"),
+            ("/js/core/login.js", "handleLoginSuccessResponse"),
+            ("/js/core/auth.js", "saveAuthSession"),
             ("/graph.html", "cytoscape.min.js"),
             ("/js/admin/graph.js", "initConflictGraph"),
         ]:
@@ -104,6 +142,7 @@ if __name__ == "__main__":
     test_login_files_exist()
     test_login_page_structure_and_security()
     test_login_form_submit_json_payload()
+    test_jwt_storage_and_role_redirection()
     test_cytoscape_cdn_configuration()
     test_caddy_serves_login_and_graph_assets()
     print("ALL LOGIN & CYTOSCAPE TESTS PASSED!")
