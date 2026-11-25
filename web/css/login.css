@@ -144,8 +144,10 @@ body.login-body {
 }
 
 .https-login__logo-img {
-  height: 34px;
-  width: auto;
+  height: 32px;
+  width: 67px;
+  max-width: 67px;
+  flex-shrink: 0;
   object-fit: contain;
   display: block;
 }
