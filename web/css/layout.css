@@ -1,4 +1,14 @@
 /* Styles bổ trợ cho khung giao diện Admin & Sinh viên (UI Shell) */
+.https-brand-wordmark {
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  background: linear-gradient(90deg, #0d9488 0%, #0284c7 55%, #2563eb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Kích thước chuẩn khung đồ thị Cytoscape.js (#cy) theo 09. Project structure.md */
 #cy {
   width: 100%;

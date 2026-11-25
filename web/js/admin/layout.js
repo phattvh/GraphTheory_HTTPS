@@ -125,8 +125,9 @@ function initAdminShell(activePage) {
           </button>
 
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
-            <img src="/assets/logo.svg" alt="HTTPS Logo" width="67" height="32" class="h-8 w-[67px] shrink-0 object-contain" />
-            <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
+            <img src="/assets/logo.svg" alt="HTTPS Logo" width="59" height="28" class="h-7 w-[59px] shrink-0 object-contain" />
+            <span class="h-5 w-[1.5px] rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
+            <h1 class="https-brand-wordmark text-lg">HTTPS</h1>
           </a>
 
           <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition ml-1">
@@ -158,10 +159,11 @@ function initAdminShell(activePage) {
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
           <div class="flex items-center gap-2.5">
-            <img src="/assets/logo.svg" alt="HTTPS Logo" width="58" height="28" class="h-7 w-[58px] shrink-0 object-contain" />
+            <img src="/assets/logo.svg" alt="HTTPS Logo" width="50" height="24" class="h-6 w-[50px] shrink-0 object-contain" />
+            <span class="h-5 w-[1.5px] rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
             <div>
-              <div class="text-sm font-bold text-slate-900">HTTPS</div>
-              <div class="text-xs text-slate-500">Admin: Phòng Đào Tạo</div>
+              <div class="https-brand-wordmark text-sm">HTTPS</div>
+              <div class="text-xs text-slate-500 mt-0.5">Admin: Phòng Đào Tạo</div>
             </div>
           </div>
           <button id="btn-close-right-drawer" type="button" onclick="closeRightDrawer()"
