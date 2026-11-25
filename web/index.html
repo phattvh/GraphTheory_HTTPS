@@ -226,17 +226,42 @@
               class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
-                <h3 class="text-sm font-bold text-slate-900">
+                <h3
+                  id="room-count-label"
+                  class="text-sm font-bold text-slate-900"
+                >
                   Danh mục Phòng thi &amp; Sức chứa
                 </h3>
-                <button
-                  data-open-import-modal
-                  type="button"
-                  onclick="openImportModal('phong_thi')"
-                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
-                >
-                  📥 Nạp dữ liệu
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <div
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
+                  >
+                    <input
+                      id="room-search-input"
+                      type="text"
+                      oninput="renderRoomTable()"
+                      placeholder="Tìm mã phòng, tên phòng, tòa nhà..."
+                      class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full"
+                    />
+                    <span class="text-slate-400">🔍</span>
+                  </div>
+                  <button
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('phong_thi')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
+                  <button
+                    id="btn-open-room-modal"
+                    type="button"
+                    onclick="openRoomModal()"
+                    class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition whitespace-nowrap"
+                  >
+                    + Thêm Phòng thi
+                  </button>
+                </div>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
@@ -249,55 +274,13 @@
                       <th class="py-2.5 px-3">Sức chứa</th>
                       <th class="py-2.5 px-3">Tòa nhà</th>
                       <th class="py-2.5 px-3">Trạng thái</th>
+                      <th class="py-2.5 px-3 text-right">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-200 text-slate-700">
-                    <tr class="hover:bg-slate-50">
-                      <td class="py-2.5 px-3 font-semibold text-slate-900">
-                        A101
-                      </td>
-                      <td class="py-2.5 px-3">Phòng thi A101</td>
-                      <td
-                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
-                      >
-                        60 chỗ
-                      </td>
-                      <td class="py-2.5 px-3">Nhà A</td>
-                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
-                        Đang sử dụng
-                      </td>
-                    </tr>
-                    <tr class="hover:bg-slate-50">
-                      <td class="py-2.5 px-3 font-semibold text-slate-900">
-                        A102
-                      </td>
-                      <td class="py-2.5 px-3">Phòng thi A102</td>
-                      <td
-                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
-                      >
-                        60 chỗ
-                      </td>
-                      <td class="py-2.5 px-3">Nhà A</td>
-                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
-                        Đang sử dụng
-                      </td>
-                    </tr>
-                    <tr class="hover:bg-slate-50">
-                      <td class="py-2.5 px-3 font-semibold text-slate-900">
-                        B201
-                      </td>
-                      <td class="py-2.5 px-3">Phòng thi B201</td>
-                      <td
-                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
-                      >
-                        45 chỗ
-                      </td>
-                      <td class="py-2.5 px-3">Nhà B</td>
-                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
-                        Đang sử dụng
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tbody
+                    id="room-table-body"
+                    class="divide-y divide-slate-200 text-slate-700"
+                  ></tbody>
                 </table>
               </div>
             </div>
@@ -800,6 +783,144 @@
                 class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
               >
                 + Thêm Kỳ thi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL NỔI: THÊM / CHỈNH SỬA PHÒNG THI -->
+      <div
+        id="room-crud-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'room-crud-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <h3 id="room-modal-title" class="text-sm font-bold text-slate-900">
+              Thêm Phòng thi mới
+            </h3>
+            <button
+              type="button"
+              onclick="closeRoomModal()"
+              aria-label="Đóng cửa sổ phòng thi"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="room-crud-form"
+            onsubmit="saveRoomForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="room-form-ma"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Mã phòng</label
+                >
+                <input
+                  id="room-form-ma"
+                  type="text"
+                  placeholder="VD: A103"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="room-form-capacity"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Sức chứa (chỗ ngồi)</label
+                >
+                <input
+                  id="room-form-capacity"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  value="60"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label
+                for="room-form-ten"
+                class="block text-xs font-semibold text-slate-700"
+                >Tên phòng thi</label
+              >
+              <input
+                id="room-form-ten"
+                type="text"
+                placeholder="VD: Phòng thi A103"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="room-form-building"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Tòa nhà</label
+                >
+                <input
+                  id="room-form-building"
+                  type="text"
+                  placeholder="VD: Nhà A"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="room-form-active"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Trạng thái</label
+                >
+                <select
+                  id="room-form-active"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="true">Đang sử dụng</option>
+                  <option value="false">Tạm bảo trì</option>
+                </select>
+              </div>
+            </div>
+
+            <p
+              id="room-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
+
+            <div
+              class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                type="button"
+                onclick="closeRoomModal()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+              >
+                Hủy
+              </button>
+              <button
+                id="room-modal-submit"
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+              >
+                + Thêm Phòng thi
               </button>
             </div>
           </form>
