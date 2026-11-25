@@ -112,12 +112,15 @@ function getAccessToken() {
  */
 function getCurrentUser() {
   try {
+    const token = getAccessToken();
+    if (!token) return null;
+
     const rawUser = localStorage.getItem(AUTH_USER_KEY);
     if (rawUser) {
       const parsed = JSON.parse(rawUser);
       if (parsed && parsed.vai_tro) return parsed;
     }
-    const token = getAccessToken();
+
     const claims = parseJwtPayload(token);
     if (!claims) return null;
     return {
