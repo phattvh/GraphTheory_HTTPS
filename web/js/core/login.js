@@ -67,6 +67,28 @@ function handleLoginSuccessResponse(data) {
   return { token, vai_tro: role };
 }
 
+/**
+ * Kiểm tra hợp lệ từng trường form đăng nhập phía client.
+ * Không kiểm tra hay gợi ý độ dài tối thiểu của mật khẩu để tránh lộ chính sách mật khẩu trước tấn công brute-force.
+ * @param {string} name
+ * @param {string} value
+ * @param {boolean} required
+ * @param {number} minLength
+ * @param {string} [requiredMsg]
+ * @returns {string}
+ */
+function validateLoginField(name, value, required, minLength, requiredMsg) {
+  const raw = String(value == null ? "" : value);
+  const effective = name === "mat_khau" ? raw : raw.trim();
+  if (required && !effective) {
+    return requiredMsg || "Trường này không được để trống.";
+  }
+  if (name !== "mat_khau" && minLength > 0 && effective.length < minLength) {
+    return `Tên đăng nhập cần tối thiểu ${minLength} ký tự.`;
+  }
+  return "";
+}
+
 (() => {
   "use strict";
 
@@ -89,18 +111,14 @@ function handleLoginSuccessResponse(data) {
     alertBox.hidden = !message;
   };
 
-  const messageFor = (el) => {
-    const val = el.value.trim();
-    if (el.required && !val) {
-      return el.dataset.msg || "Trường này không được để trống.";
-    }
-    if (el.minLength > 0 && el.value.length < el.minLength) {
-      return el.name === "ten_dang_nhap"
-        ? `Tên đăng nhập cần tối thiểu ${el.minLength} ký tự.`
-        : `Mật khẩu cần tối thiểu ${el.minLength} ký tự.`;
-    }
-    return "";
-  };
+  const messageFor = (el) =>
+    validateLoginField(
+      el.name,
+      el.value,
+      el.required,
+      el.minLength,
+      el.dataset.msg
+    );
 
   const checkField = (field) => {
     const el = field.querySelector("input");
