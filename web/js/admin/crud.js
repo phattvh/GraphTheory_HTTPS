@@ -48,6 +48,32 @@ function switchCrudEntity(entity) {
   }
 }
 
+function createTableActionCell(onEdit, onDelete) {
+  const tdAct = document.createElement("td");
+  tdAct.className = "py-2.5 px-3 text-right whitespace-nowrap";
+
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "inline-flex items-center justify-end gap-1.5";
+
+  const btnEdit = document.createElement("button");
+  btnEdit.type = "button";
+  btnEdit.className =
+    "px-2.5 py-1 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition";
+  btnEdit.textContent = "Sửa";
+  btnEdit.onclick = onEdit;
+
+  const btnDel = document.createElement("button");
+  btnDel.type = "button";
+  btnDel.className =
+    "px-2.5 py-1 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs transition";
+  btnDel.textContent = "Xóa";
+  btnDel.onclick = onDelete;
+
+  btnGroup.append(btnEdit, btnDel);
+  tdAct.appendChild(btnGroup);
+  return tdAct;
+}
+
 function renderStudentTable() {
   const tbody = document.getElementById("student-table-body");
   const countEl = document.getElementById("student-count-label");
@@ -90,22 +116,10 @@ function renderStudentTable() {
     tdClass.className = "py-2.5 px-3 font-mono text-blue-700 font-semibold";
     tdClass.textContent = sv.lop_sinh_hoat;
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditStudent(sv.mssv);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteStudent(sv.mssv);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditStudent(sv.mssv),
+      () => deleteStudent(sv.mssv)
+    );
     tr.append(tdMssv, tdName, tdEmail, tdClass, tdAct);
     tbody.appendChild(tr);
   });
@@ -237,22 +251,10 @@ function renderExamTable() {
     badge.textContent = statusInfo.label;
     tdStatus.appendChild(badge);
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditExam(kt.ma_ky_thi);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteExam(kt.ma_ky_thi);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditExam(kt.ma_ky_thi),
+      () => deleteExam(kt.ma_ky_thi)
+    );
     tr.append(tdCode, tdName, tdRange, tdShifts, tdStatus, tdAct);
     tbody.appendChild(tr);
   });
@@ -393,22 +395,10 @@ function renderCourseTable() {
     tdCredits.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
     tdCredits.textContent = `${mh.so_tin_chi} TC`;
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditCourse(mh.ma_mon);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteCourse(mh.ma_mon);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditCourse(mh.ma_mon),
+      () => deleteCourse(mh.ma_mon)
+    );
     tr.append(tdCode, tdName, tdDuration, tdCredits, tdAct);
     tbody.appendChild(tr);
   });
