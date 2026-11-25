@@ -41,15 +41,18 @@ def test_login_page_structure_and_security():
         'href="/css/login.css"',
         'src="/js/core/auth.js"',
         'src="/js/core/login.js"',
-        ">HTTPS<",
+        'src="/assets/logo.svg"',
+        'class="https-login__pupil"',
     ]:
         assert marker in html, f"web/login.html thiếu thành phần: {marker}"
 
-    for forbidden in ["Colorlib", "Sprout", "plant pal", "GraphSchedule"]:
-        assert forbidden not in html, f"web/login.html còn sót chuỗi template cũ: {forbidden}"
+    for forbidden in ["Colorlib", "Sprout", "plant pal", "GraphSchedule", 'minlength="6"']:
+        assert forbidden not in html, f"web/login.html còn sót chuỗi không hợp lệ: {forbidden}"
 
     assert ".https-login-card" in css and ".is-shy" in css
     assert "/api/v1/auth/login" in js and "CapsLock" in js
+    assert "Mật khẩu cần tối thiểu" not in js, "Không được lộ gợi ý độ dài tối thiểu của mật khẩu trên form đăng nhập"
+    assert "function validateLoginField" in js and "function resolveCapsLockState" in js
     assert "innerHTML" not in js, "web/js/core/login.js không được dùng innerHTML để tránh XSS"
     assert "innerHTML" not in auth_js, "web/js/core/auth.js không được dùng innerHTML để tránh XSS"
 
@@ -188,6 +191,53 @@ assert.strictEqual(sandbox.window.location.href, "/student.html");
 sandbox.handleLogout();
 assert.strictEqual(store.size, 0);
 assert.strictEqual(sandbox.window.location.href, "/login.html");
+
+// 8. validateLoginField must NOT reveal minimum password length hints
+assert.strictEqual(sandbox.validateLoginField("mat_khau", "", true, 6, "Vui lòng nhập mật khẩu."), "Vui lòng nhập mật khẩu.");
+assert.strictEqual(sandbox.validateLoginField("mat_khau", "a", true, 6, "Vui lòng nhập mật khẩu."), "");
+assert.strictEqual(sandbox.validateLoginField("mat_khau", "12345", true, 6, "Vui lòng nhập mật khẩu."), "");
+assert.strictEqual(sandbox.validateLoginField("ten_dang_nhap", "ab", true, 3, "Vui lòng nhập"), "Tên đăng nhập cần tối thiểu 3 ký tự.");
+assert.strictEqual(sandbox.validateLoginField("ten_dang_nhap", "abc", true, 3, "Vui lòng nhập"), "");
+
+// 9. resolveCapsLockState on Linux X11 (keydown=false/keyup=true for ON; keydown=true/keyup=true stale for OFF)
+let st = { capsOn: false, capsPending: null };
+for (let i = 0; i < 4; i++) {
+  // Turn ON on X11
+  st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", modifierState: false });
+  st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: true });
+  assert.strictEqual(st.capsOn, true, `X11 cycle ${i}: expected ON after release`);
+  // Turn OFF on X11 (both keydown & keyup report stale true)
+  st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", modifierState: true });
+  st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", repeat: true, modifierState: true });
+  st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: true });
+  assert.strictEqual(st.capsOn, false, `X11 cycle ${i}: expected OFF immediately on first release`);
+}
+
+// 10. resolveCapsLockState on Linux X11 when CapsLock was already ON before clicking password input
+st = { capsOn: false, capsPending: null };
+st = sandbox.resolveCapsLockState(st, { type: "mousedown", modifierState: true });
+assert.strictEqual(st.capsOn, true);
+st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "Unidentified", code: "CapsLock", modifierState: true });
+st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "Unidentified", code: "CapsLock", modifierState: true });
+assert.strictEqual(st.capsOn, false);
+
+// 11. resolveCapsLockState on Windows (toggles before keydown)
+st = { capsOn: false, capsPending: null };
+st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", modifierState: true });
+assert.strictEqual(st.capsOn, true);
+st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: true });
+assert.strictEqual(st.capsOn, true);
+st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", modifierState: false });
+assert.strictEqual(st.capsOn, false);
+st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: false });
+assert.strictEqual(st.capsOn, false);
+
+// 12. resolveCapsLockState on macOS (keydown on ON, keyup on OFF)
+st = { capsOn: false, capsPending: null };
+st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: "CapsLock", modifierState: true });
+assert.strictEqual(st.capsOn, true);
+st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: false });
+assert.strictEqual(st.capsOn, false);
 """
     res = subprocess.run(
         ["node", "-e", script],

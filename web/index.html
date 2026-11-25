@@ -1,303 +1,1011 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTTPS — Quản lý Dữ liệu & Import Excel</title>
-  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/layout.css" />
-</head>
-<body data-admin-page="crud" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTTPS - Quản lý Dữ liệu</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+    <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/layout.css" />
+  </head>
+  <body
+    data-admin-page="crud"
+    class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col"
+  >
+    <div id="admin-layout-shell" class="flex-1 flex flex-col min-h-screen">
+      <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
+      <div id="admin-shell-mount"></div>
 
-  <div id="admin-layout-shell" class="flex-1 flex flex-col min-h-screen">
-    <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
-    <div id="admin-shell-mount"></div>
-
-    <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-6">
-      <!-- MÀN HÌNH FIGMA 02: QUẢN LÝ DỮ LIỆU & IMPORT CSV/EXCEL (UC02 - UC07) -->
-      <section id="tab-crud" class="admin-tab-section space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div>
-            <h2 id="crud-active-heading" class="text-sm font-bold text-slate-900">Quản lý Dữ liệu Đầu vào • Môn học</h2>
-            <p class="text-xs text-slate-500">Chọn danh mục ở thanh ngang phía trên để chuyển nhanh giữa Kỳ thi, Môn học, Sinh viên, Phòng thi và Đăng ký thi</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
-              📥 Import CSV / Excel
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
-              📤 Export Excel
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div id="crud-panel-mon_hoc" class="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h3 id="course-count-label" class="text-sm font-bold text-slate-900">Danh mục Học phần / Môn thi</h3>
-              <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-64 text-xs">
-                <input id="course-search-input" type="text" oninput="renderCourseTable()"
-                  placeholder="Tìm mã môn, tên môn học..."
-                  class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full" />
-                <span class="text-slate-400">🔍</span>
-              </div>
-            </div>
-
-            <form id="course-crud-form" onsubmit="saveCourseForm(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-              <input id="course-form-ma" type="text" placeholder="Mã môn (VD: IT009)" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="course-form-ten" type="text" placeholder="Tên học phần / Môn thi" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 sm:col-span-2" />
-              <input id="course-form-duration" type="number" min="15" max="300" value="90" placeholder="Phút" required
-                aria-label="Thời lượng thi (phút)"
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="course-form-credits" type="number" min="1" max="10" value="3" placeholder="Tín chỉ" required
-                aria-label="Số tín chỉ"
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <div class="sm:col-span-2 lg:col-span-5 flex flex-wrap items-center justify-between gap-2">
-                <p id="course-form-error" class="text-xs font-medium text-red-600 min-h-[1rem]"></p>
-                <div class="flex items-center gap-2">
-                  <button type="button" onclick="resetCourseForm()"
-                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
-                    Hủy
+      <main
+        id="admin-main-content"
+        class="flex-1 flex flex-col w-full p-6 space-y-6"
+      >
+        <!-- MÀN HÌNH FIGMA 02: QUẢN LÝ DỮ LIỆU & IMPORT CSV/EXCEL (UC02 - UC07) -->
+        <section id="tab-crud" class="admin-tab-section space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div
+              id="crud-panel-mon_hoc"
+              class="lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3
+                  id="course-count-label"
+                  class="text-sm font-bold text-slate-900"
+                >
+                  Danh mục Học phần / Môn thi
+                </h3>
+                <div class="flex flex-wrap items-center gap-2">
+                  <div
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
+                  >
+                    <input
+                      id="course-search-input"
+                      type="text"
+                      oninput="renderCourseTable()"
+                      placeholder="Tìm mã môn, tên môn học..."
+                      class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full"
+                    />
+                    <span class="text-slate-400">🔍</span>
+                  </div>
+                  <button
+                    id="btn-open-import-modal"
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('mon_hoc')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
                   </button>
-                  <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
-                    + Lưu Môn học
+                  <button
+                    id="btn-open-course-modal"
+                    type="button"
+                    onclick="openCourseModal()"
+                    class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition whitespace-nowrap"
+                  >
+                    + Thêm Môn học
                   </button>
                 </div>
               </div>
-            </form>
 
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-lg">
-                    <th class="py-2.5 px-3">Mã môn</th>
-                    <th class="py-2.5 px-3">Tên học phần / Môn thi</th>
-                    <th class="py-2.5 px-3">Thời lượng</th>
-                    <th class="py-2.5 px-3">Số tín chỉ</th>
-                    <th class="py-2.5 px-3 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="course-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- QUẢN LÝ SINH VIÊN (UC03) -->
-          <div id="crud-panel-sinh_vien" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h3 id="student-count-label" class="text-sm font-bold text-slate-900">Danh sách Sinh viên</h3>
-              <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-64 text-xs">
-                <input id="student-search-input" type="text" oninput="renderStudentTable()"
-                  placeholder="Tìm MSSV, họ tên, email, lớp..."
-                  class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full" />
-                <span class="text-slate-400">🔍</span>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-lg"
+                    >
+                      <th class="py-2.5 px-3">Mã môn</th>
+                      <th class="py-2.5 px-3">Tên học phần / Môn thi</th>
+                      <th class="py-2.5 px-3">Thời lượng</th>
+                      <th class="py-2.5 px-3">Số tín chỉ</th>
+                      <th class="py-2.5 px-3 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="course-table-body"
+                    class="divide-y divide-slate-200 text-slate-700"
+                  ></tbody>
+                </table>
               </div>
             </div>
 
-            <form id="student-crud-form" onsubmit="saveStudentForm(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-              <input id="sv-form-mssv" type="text" placeholder="MSSV (VD: 22110005)" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="sv-form-hoten" type="text" placeholder="Họ và tên" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="sv-form-email" type="email" placeholder="Email sinh viên"
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="sv-form-lop" type="text" placeholder="Lớp (VD: 22CNTT1)"
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <button type="submit" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
-                + Lưu Sinh viên
+            <!-- QUẢN LÝ SINH VIÊN (UC03) -->
+            <div
+              id="crud-panel-sinh_vien"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3
+                  id="student-count-label"
+                  class="text-sm font-bold text-slate-900"
+                >
+                  Danh sách Sinh viên
+                </h3>
+                <div class="flex flex-wrap items-center gap-2">
+                  <div
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
+                  >
+                    <input
+                      id="student-search-input"
+                      type="text"
+                      oninput="renderStudentTable()"
+                      placeholder="Tìm MSSV, họ tên, email, lớp..."
+                      class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full"
+                    />
+                    <span class="text-slate-400">🔍</span>
+                  </div>
+                  <button
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('sinh_vien')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
+                  <button
+                    id="btn-open-student-modal"
+                    type="button"
+                    onclick="openStudentModal()"
+                    class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition whitespace-nowrap"
+                  >
+                    + Thêm Sinh viên
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 text-slate-700 font-bold border border-slate-200"
+                    >
+                      <th class="py-2.5 px-3">MSSV</th>
+                      <th class="py-2.5 px-3">Họ và tên</th>
+                      <th class="py-2.5 px-3">Email</th>
+                      <th class="py-2.5 px-3">Lớp sinh hoạt</th>
+                      <th class="py-2.5 px-3 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="student-table-body"
+                    class="divide-y divide-slate-200 text-slate-700"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- QUẢN LÝ KỲ THI (UC02) -->
+            <div
+              id="crud-panel-ky_thi"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3
+                  id="exam-count-label"
+                  class="text-sm font-bold text-slate-900"
+                >
+                  Danh sách Kỳ thi
+                </h3>
+                <div class="flex flex-wrap items-center gap-2">
+                  <div
+                    class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 text-xs"
+                  >
+                    <input
+                      id="exam-search-input"
+                      type="text"
+                      oninput="renderExamTable()"
+                      placeholder="Tìm mã kỳ thi, tên kỳ thi, trạng thái..."
+                      class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full"
+                    />
+                    <span class="text-slate-400">🔍</span>
+                  </div>
+                  <button
+                    data-open-import-modal
+                    type="button"
+                    onclick="openImportModal('ky_thi')"
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                  >
+                    📥 Nạp dữ liệu
+                  </button>
+                  <button
+                    id="btn-open-exam-modal"
+                    type="button"
+                    onclick="openExamModal()"
+                    class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition whitespace-nowrap"
+                  >
+                    + Thêm Kỳ thi
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 text-slate-700 font-bold border border-slate-200"
+                    >
+                      <th class="py-2.5 px-3">Mã kỳ thi</th>
+                      <th class="py-2.5 px-3">Tên kỳ thi</th>
+                      <th class="py-2.5 px-3">Thời gian</th>
+                      <th class="py-2.5 px-3">Số ca/ngày</th>
+                      <th class="py-2.5 px-3">Trạng thái</th>
+                      <th class="py-2.5 px-3 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="exam-table-body"
+                    class="divide-y divide-slate-200 text-slate-700"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- QUẢN LÝ PHÒNG THI (UC06) -->
+            <div
+              id="crud-panel-phong_thi"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-slate-900">
+                  Danh mục Phòng thi &amp; Sức chứa
+                </h3>
+                <button
+                  data-open-import-modal
+                  type="button"
+                  onclick="openImportModal('phong_thi')"
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                >
+                  📥 Nạp dữ liệu
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 text-slate-700 font-bold border border-slate-200"
+                    >
+                      <th class="py-2.5 px-3">Mã phòng</th>
+                      <th class="py-2.5 px-3">Tên phòng</th>
+                      <th class="py-2.5 px-3">Sức chứa</th>
+                      <th class="py-2.5 px-3">Tòa nhà</th>
+                      <th class="py-2.5 px-3">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200 text-slate-700">
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">
+                        A101
+                      </td>
+                      <td class="py-2.5 px-3">Phòng thi A101</td>
+                      <td
+                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
+                      >
+                        60 chỗ
+                      </td>
+                      <td class="py-2.5 px-3">Nhà A</td>
+                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
+                        Đang sử dụng
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">
+                        A102
+                      </td>
+                      <td class="py-2.5 px-3">Phòng thi A102</td>
+                      <td
+                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
+                      >
+                        60 chỗ
+                      </td>
+                      <td class="py-2.5 px-3">Nhà A</td>
+                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
+                        Đang sử dụng
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">
+                        B201
+                      </td>
+                      <td class="py-2.5 px-3">Phòng thi B201</td>
+                      <td
+                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
+                      >
+                        45 chỗ
+                      </td>
+                      <td class="py-2.5 px-3">Nhà B</td>
+                      <td class="py-2.5 px-3 text-emerald-700 font-semibold">
+                        Đang sử dụng
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- QUẢN LÝ ĐĂNG KÝ THI (UC05) -->
+            <div
+              id="crud-panel-dang_ky_thi"
+              class="hidden lg:col-span-9 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-slate-900">
+                  Danh sách Đăng ký dự thi (Đầu vào dựng đồ thị)
+                </h3>
+                <button
+                  data-open-import-modal
+                  type="button"
+                  onclick="openImportModal('dang_ky_thi')"
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition whitespace-nowrap"
+                >
+                  📥 Nạp dữ liệu
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 text-slate-700 font-bold border border-slate-200"
+                    >
+                      <th class="py-2.5 px-3">MSSV</th>
+                      <th class="py-2.5 px-3">Họ tên sinh viên</th>
+                      <th class="py-2.5 px-3">Mã môn</th>
+                      <th class="py-2.5 px-3">Tên học phần</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200 text-slate-700">
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">
+                        22110399
+                      </td>
+                      <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
+                      <td
+                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
+                      >
+                        IT001
+                      </td>
+                      <td class="py-2.5 px-3">Lý thuyết Đồ thị</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">
+                        22110399
+                      </td>
+                      <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
+                      <td
+                        class="py-2.5 px-3 font-mono font-semibold text-blue-700"
+                      >
+                        IT002
+                      </td>
+                      <td class="py-2.5 px-3">
+                        Cấu trúc Dữ liệu &amp; Giải thuật
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div
+              class="lg:col-span-3 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3"
+            >
+              <h4 class="text-sm font-bold text-slate-900">
+                Cấu hình Kỳ thi hiện tại
+              </h4>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700"
+                  >Tên kỳ thi</label
+                >
+                <input
+                  type="text"
+                  value="Thi Cuối Kỳ HK1 (2026 - 2027)"
+                  readonly
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700"
+                  >Khoảng ngày thi &amp; Số ca/ngày</label
+                >
+                <input
+                  type="text"
+                  value="15/12/2026 - 22/12/2026 (4 ca/ngày)"
+                  readonly
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800"
+                />
+              </div>
+              <button
+                type="button"
+                class="w-full py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+              >
+                Lưu cấu hình &amp; Công bố lịch thi
               </button>
-            </form>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    <th class="py-2.5 px-3">MSSV</th>
-                    <th class="py-2.5 px-3">Họ và tên</th>
-                    <th class="py-2.5 px-3">Email</th>
-                    <th class="py-2.5 px-3">Lớp sinh hoạt</th>
-                    <th class="py-2.5 px-3 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="student-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
-              </table>
             </div>
           </div>
+        </section>
+      </main>
 
-          <!-- QUẢN LÝ KỲ THI (UC02) -->
-          <div id="crud-panel-ky_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h3 id="exam-count-label" class="text-sm font-bold text-slate-900">Danh sách Kỳ thi</h3>
-              <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-64 text-xs">
-                <input id="exam-search-input" type="text" oninput="renderExamTable()"
-                  placeholder="Tìm mã kỳ thi, tên kỳ thi, trạng thái..."
-                  class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full" />
-                <span class="text-slate-400">🔍</span>
+      <!-- MODAL NỔI: THÊM / CHỈNH SỬA MÔN HỌC -->
+      <div
+        id="course-crud-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="course-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'course-crud-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <h3
+              id="course-modal-title"
+              class="text-sm font-bold text-slate-900"
+            >
+              Thêm Môn học mới
+            </h3>
+            <button
+              type="button"
+              onclick="closeCourseModal()"
+              aria-label="Đóng cửa sổ môn học"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="course-crud-form"
+            onsubmit="saveCourseForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="space-y-1">
+              <label
+                for="course-form-ma"
+                class="block text-xs font-semibold text-slate-700"
+                >Mã môn</label
+              >
+              <input
+                id="course-form-ma"
+                type="text"
+                placeholder="VD: IT009"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label
+                for="course-form-ten"
+                class="block text-xs font-semibold text-slate-700"
+                >Tên học phần / Môn thi</label
+              >
+              <input
+                id="course-form-ten"
+                type="text"
+                placeholder="Nhập tên học phần / môn thi"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="course-form-duration"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Thời lượng thi (phút)</label
+                >
+                <input
+                  id="course-form-duration"
+                  type="number"
+                  min="15"
+                  max="300"
+                  value="90"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="course-form-credits"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Số tín chỉ</label
+                >
+                <input
+                  id="course-form-credits"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value="3"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
               </div>
             </div>
 
-            <form id="exam-crud-form" onsubmit="saveExamForm(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-              <input id="exam-form-ma" type="text" placeholder="Mã kỳ thi (VD: KTHK2_2026)" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="exam-form-ten" type="text" placeholder="Tên kỳ thi" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 sm:col-span-2" />
-              <input id="exam-form-start" type="date" aria-label="Ngày bắt đầu" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <input id="exam-form-end" type="date" aria-label="Ngày kết thúc" required
-                class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-              <div class="flex gap-2">
-                <input id="exam-form-shifts" type="number" min="1" max="10" value="4" placeholder="Ca/ngày" required
-                  class="w-24 px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800" />
-                <select id="exam-form-status" aria-label="Trạng thái kỳ thi"
-                  class="flex-1 px-2.5 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800">
+            <p
+              id="course-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
+
+            <div
+              class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                type="button"
+                onclick="closeCourseModal()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+              >
+                Hủy
+              </button>
+              <button
+                id="course-modal-submit"
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+              >
+                + Thêm Môn học
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL NỔI: THÊM / CHỈNH SỬA SINH VIÊN -->
+      <div
+        id="student-crud-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="student-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'student-crud-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <h3
+              id="student-modal-title"
+              class="text-sm font-bold text-slate-900"
+            >
+              Thêm Sinh viên mới
+            </h3>
+            <button
+              type="button"
+              onclick="closeStudentModal()"
+              aria-label="Đóng cửa sổ sinh viên"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="student-crud-form"
+            onsubmit="saveStudentForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="sv-form-mssv"
+                  class="block text-xs font-semibold text-slate-700"
+                  >MSSV</label
+                >
+                <input
+                  id="sv-form-mssv"
+                  type="text"
+                  placeholder="VD: 22110005"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="sv-form-lop"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Lớp sinh hoạt</label
+                >
+                <input
+                  id="sv-form-lop"
+                  type="text"
+                  placeholder="VD: 22CNTT1"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label
+                for="sv-form-hoten"
+                class="block text-xs font-semibold text-slate-700"
+                >Họ và tên</label
+              >
+              <input
+                id="sv-form-hoten"
+                type="text"
+                placeholder="Nhập họ và tên sinh viên"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label
+                for="sv-form-email"
+                class="block text-xs font-semibold text-slate-700"
+                >Email sinh viên</label
+              >
+              <input
+                id="sv-form-email"
+                type="email"
+                placeholder="VD: sv@univ.edu.vn"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <p
+              id="student-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
+
+            <div
+              class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                type="button"
+                onclick="closeStudentModal()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+              >
+                Hủy
+              </button>
+              <button
+                id="student-modal-submit"
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+              >
+                + Thêm Sinh viên
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL NỔI: THÊM / CHỈNH SỬA KỲ THI -->
+      <div
+        id="exam-crud-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exam-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'exam-crud-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <h3 id="exam-modal-title" class="text-sm font-bold text-slate-900">
+              Thêm Kỳ thi mới
+            </h3>
+            <button
+              type="button"
+              onclick="closeExamModal()"
+              aria-label="Đóng cửa sổ kỳ thi"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="exam-crud-form"
+            onsubmit="saveExamForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="space-y-1">
+              <label
+                for="exam-form-ma"
+                class="block text-xs font-semibold text-slate-700"
+                >Mã kỳ thi</label
+              >
+              <input
+                id="exam-form-ma"
+                type="text"
+                placeholder="VD: KTHK2_2026"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label
+                for="exam-form-ten"
+                class="block text-xs font-semibold text-slate-700"
+                >Tên kỳ thi</label
+              >
+              <input
+                id="exam-form-ten"
+                type="text"
+                placeholder="Nhập tên kỳ thi"
+                required
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="exam-form-start"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Ngày bắt đầu</label
+                >
+                <input
+                  id="exam-form-start"
+                  type="date"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="exam-form-end"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Ngày kết thúc</label
+                >
+                <input
+                  id="exam-form-end"
+                  type="date"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label
+                  for="exam-form-shifts"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Số ca / ngày</label
+                >
+                <input
+                  id="exam-form-shifts"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value="4"
+                  required
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  for="exam-form-status"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Trạng thái kỳ thi</label
+                >
+                <select
+                  id="exam-form-status"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                >
                   <option value="khoi_tao">Khởi tạo</option>
                   <option value="da_xep_lich">Đã xếp lịch</option>
                   <option value="cong_bo">Công bố</option>
                 </select>
               </div>
-              <div class="sm:col-span-2 lg:col-span-3 flex flex-wrap items-center justify-between gap-2">
-                <p id="exam-form-error" class="text-xs font-medium text-red-600 min-h-[1rem]"></p>
-                <div class="flex items-center gap-2">
-                  <button type="button" onclick="resetExamForm()"
-                    class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
-                    Hủy
-                  </button>
-                  <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
-                    + Lưu Kỳ thi
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    <th class="py-2.5 px-3">Mã kỳ thi</th>
-                    <th class="py-2.5 px-3">Tên kỳ thi</th>
-                    <th class="py-2.5 px-3">Thời gian</th>
-                    <th class="py-2.5 px-3">Số ca/ngày</th>
-                    <th class="py-2.5 px-3">Trạng thái</th>
-                    <th class="py-2.5 px-3 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="exam-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- QUẢN LÝ PHÒNG THI (UC06) -->
-          <div id="crud-panel-phong_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-sm font-bold text-slate-900">Danh mục Phòng thi &amp; Sức chứa</h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    <th class="py-2.5 px-3">Mã phòng</th>
-                    <th class="py-2.5 px-3">Tên phòng</th>
-                    <th class="py-2.5 px-3">Sức chứa</th>
-                    <th class="py-2.5 px-3">Tòa nhà</th>
-                    <th class="py-2.5 px-3">Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 text-slate-700">
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">A101</td>
-                    <td class="py-2.5 px-3">Phòng thi A101</td>
-                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">60 chỗ</td>
-                    <td class="py-2.5 px-3">Nhà A</td>
-                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">A102</td>
-                    <td class="py-2.5 px-3">Phòng thi A102</td>
-                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">60 chỗ</td>
-                    <td class="py-2.5 px-3">Nhà A</td>
-                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">B201</td>
-                    <td class="py-2.5 px-3">Phòng thi B201</td>
-                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">45 chỗ</td>
-                    <td class="py-2.5 px-3">Nhà B</td>
-                    <td class="py-2.5 px-3 text-emerald-700 font-semibold">Đang sử dụng</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- QUẢN LÝ ĐĂNG KÝ THI (UC05) -->
-          <div id="crud-panel-dang_ky_thi" class="hidden lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-sm font-bold text-slate-900">Danh sách Đăng ký dự thi (Đầu vào dựng đồ thị)</h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    <th class="py-2.5 px-3">MSSV</th>
-                    <th class="py-2.5 px-3">Họ tên sinh viên</th>
-                    <th class="py-2.5 px-3">Mã môn</th>
-                    <th class="py-2.5 px-3">Tên học phần</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 text-slate-700">
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">22110399</td>
-                    <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
-                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">IT001</td>
-                    <td class="py-2.5 px-3">Lý thuyết Đồ thị</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="py-2.5 px-3 font-semibold text-slate-900">22110399</td>
-                    <td class="py-2.5 px-3">Bùi Thiên Phúc</td>
-                    <td class="py-2.5 px-3 font-mono font-semibold text-blue-700">IT002</td>
-                    <td class="py-2.5 px-3">Cấu trúc Dữ liệu &amp; Giải thuật</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="space-y-1">
-              <h3 class="text-sm font-bold text-slate-900">Nạp dữ liệu hàng loạt CSV/Excel</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">
-                Hỗ trợ openpyxl / csv. Tự động kiểm tra toàn vẹn Transaction ACID và chặn Formula Injection (=, +, -, @).
-              </p>
             </div>
 
-            <div class="border-2 border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-6 text-center space-y-1.5 transition cursor-pointer">
-              <div class="text-xs font-bold text-slate-800">📂 Kéo thả file .xlsx hoặc .csv vào đây</div>
-              <div class="text-[11px] text-slate-500">sinh_vien.xlsx • mon_hoc.csv • dang_ky_thi.xlsx (Tối đa 5MB)</div>
-            </div>
+            <p
+              id="exam-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
 
-            <div class="pt-3 border-t border-slate-100 space-y-3">
-              <h4 class="text-sm font-bold text-slate-900">Cấu hình Kỳ thi hiện tại</h4>
-              <div class="space-y-1">
-                <label class="text-xs font-medium text-slate-700">Tên kỳ thi</label>
-                <input type="text" value="Thi Cuối Kỳ HK1 (2026 - 2027)" readonly
-                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-medium text-slate-700">Khoảng ngày thi &amp; Số ca/ngày</label>
-                <input type="text" value="15/12/2026 - 22/12/2026 (4 ca/ngày)" readonly
-                  class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-800" />
-              </div>
-              <button type="button" class="w-full py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
-                Lưu cấu hình &amp; Công bố lịch thi
+            <div
+              class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                type="button"
+                onclick="closeExamModal()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+              >
+                Hủy
+              </button>
+              <button
+                id="exam-modal-submit"
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+              >
+                + Thêm Kỳ thi
               </button>
             </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL NỔI: NẠP & XUẤT DỮ LIỆU CSV / EXCEL -->
+      <div
+        id="import-data-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-modal-title"
+        onclick="handleCrudModalBackdropClick(event, 'import-data-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-slate-200"
+          >
+            <div>
+              <h3
+                id="import-modal-title"
+                class="text-sm font-bold text-slate-900"
+              >
+                Nạp &amp; Xuất dữ liệu CSV / Excel
+              </h3>
+            </div>
+            <button
+              type="button"
+              onclick="closeImportModal()"
+              aria-label="Đóng cửa sổ nạp dữ liệu"
+              class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form
+            id="import-data-form"
+            onsubmit="submitImportForm(event)"
+            class="p-6 space-y-4"
+          >
+            <div class="space-y-1">
+              <label
+                for="import-entity-select"
+                class="block text-xs font-semibold text-slate-700"
+                >Danh mục dữ liệu</label
+              >
+              <select
+                id="import-entity-select"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              >
+                <option value="ky_thi">Kỳ thi</option>
+                <option value="mon_hoc">Môn học</option>
+                <option value="sinh_vien">Quản lý Sinh viên</option>
+                <option value="phong_thi">Phòng thi</option>
+                <option value="dang_ky_thi">Đăng ký thi</option>
+              </select>
+            </div>
+
+            <div
+              id="import-dropzone"
+              role="button"
+              tabindex="0"
+              onclick="triggerImportFilePicker()"
+              class="border-2 border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-6 text-center space-y-1.5 transition cursor-pointer"
+            >
+              <input
+                id="import-file-input"
+                type="file"
+                accept=".xlsx,.csv"
+                onchange="handleImportFileInputChange(event)"
+                class="hidden"
+              />
+              <div class="text-xs font-bold text-slate-800">
+                📂 Nhấn để chọn hoặc kéo thả file .xlsx / .csv vào đây
+              </div>
+              <div class="text-[11px] text-slate-500">
+                sinh_vien.xlsx • mon_hoc.csv • dang_ky_thi.xlsx (Tối đa 5MB)
+              </div>
+              <p
+                id="import-selected-file"
+                class="hidden text-xs font-semibold text-blue-700 pt-1"
+              ></p>
+            </div>
+
+            <p
+              id="import-form-error"
+              class="text-xs font-medium text-red-600 min-h-[1rem]"
+            ></p>
+            <p
+              id="import-form-status"
+              class="hidden text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2"
+            ></p>
+
+            <div
+              class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100"
+            >
+              <button
+                id="btn-export-excel"
+                type="button"
+                onclick="exportSelectedEntityData()"
+                class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+              >
+                📤 Export Excel
+              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick="closeImportModal()"
+                  class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+                >
+                  Đóng
+                </button>
+                <button
+                  id="import-modal-submit"
+                  type="submit"
+                  class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition"
+                >
+                  📥 Import CSV / Excel
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ALERT XÁC NHẬN XÓA DỮ LIỆU -->
+      <div
+        id="delete-confirm-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-alert-title"
+        aria-describedby="delete-alert-message"
+        onclick="handleCrudModalBackdropClick(event, 'delete-confirm-modal')"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px] no-print"
+      >
+        <div
+          class="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+        >
+          <div class="p-6 flex items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"
+              aria-hidden="true"
+            >
+              <svg
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div class="space-y-1.5 min-w-0">
+              <h3
+                id="delete-alert-title"
+                class="text-sm font-bold text-slate-900"
+              >
+                Xác nhận xóa dữ liệu
+              </h3>
+              <p
+                id="delete-alert-message"
+                class="text-xs text-slate-600 leading-relaxed"
+              >
+                Bạn có chắc chắn muốn xóa bản ghi này? Hành động này không thể
+                hoàn tác.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2"
+          >
+            <button
+              id="btn-cancel-delete"
+              type="button"
+              onclick="closeDeleteAlert()"
+              class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+            >
+              Hủy
+            </button>
+            <button
+              id="btn-confirm-delete"
+              type="button"
+              onclick="confirmPendingDelete()"
+              class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-sm transition"
+            >
+              Xác nhận xóa
+            </button>
           </div>
         </div>
-      </section>
-    </main>
-  </div>
+      </div>
+    </div>
 
-  <script src="/js/core/auth.js"></script>
-  <script src="/js/admin/layout.js"></script>
-  <script src="/js/admin/crud.js"></script>
-</body>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/admin/layout.js"></script>
+    <script src="/js/admin/crud.js"></script>
+  </body>
 </html>

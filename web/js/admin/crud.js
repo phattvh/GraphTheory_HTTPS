@@ -12,6 +12,16 @@ let studentRecords = [
 ];
 
 let editingMssv = null;
+let activeCrudEntity = "mon_hoc";
+let pendingDeleteAction = null;
+
+const CRUD_MODAL_IDS = [
+  "course-crud-modal",
+  "student-crud-modal",
+  "exam-crud-modal",
+  "import-data-modal",
+  "delete-confirm-modal",
+];
 
 const CRUD_HEADINGS = {
   ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi",
@@ -21,8 +31,86 @@ const CRUD_HEADINGS = {
   dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi",
 };
 
+function setInputLockedState(inputEl, locked) {
+  if (!inputEl) return;
+  inputEl.readOnly = Boolean(locked);
+  inputEl.classList.toggle("bg-slate-100", Boolean(locked));
+  inputEl.classList.toggle("text-slate-500", Boolean(locked));
+  inputEl.classList.toggle("cursor-not-allowed", Boolean(locked));
+  inputEl.classList.toggle("bg-white", !locked);
+}
+
+function openCrudModal(modalId, focusInputId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
+  if (focusInputId) {
+    const focusEl = document.getElementById(focusInputId);
+    if (focusEl && typeof focusEl.focus === "function") {
+      focusEl.focus();
+    }
+  }
+}
+
+function closeCrudModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.classList.add("hidden");
+  const anyOpen = CRUD_MODAL_IDS.some((id) => {
+    const el = document.getElementById(id);
+    return el && !el.classList.contains("hidden");
+  });
+  if (!anyOpen) {
+    document.body.classList.remove("overflow-hidden");
+  }
+}
+
+function closeAllCrudModals() {
+  pendingDeleteAction = null;
+  CRUD_MODAL_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+  });
+  document.body.classList.remove("overflow-hidden");
+}
+
+function openDeleteAlert(title, message, onConfirm) {
+  const titleEl = document.getElementById("delete-alert-title");
+  const msgEl = document.getElementById("delete-alert-message");
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  pendingDeleteAction = typeof onConfirm === "function" ? onConfirm : null;
+  openCrudModal("delete-confirm-modal", "btn-cancel-delete");
+}
+
+function closeDeleteAlert() {
+  pendingDeleteAction = null;
+  closeCrudModal("delete-confirm-modal");
+}
+
+function confirmPendingDelete() {
+  const action = pendingDeleteAction;
+  closeDeleteAlert();
+  if (typeof action === "function") {
+    action();
+  }
+}
+
+function handleCrudModalBackdropClick(event, modalId) {
+  if (event && event.target === event.currentTarget) {
+    if (modalId === "course-crud-modal") closeCourseModal();
+    else if (modalId === "student-crud-modal") closeStudentModal();
+    else if (modalId === "exam-crud-modal") closeExamModal();
+    else if (modalId === "import-data-modal") closeImportModal();
+    else if (modalId === "delete-confirm-modal") closeDeleteAlert();
+    else closeCrudModal(modalId);
+  }
+}
+
 function switchCrudEntity(entity) {
   const validEntity = CRUD_HEADINGS[entity] ? entity : "mon_hoc";
+  activeCrudEntity = validEntity;
   Object.keys(CRUD_HEADINGS).forEach((key) => {
     const el = document.getElementById(`crud-panel-${key}`);
     if (el) el.classList.toggle("hidden", key !== validEntity);
@@ -34,8 +122,9 @@ function switchCrudEntity(entity) {
   document.querySelectorAll("[data-crud-nav]").forEach((btn) => {
     const isActive = btn.getAttribute("data-crud-nav") === validEntity;
     btn.className = isActive
-      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
-      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
+      ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-700 border-b-2 border-blue-700 bg-white transition whitespace-nowrap"
+      : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:border-slate-300 border-b-2 border-transparent bg-white transition whitespace-nowrap";
+    btn.setAttribute("aria-current", isActive ? "page" : "false");
   });
 
   if (validEntity === "sinh_vien") {
@@ -45,6 +134,32 @@ function switchCrudEntity(entity) {
   } else if (validEntity === "mon_hoc") {
     renderCourseTable();
   }
+}
+
+function createTableActionCell(onEdit, onDelete) {
+  const tdAct = document.createElement("td");
+  tdAct.className = "py-2.5 px-3 text-right whitespace-nowrap";
+
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "inline-flex items-center justify-end gap-1.5";
+
+  const btnEdit = document.createElement("button");
+  btnEdit.type = "button";
+  btnEdit.className =
+    "px-2.5 py-1 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition";
+  btnEdit.textContent = "Sửa";
+  btnEdit.onclick = onEdit;
+
+  const btnDel = document.createElement("button");
+  btnDel.type = "button";
+  btnDel.className =
+    "px-2.5 py-1 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs transition";
+  btnDel.textContent = "Xóa";
+  btnDel.onclick = onDelete;
+
+  btnGroup.append(btnEdit, btnDel);
+  tdAct.appendChild(btnGroup);
+  return tdAct;
 }
 
 function renderStudentTable() {
@@ -89,25 +204,37 @@ function renderStudentTable() {
     tdClass.className = "py-2.5 px-3 font-mono text-blue-700 font-semibold";
     tdClass.textContent = sv.lop_sinh_hoat;
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditStudent(sv.mssv);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteStudent(sv.mssv);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditStudent(sv.mssv),
+      () => deleteStudent(sv.mssv)
+    );
     tr.append(tdMssv, tdName, tdEmail, tdClass, tdAct);
     tbody.appendChild(tr);
   });
+}
+
+function resetStudentForm() {
+  editingMssv = null;
+  const form = document.getElementById("student-crud-form");
+  const mssvInput = document.getElementById("sv-form-mssv");
+  const errEl = document.getElementById("student-form-error");
+  if (form) form.reset();
+  setInputLockedState(mssvInput, false);
+  if (errEl) errEl.textContent = "";
+}
+
+function openStudentModal() {
+  resetStudentForm();
+  const titleEl = document.getElementById("student-modal-title");
+  const submitEl = document.getElementById("student-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Sinh viên mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Sinh viên";
+  openCrudModal("student-crud-modal", "sv-form-mssv");
+}
+
+function closeStudentModal() {
+  resetStudentForm();
+  closeCrudModal("student-crud-modal");
 }
 
 function saveStudentForm(event) {
@@ -116,12 +243,16 @@ function saveStudentForm(event) {
   const nameInput = document.getElementById("sv-form-hoten");
   const emailInput = document.getElementById("sv-form-email");
   const classInput = document.getElementById("sv-form-lop");
+  const errEl = document.getElementById("student-form-error");
 
   const mssv = mssvInput.value.trim().toUpperCase();
   const ho_ten = nameInput.value.trim();
   const email = emailInput.value.trim();
   const lop_sinh_hoat = classInput.value.trim().toUpperCase();
-  if (!mssv || !ho_ten) return;
+  if (!mssv || !ho_ten) {
+    if (errEl) errEl.textContent = "Vui lòng nhập đầy đủ MSSV và họ tên sinh viên.";
+    return;
+  }
 
   const existingIdx = studentRecords.findIndex((s) => s.mssv === (editingMssv || mssv));
   const record = { mssv, ho_ten, email, lop_sinh_hoat };
@@ -131,9 +262,7 @@ function saveStudentForm(event) {
     studentRecords.unshift(record);
   }
 
-  editingMssv = null;
-  mssvInput.readOnly = false;
-  event.target.reset();
+  closeStudentModal();
   renderStudentTable();
 }
 
@@ -143,15 +272,31 @@ function startEditStudent(mssv) {
   editingMssv = mssv;
   const mssvInput = document.getElementById("sv-form-mssv");
   mssvInput.value = sv.mssv;
-  mssvInput.readOnly = true;
+  setInputLockedState(mssvInput, true);
   document.getElementById("sv-form-hoten").value = sv.ho_ten;
   document.getElementById("sv-form-email").value = sv.email;
   document.getElementById("sv-form-lop").value = sv.lop_sinh_hoat;
+  const errEl = document.getElementById("student-form-error");
+  if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("student-modal-title");
+  const submitEl = document.getElementById("student-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Sinh viên";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("student-crud-modal", "sv-form-hoten");
 }
 
 function deleteStudent(mssv) {
-  studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
-  renderStudentTable();
+  const sv = studentRecords.find((s) => s.mssv === mssv);
+  const label = sv ? `${sv.mssv} - ${sv.ho_ten}` : mssv;
+  openDeleteAlert(
+    "Xác nhận xóa Sinh viên",
+    `Bạn có chắc chắn muốn xóa sinh viên "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
+      if (editingMssv === mssv) closeStudentModal();
+      renderStudentTable();
+    }
+  );
 }
 
 let examRecords = [
@@ -236,22 +381,10 @@ function renderExamTable() {
     badge.textContent = statusInfo.label;
     tdStatus.appendChild(badge);
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditExam(kt.ma_ky_thi);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteExam(kt.ma_ky_thi);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditExam(kt.ma_ky_thi),
+      () => deleteExam(kt.ma_ky_thi)
+    );
     tr.append(tdCode, tdName, tdRange, tdShifts, tdStatus, tdAct);
     tbody.appendChild(tr);
   });
@@ -263,8 +396,22 @@ function resetExamForm() {
   const codeInput = document.getElementById("exam-form-ma");
   const errEl = document.getElementById("exam-form-error");
   if (form) form.reset();
-  if (codeInput) codeInput.readOnly = false;
+  setInputLockedState(codeInput, false);
   if (errEl) errEl.textContent = "";
+}
+
+function openExamModal() {
+  resetExamForm();
+  const titleEl = document.getElementById("exam-modal-title");
+  const submitEl = document.getElementById("exam-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Kỳ thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Kỳ thi";
+  openCrudModal("exam-crud-modal", "exam-form-ma");
+}
+
+function closeExamModal() {
+  resetExamForm();
+  closeCrudModal("exam-crud-modal");
 }
 
 function saveExamForm(event) {
@@ -313,7 +460,7 @@ function saveExamForm(event) {
     examRecords.unshift(record);
   }
 
-  resetExamForm();
+  closeExamModal();
   renderExamTable();
 }
 
@@ -323,7 +470,7 @@ function startEditExam(maKyThi) {
   editingExamCode = maKyThi;
   const codeInput = document.getElementById("exam-form-ma");
   codeInput.value = kt.ma_ky_thi;
-  codeInput.readOnly = true;
+  setInputLockedState(codeInput, true);
   document.getElementById("exam-form-ten").value = kt.ten_ky_thi;
   document.getElementById("exam-form-start").value = kt.ngay_bat_dau;
   document.getElementById("exam-form-end").value = kt.ngay_ket_thuc;
@@ -331,12 +478,25 @@ function startEditExam(maKyThi) {
   document.getElementById("exam-form-status").value = kt.trang_thai;
   const errEl = document.getElementById("exam-form-error");
   if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("exam-modal-title");
+  const submitEl = document.getElementById("exam-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Kỳ thi";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("exam-crud-modal", "exam-form-ten");
 }
 
 function deleteExam(maKyThi) {
-  examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
-  if (editingExamCode === maKyThi) resetExamForm();
-  renderExamTable();
+  const kt = examRecords.find((e) => e.ma_ky_thi === maKyThi);
+  const label = kt ? `${kt.ma_ky_thi} - ${kt.ten_ky_thi}` : maKyThi;
+  openDeleteAlert(
+    "Xác nhận xóa Kỳ thi",
+    `Bạn có chắc chắn muốn xóa kỳ thi "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
+      if (editingExamCode === maKyThi) closeExamModal();
+      renderExamTable();
+    }
+  );
 }
 
 let courseRecords = [
@@ -392,22 +552,10 @@ function renderCourseTable() {
     tdCredits.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
     tdCredits.textContent = `${mh.so_tin_chi} TC`;
 
-    const tdAct = document.createElement("td");
-    tdAct.className = "py-2.5 px-3 text-right space-x-2";
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "font-medium text-blue-600 hover:underline";
-    btnEdit.textContent = "Sửa";
-    btnEdit.onclick = () => startEditCourse(mh.ma_mon);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "font-medium text-red-600 hover:underline";
-    btnDel.textContent = "Xóa";
-    btnDel.onclick = () => deleteCourse(mh.ma_mon);
-
-    tdAct.append(btnEdit, document.createTextNode(" • "), btnDel);
+    const tdAct = createTableActionCell(
+      () => startEditCourse(mh.ma_mon),
+      () => deleteCourse(mh.ma_mon)
+    );
     tr.append(tdCode, tdName, tdDuration, tdCredits, tdAct);
     tbody.appendChild(tr);
   });
@@ -419,8 +567,22 @@ function resetCourseForm() {
   const codeInput = document.getElementById("course-form-ma");
   const errEl = document.getElementById("course-form-error");
   if (form) form.reset();
-  if (codeInput) codeInput.readOnly = false;
+  setInputLockedState(codeInput, false);
   if (errEl) errEl.textContent = "";
+}
+
+function openCourseModal() {
+  resetCourseForm();
+  const titleEl = document.getElementById("course-modal-title");
+  const submitEl = document.getElementById("course-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Môn học mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Môn học";
+  openCrudModal("course-crud-modal", "course-form-ma");
+}
+
+function closeCourseModal() {
+  resetCourseForm();
+  closeCrudModal("course-crud-modal");
 }
 
 function saveCourseForm(event) {
@@ -457,7 +619,7 @@ function saveCourseForm(event) {
     courseRecords.unshift(record);
   }
 
-  resetCourseForm();
+  closeCourseModal();
   renderCourseTable();
 }
 
@@ -467,19 +629,205 @@ function startEditCourse(maMon) {
   editingCourseCode = maMon;
   const codeInput = document.getElementById("course-form-ma");
   codeInput.value = mh.ma_mon;
-  codeInput.readOnly = true;
+  setInputLockedState(codeInput, true);
   document.getElementById("course-form-ten").value = mh.ten_mon;
   document.getElementById("course-form-duration").value = String(mh.thoi_luong_phut);
   document.getElementById("course-form-credits").value = String(mh.so_tin_chi);
   const errEl = document.getElementById("course-form-error");
   if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("course-modal-title");
+  const submitEl = document.getElementById("course-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Môn học";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("course-crud-modal", "course-form-ten");
 }
 
 function deleteCourse(maMon) {
-  courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
-  if (editingCourseCode === maMon) resetCourseForm();
-  renderCourseTable();
+  const mh = courseRecords.find((c) => c.ma_mon === maMon);
+  const label = mh ? `${mh.ma_mon} - ${mh.ten_mon}` : maMon;
+  openDeleteAlert(
+    "Xác nhận xóa Môn học",
+    `Bạn có chắc chắn muốn xóa môn học "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
+      if (editingCourseCode === maMon) closeCourseModal();
+      renderCourseTable();
+    }
+  );
 }
+
+const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+let selectedImportFile = null;
+
+function resetImportModalState() {
+  selectedImportFile = null;
+  const form = document.getElementById("import-data-form");
+  const fileInput = document.getElementById("import-file-input");
+  const selectedEl = document.getElementById("import-selected-file");
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  if (form) form.reset();
+  if (fileInput) fileInput.value = "";
+  if (selectedEl) {
+    selectedEl.textContent = "";
+    selectedEl.classList.add("hidden");
+  }
+  if (errEl) errEl.textContent = "";
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.add("hidden");
+  }
+}
+
+function openImportModal(entity) {
+  resetImportModalState();
+  const selectEl = document.getElementById("import-entity-select");
+  const target = entity && CRUD_HEADINGS[entity] ? entity : activeCrudEntity;
+  if (selectEl && CRUD_HEADINGS[target]) {
+    selectEl.value = target;
+  }
+  openCrudModal("import-data-modal", "import-entity-select");
+}
+
+function closeImportModal() {
+  resetImportModalState();
+  closeCrudModal("import-data-modal");
+}
+
+function triggerImportFilePicker() {
+  const fileInput = document.getElementById("import-file-input");
+  if (fileInput) fileInput.click();
+}
+
+function selectImportFile(file) {
+  const selectedEl = document.getElementById("import-selected-file");
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  if (errEl) errEl.textContent = "";
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.add("hidden");
+  }
+  if (!file) {
+    selectedImportFile = null;
+    if (selectedEl) {
+      selectedEl.textContent = "";
+      selectedEl.classList.add("hidden");
+    }
+    return;
+  }
+
+  const lowerName = String(file.name || "").toLowerCase();
+  if (!lowerName.endsWith(".xlsx") && !lowerName.endsWith(".csv")) {
+    selectedImportFile = null;
+    if (selectedEl) selectedEl.classList.add("hidden");
+    if (errEl) errEl.textContent = "Chỉ hỗ trợ định dạng tệp .xlsx hoặc .csv.";
+    return;
+  }
+  if (file.size > IMPORT_MAX_BYTES) {
+    selectedImportFile = null;
+    if (selectedEl) selectedEl.classList.add("hidden");
+    if (errEl) errEl.textContent = "Dung lượng tệp vượt quá giới hạn tối đa 5MB.";
+    return;
+  }
+
+  selectedImportFile = file;
+  if (selectedEl) {
+    const sizeKb = Math.max(1, Math.round(file.size / 1024));
+    selectedEl.textContent = `Đã chọn: ${file.name} (${sizeKb} KB)`;
+    selectedEl.classList.remove("hidden");
+  }
+}
+
+function handleImportFileInputChange(event) {
+  const file = event && event.target && event.target.files ? event.target.files[0] : null;
+  selectImportFile(file);
+}
+
+function submitImportForm(event) {
+  event.preventDefault();
+  const errEl = document.getElementById("import-form-error");
+  const statusEl = document.getElementById("import-form-status");
+  const selectEl = document.getElementById("import-entity-select");
+  if (errEl) errEl.textContent = "";
+
+  if (!selectedImportFile) {
+    if (errEl) errEl.textContent = "Vui lòng chọn tệp .xlsx hoặc .csv trước khi nạp dữ liệu.";
+    return;
+  }
+
+  const entityLabel =
+    selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0]
+      ? selectEl.selectedOptions[0].textContent
+      : "Dữ liệu";
+  if (statusEl) {
+    statusEl.textContent = `Đã tiếp nhận tệp "${selectedImportFile.name}" cho danh mục ${entityLabel}. Sẵn sàng đồng bộ qua API Import Transaction ACID.`;
+    statusEl.classList.remove("hidden");
+  }
+}
+
+function sanitizeCsvCell(value) {
+  const str = String(value == null ? "" : value);
+  const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function exportSelectedEntityData() {
+  const selectEl = document.getElementById("import-entity-select");
+  const statusEl = document.getElementById("import-form-status");
+  const errEl = document.getElementById("import-form-error");
+  if (errEl) errEl.textContent = "";
+
+  const entity = (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+  let headers = [];
+  let rows = [];
+
+  if (entity === "mon_hoc") {
+    headers = ["ma_mon", "ten_mon", "thoi_luong_phut", "so_tin_chi"];
+    rows = courseRecords.map((r) => [r.ma_mon, r.ten_mon, r.thoi_luong_phut, r.so_tin_chi]);
+  } else if (entity === "sinh_vien") {
+    headers = ["mssv", "ho_ten", "email", "lop_sinh_hoat"];
+    rows = studentRecords.map((r) => [r.mssv, r.ho_ten, r.email, r.lop_sinh_hoat]);
+  } else if (entity === "ky_thi") {
+    headers = ["ma_ky_thi", "ten_ky_thi", "ngay_bat_dau", "ngay_ket_thuc", "so_ca_moi_ngay", "trang_thai"];
+    rows = examRecords.map((r) => [
+      r.ma_ky_thi,
+      r.ten_ky_thi,
+      r.ngay_bat_dau,
+      r.ngay_ket_thuc,
+      r.so_ca_moi_ngay,
+      r.trang_thai,
+    ]);
+  } else {
+    if (statusEl) {
+      statusEl.textContent = "Đã sẵn sàng xuất file Excel khi đồng bộ dữ liệu từ máy chủ.";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const csvLines = [headers, ...rows].map((row) => row.map(sanitizeCsvCell).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csvLines], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${entity}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  if (statusEl) {
+    statusEl.textContent = `Đã xuất tệp ${entity}.csv (${rows.length} bản ghi).`;
+    statusEl.classList.remove("hidden");
+  }
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeAllCrudModals();
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   const entity = new URLSearchParams(window.location.search).get("entity");
@@ -489,5 +837,28 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCourseTable();
     renderStudentTable();
     renderExamTable();
+  }
+
+  const dropzone = document.getElementById("import-dropzone");
+  if (dropzone) {
+    dropzone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        triggerImportFilePicker();
+      }
+    });
+    dropzone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropzone.classList.add("border-blue-500", "bg-blue-100/60");
+    });
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-blue-500", "bg-blue-100/60");
+    });
+    dropzone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropzone.classList.remove("border-blue-500", "bg-blue-100/60");
+      const file = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files[0] : null;
+      selectImportFile(file);
+    });
   }
 });

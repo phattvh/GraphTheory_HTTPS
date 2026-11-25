@@ -89,14 +89,14 @@ function initAdminShell(activePage) {
   const crudSubNav =
     activePage === "crud"
       ? `
-      <div id="crud-entity-menubar" class="w-full px-6 bg-slate-50/90 border-t border-slate-200 flex items-center justify-between overflow-x-auto">
+      <div id="crud-entity-menubar" class="w-full px-6 bg-white flex items-center justify-between overflow-x-auto">
         <nav aria-label="Data Management Entity Menu" class="flex items-center gap-1">
           ${CRUD_ENTITIES.map((ent) => {
             const isActive = ent.key === activeEntity;
             const cls = isActive
-              ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 border-b-2 border-blue-600 bg-white transition whitespace-nowrap"
-              : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 border-b-2 border-transparent transition whitespace-nowrap";
-            return `<button type="button" data-crud-nav="${ent.key}" onclick="switchCrudEntity('${ent.key}')" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></button>`;
+              ? "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-700 border-b-2 border-blue-700 bg-white transition whitespace-nowrap"
+              : "admin-nav-btn flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-blue-700 hover:border-slate-300 border-b-2 border-transparent bg-white transition whitespace-nowrap";
+            return `<button type="button" data-crud-nav="${ent.key}" aria-current="${isActive ? "page" : "false"}" onclick="switchCrudEntity('${ent.key}')" class="${cls}"><span>${ent.icon}</span><span>${ent.label}</span></button>`;
           }).join("\n")}
         </nav>
       </div>`
@@ -117,23 +117,21 @@ function initAdminShell(activePage) {
       <div class="w-full px-6 h-16 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <button id="btn-open-right-drawer" type="button" onclick="toggleRightDrawer()"
-            aria-expanded="false" aria-controls="admin-sidebar"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition shrink-0"
-            title="Mở Menu điều hướng">
-            <span>☰</span>
-            <span class="hidden sm:inline">Menu</span>
+            aria-expanded="false" aria-controls="admin-sidebar" aria-label="Mở menu điều hướng"
+            class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition shrink-0"
+            title="Mở menu điều hướng">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
           </button>
 
           <a href="/index.html" class="flex items-center gap-2.5 shrink-0">
-            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">H</div>
-            <h1 class="text-base font-bold text-slate-900 leading-tight">HTTPS</h1>
+            <img src="/assets/logo.svg" alt="HTTPS Logo" width="59" height="28" class="h-7 w-[59px] shrink-0 object-contain" />
+            <span class="h-5 w-[1.5px] rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
+            <h1 class="https-brand-wordmark text-lg">HTTPS</h1>
           </a>
-
-          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition ml-1">
-            <span class="mr-2 text-slate-400">🔍</span>
-            <input id="global-search-input" type="text" placeholder="Tìm nhanh môn, phòng, SV (/)..."
-              class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full text-xs" />
-          </div>
         </div>
 
         <div class="flex items-center gap-2.5 shrink-0">
@@ -158,10 +156,11 @@ function initAdminShell(activePage) {
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">H</div>
+            <img src="/assets/logo.svg" alt="HTTPS Logo" width="50" height="24" class="h-6 w-[50px] shrink-0 object-contain" />
+            <span class="h-5 w-[1.5px] rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
             <div>
-              <div class="text-sm font-bold text-slate-900">HTTPS</div>
-              <div class="text-xs text-slate-500">Admin: Phòng Đào Tạo</div>
+              <div class="https-brand-wordmark text-sm">HTTPS</div>
+              <div class="text-xs text-slate-500 mt-0.5">Admin: Phòng Đào Tạo</div>
             </div>
           </div>
           <button id="btn-close-right-drawer" type="button" onclick="closeRightDrawer()"
