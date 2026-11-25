@@ -36,12 +36,20 @@ def build_conflict_graph(
     # 1. Nạp danh mục môn học ban đầu nếu được cung cấp
     if courses:
         for course in courses:
-            ma_mon = "" if course.get("ma_mon") is None else str(course.get("ma_mon")).strip()
+            if not isinstance(course, dict):
+                continue
+            raw_ma = course.get("ma_mon")
+            if raw_ma is None or str(raw_ma).strip() == "":
+                raw_ma = course.get("ma_mon_hoc")
+            raw_ten = course.get("ten_mon")
+            if raw_ten is None or str(raw_ten).strip() == "":
+                raw_ten = course.get("ten_mon_hoc", "")
+            ma_mon = "" if raw_ma is None else str(raw_ma).strip()
             if ma_mon:
                 G.add_node(
                     ma_mon,
                     ma_mon=ma_mon,
-                    ten_mon=course.get("ten_mon", ""),
+                    ten_mon="" if raw_ten is None else str(raw_ten).strip(),
                     size=0,
                 )
 
@@ -51,7 +59,12 @@ def build_conflict_graph(
 
     for reg in registrations:
         if isinstance(reg, dict):
-            raw_mssv, raw_mon = reg.get("mssv"), reg.get("ma_mon")
+            raw_mssv = reg.get("mssv")
+            if raw_mssv is None or str(raw_mssv).strip() == "":
+                raw_mssv = reg.get("ma_sinh_vien")
+            raw_mon = reg.get("ma_mon")
+            if raw_mon is None or str(raw_mon).strip() == "":
+                raw_mon = reg.get("ma_mon_hoc")
         elif isinstance(reg, (list, tuple)) and len(reg) >= 2:
             raw_mssv, raw_mon = reg[0], reg[1]
         else:
