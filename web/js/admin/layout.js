@@ -132,12 +132,6 @@ function initAdminShell(activePage) {
             <span class="h-5 w-[1.5px] rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
             <h1 class="https-brand-wordmark text-lg">HTTPS</h1>
           </a>
-
-          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-lg px-3 py-1.5 w-56 lg:w-64 text-xs transition ml-1">
-            <span class="mr-2 text-slate-400">🔍</span>
-            <input id="global-search-input" type="text" placeholder="Tìm nhanh môn, phòng, SV (/)..."
-              class="bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 w-full text-xs" />
-          </div>
         </div>
 
         <div class="flex items-center gap-2.5 shrink-0">
