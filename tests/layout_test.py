@@ -49,6 +49,12 @@ def test_admin_pages_and_student_structure():
     assert "⚡ Xếp lịch DSatur" not in layout_js, "Không còn nút Xếp lịch DSatur trên header"
     assert "CRUD_ENTITIES" in layout_js and '"Kỳ thi"' in layout_js and '"Quản lý Sinh viên"' in layout_js
     assert 'activePage === "crud"' in layout_js and 'id="crud-entity-menubar"' in layout_js
+    assert 'id="crud-entity-menubar" class="w-full px-6 bg-white' in layout_js, "Thanh danh mục CRUD phải cùng màu nền trắng với header phía trên"
+    assert "bg-slate-50/90" not in layout_js, "Không dùng nền xám tách biệt cho thanh danh mục CRUD"
+    assert "font-bold text-blue-700 border-b-2 border-blue-700" in layout_js, "Mục CRUD đang chọn phải chữ xanh đậm và có gạch dưới"
+    assert ">Menu<" not in layout_js, "Nút mở sidebar chỉ dùng biểu tượng, bỏ chữ Menu"
+    assert 'aria-label="Mở menu điều hướng"' in layout_js and "w-10 h-10" in layout_js
+    assert 'id="global-search-input"' not in layout_js, "Đã bỏ thanh tìm kiếm nhanh trên header Admin"
     assert "(UC" not in layout_js, "Không còn nhãn (UC...) trên giao diện"
     assert "max-w-[1440px]" not in layout_js, "Header Admin phải dùng full-width"
     assert layout_js.index('id="btn-open-right-drawer"') < layout_js.index(">HTTPS<"), "Nút Menu phải nằm cùng chỗ bên trái với logo HTTPS"
@@ -90,6 +96,7 @@ def test_admin_pages_and_student_structure():
     assert 'src="/js/admin/crud.js"' in index_html
     for fn in [
         "switchCrudEntity",
+        "createTableActionCell",
         "saveStudentForm",
         "renderExamTable",
         "saveExamForm",
@@ -97,6 +104,9 @@ def test_admin_pages_and_student_structure():
         "saveCourseForm",
     ]:
         assert fn in crud_js, f"web/js/admin/crud.js thiếu hàm {fn}"
+    assert "font-bold text-blue-700 border-b-2 border-blue-700" in crud_js, "switchCrudEntity phải giữ style xanh đậm + gạch dưới cho mục đang chọn"
+    assert '" • "' not in crud_js, "Nút Sửa và Xóa phải tách thành 2 button riêng, không nối bằng dấu chấm"
+    assert "border-blue-200 bg-blue-50" in crud_js and "border-red-200 bg-red-50" in crud_js
     assert "innerHTML" not in crud_js, "web/js/admin/crud.js không được dùng innerHTML để tránh XSS"
 
     # Kiểm tra khung giao diện Sinh viên nằm tách biệt tại student.html và không kéo thừa JS/link của Admin
