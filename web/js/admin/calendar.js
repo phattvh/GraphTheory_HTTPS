@@ -286,16 +286,43 @@ function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
   const activeCount = visibleDates.filter((d) => datesWithExams.has(d)).length;
   const emptyCount = visibleDates.length - activeCount;
 
-  // Nếu đang ở chế độ xem Tuần và có cả ngày có môn thi lẫn ngày trống thì thu nhỏ cột ngày trống (76px)
-  const shouldCollapseEmpty = isWeekView && activeCount > 0 && emptyCount > 0;
+  // Tính số môn tối đa trong cùng 1 ca của từng ngày (phục vụ chế độ Chia theo giờ để các môn trùng ca không bị ép hẹp)
+  const dayMaxConcurrency = {};
+  visibleDates.forEach((d) => {
+    dayMaxConcurrency[d] = 0;
+  });
+  const dayShiftCounter = {};
+  (eventsList || []).forEach((ev) => {
+    const d = String(ev.ngay_thi || String(ev.start || "").slice(0, 10));
+    const key = `${d}_ca_${ev.stt_ca}`;
+    dayShiftCounter[key] = (dayShiftCounter[key] || 0) + 1;
+    if (dayMaxConcurrency[d] !== undefined && dayShiftCounter[key] > dayMaxConcurrency[d]) {
+      dayMaxConcurrency[d] = dayShiftCounter[key];
+    }
+  });
+
+  const getDayWeight = (dateStr) => {
+    if (!datesWithExams.has(dateStr)) return 0;
+    if (currentSlotMode === "hour") {
+      return Math.max(1, dayMaxConcurrency[dateStr] || 1);
+    }
+    return 1;
+  };
+
+  const totalActiveWeight = visibleDates.reduce((sum, d) => sum + getDayWeight(d), 0);
+
+  // Nếu đang ở chế độ xem Tuần và có ngày có môn thi thì thu nhỏ cột ngày trống (76px) và chia cột có môn theo trọng số
+  const shouldAdjust = isWeekView && activeCount > 0 && totalActiveWeight > 0;
   const emptyWidthCss = "76px";
-  const activeWidthCss = shouldCollapseEmpty
-    ? `calc((100% - ${emptyCount * 76}px) / ${activeCount})`
-    : "";
 
   visibleDates.forEach((dateStr) => {
     const hasExam = datesWithExams.has(dateStr);
-    const widthVal = shouldCollapseEmpty ? (hasExam ? activeWidthCss : emptyWidthCss) : "";
+    const weight = getDayWeight(dateStr);
+    const activeWidthCss =
+      emptyCount > 0
+        ? `calc(((100% - ${emptyCount * 76}px) * ${weight}) / ${totalActiveWeight})`
+        : `${((weight / totalActiveWeight) * 100).toFixed(4)}%`;
+    const widthVal = shouldAdjust ? (hasExam ? activeWidthCss : emptyWidthCss) : "";
 
     const matchingCells = Array.from(
       calendarEl.querySelectorAll(`[data-date="${dateStr}"]`)
@@ -305,8 +332,8 @@ function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
         cell.style.width = widthVal;
       }
       if (cell.classList) {
-        cell.classList.toggle("is-empty-day-col", shouldCollapseEmpty && !hasExam);
-        cell.classList.toggle("is-active-day-col", shouldCollapseEmpty && hasExam);
+        cell.classList.toggle("is-empty-day-col", shouldAdjust && !hasExam);
+        cell.classList.toggle("is-active-day-col", shouldAdjust && hasExam);
       }
     });
   });
@@ -323,9 +350,14 @@ function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
       const offset = cols.length - visibleDates.length;
       visibleDates.forEach((dateStr, idx) => {
         const hasExam = datesWithExams.has(dateStr);
+        const weight = getDayWeight(dateStr);
+        const activeWidthCss =
+          emptyCount > 0
+            ? `calc(((100% - ${emptyCount * 76}px) * ${weight}) / ${totalActiveWeight})`
+            : `${((weight / totalActiveWeight) * 100).toFixed(4)}%`;
         const colEl = cols[offset + idx];
         if (colEl && colEl.style) {
-          colEl.style.width = shouldCollapseEmpty
+          colEl.style.width = shouldAdjust
             ? hasExam
               ? activeWidthCss
               : emptyWidthCss
@@ -339,7 +371,8 @@ function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
     visibleDates,
     activeCount,
     emptyCount,
-    collapsed: shouldCollapseEmpty,
+    totalActiveWeight,
+    collapsed: shouldAdjust && emptyCount > 0,
   };
 }
 
@@ -385,20 +418,48 @@ function addMinutesToTimeString(timeStr, minutesToAdd) {
 }
 
 /**
+ * Tính số lượng môn thi tối đa trong cùng một ô (Ngày × Ca) để đồng bộ kích thước mọi thẻ môn thi bằng nhau
+ * và tự động giãn chiều cao hàng Ca mà không bị nhồi nhét.
+ * @param {Array<Record<string, any>>} rawEvents
+ */
+function getMaxCoursesPerShiftSlot(rawEvents = SAMPLE_EXAM_EVENTS) {
+  const counts = {};
+  let maxInOneSlot = 1;
+  (rawEvents || []).forEach((item) => {
+    const key = `${item.ngay_thi}_ca_${item.stt_ca}`;
+    counts[key] = (counts[key] || 0) + 1;
+    if (counts[key] > maxInOneSlot) {
+      maxInOneSlot = counts[key];
+    }
+  });
+  return Math.max(2, maxInOneSlot);
+}
+
+/**
+ * Cập nhật chiều cao hàng Ca (--https-shift-row-height) tỉ lệ thuận với số môn tối đa trong 1 ca
+ * để mỗi thẻ môn thi luôn giữ kích thước chuẩn 4.75rem (~76px) bằng nhau.
+ * @param {Array<Record<string, any>>} rawEvents
+ */
+function syncUniformShiftRowHeight(rawEvents = activeFilteredEvents) {
+  const calendarEl = document.getElementById("admin-fullcalendar");
+  const uniformCapacity = getMaxCoursesPerShiftSlot(rawEvents);
+  const rowHeightRem = (uniformCapacity * 4.75).toFixed(2);
+  if (calendarEl && calendarEl.style && typeof calendarEl.style.setProperty === "function") {
+    calendarEl.style.setProperty("--https-shift-row-height", `${rowHeightRem}rem`);
+  }
+  return uniformCapacity;
+}
+
+/**
  * Chuyển đổi danh sách ca thi thành định dạng Event Object chuẩn của FullCalendar.
- * Các môn thi cùng ngày + cùng ca được chia thành các dải hàng ngang 100% chiều rộng
- * nằm gọn bên trong ô ca đó (không bị ép cột dọc 50% gây cắt chữ).
+ * Ở chế độ "shift", mọi môn thi (dù ngày đó có 1 môn hay nhiều môn) đều chiếm đúng 1 đơn vị chiều cao
+ * chuẩn bằng nhau (60 / uniformCapacity phút), giúp tất cả các ô môn thi to bằng nhau 100% và không bị nhồi nhét.
  * @param {Array<Record<string, any>>} rawEvents
  * @param {string} mode
  */
 function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentSlotMode) {
-  // Gom nhóm các môn cùng ngày và cùng ca để chia hàng ngang tuần tự trong ô ca
-  const groupCounts = {};
   const groupIndices = {};
-  rawEvents.forEach((item) => {
-    const key = `${item.ngay_thi}_ca_${item.stt_ca}`;
-    groupCounts[key] = (groupCounts[key] || 0) + 1;
-  });
+  const uniformCapacity = syncUniformShiftRowHeight(rawEvents);
 
   return rawEvents.map((item) => {
     const palette = SHIFT_COLOR_PALETTE[item.stt_ca] || SHIFT_COLOR_PALETTE[1];
@@ -406,7 +467,6 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentS
     const roomText = Array.isArray(item.rooms) ? item.rooms.join(", ") : String(item.rooms || "");
 
     const key = `${item.ngay_thi}_ca_${item.stt_ca}`;
-    const totalInSlot = groupCounts[key] || 1;
     const indexInSlot = groupIndices[key] || 0;
     groupIndices[key] = indexInSlot + 1;
 
@@ -415,11 +475,14 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentS
 
     if (mode === "shift") {
       const slotMinutes = 60;
-      const sliceMinutes = slotMinutes / totalInSlot;
-      const startTime = addMinutesToTimeString(compactSlot.startSlot, indexInSlot * sliceMinutes);
+      const uniformSliceMinutes = slotMinutes / uniformCapacity;
+      const startTime = addMinutesToTimeString(
+        compactSlot.startSlot,
+        indexInSlot * uniformSliceMinutes
+      );
       const endTime = addMinutesToTimeString(
         compactSlot.startSlot,
-        (indexInSlot + 1) * sliceMinutes
+        (indexInSlot + 1) * uniformSliceMinutes
       );
       eventStart = `${item.ngay_thi}T${startTime}`;
       eventEnd = `${item.ngay_thi}T${endTime}`;

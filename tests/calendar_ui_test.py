@@ -237,10 +237,14 @@ assert.strictEqual(sandbox.switchCalendarSlotMode("shift"), "shift");
 assert.strictEqual(elements["btn-view-week"].value, "shift");
 assert.strictEqual(optionsLog.slotMinTime, "01:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "05:00:00");
+// Mọi ô môn thi (kể cả ngày có 2 môn như IT002/IT005 ngày 15/12 và ngày chỉ có 1 môn như IT009 ngày 16/12) đều có độ cao 30 phút bằng nhau
 assert.strictEqual(currentEvents[0].start, "2026-12-15T01:00:00");
 assert.strictEqual(currentEvents[0].end, "2026-12-15T01:30:00");
 assert.strictEqual(currentEvents[1].start, "2026-12-15T01:30:00");
 assert.strictEqual(currentEvents[1].end, "2026-12-15T02:00:00");
+const it009 = currentEvents.find((e) => e.extendedProps.ma_mon === "IT009");
+assert.strictEqual(it009.start, "2026-12-16T01:00:00");
+assert.strictEqual(it009.end, "2026-12-16T01:30:00");
 
 // 4. Kiểm tra ô tìm kiếm từ khóa gợi ý & Đặt lại
 const shift1Events = sandbox.applyCalendarSearchKeyword("Ca 1");
