@@ -299,6 +299,46 @@ def test_high_load_combined_splitting_and_spilling():
             )
 
 
+def test_no_useless_spill_for_impossible_courses_and_mixed_shift_keys():
+    """Không tách ca vô ích cho môn vượt sức chứa đơn khi tắt chia phòng hoặc khi chỉ có môn quá tải; hỗ trợ shift_id lẫn kiểu."""
+    rooms = [
+        {"ma_phong": "P1", "suc_chua": 80},
+        {"ma_phong": "P2", "suc_chua": 50},
+    ]
+
+    # 1. allow_room_splitting=False: môn 120 SV vượt phòng lớn nhất (80) không được tách ca vô ích
+    res_no_split = allocate_exam_rooms_with_spilling(
+        shifts={1: ["M_BIG", "M_OK"]},
+        course_sizes={"M_BIG": 120, "M_OK": 40},
+        rooms=rooms,
+        allow_room_splitting=False,
+        allow_shift_spilling=True,
+    )
+    assert res_no_split["new_shifts_created"] == 0
+    assert res_no_split["total_spilled_courses"] == 0
+    assert res_no_split["is_all_successful"] is False
+
+    # 2. Môn 500 SV vượt tổng sức chứa toàn trường (130) ở chung ca với môn 30 SV -> không tách vô ích môn 30 SV
+    res_monster = allocate_exam_rooms_with_spilling(
+        shifts={1: ["M_MONSTER", "M_SMALL"]},
+        course_sizes={"M_MONSTER": 500, "M_SMALL": 30},
+        rooms=rooms,
+        allow_room_splitting=True,
+        allow_shift_spilling=True,
+    )
+    assert res_monster["new_shifts_created"] == 0
+    assert res_monster["total_spilled_courses"] == 0
+
+    # 3. shift_id lẫn kiểu (int và str) không gây TypeError và gộp cùng ca 1 mà không ghi đè mất môn
+    res_mixed = allocate_exam_rooms_with_spilling(
+        shifts={1: ["M1"], "1": ["M2"], "2": ["M3"]},
+        course_sizes={"M1": 40, "M2": 30, "M3": 20},
+        rooms=rooms,
+    )
+    assert res_mixed["is_all_successful"] is True
+    assert res_mixed["total_courses"] == 3
+
+
 if __name__ == "__main__":
     test_basic_room_splitting()
     test_room_splitting_conservation_and_no_partial_waste()
@@ -308,4 +348,5 @@ if __name__ == "__main__":
     test_shift_spilling_reuses_non_conflicting_existing_shift()
     test_unsolvable_single_course_exceeds_school_capacity()
     test_high_load_combined_splitting_and_spilling()
+    test_no_useless_spill_for_impossible_courses_and_mixed_shift_keys()
     print("\nALL OVERFLOW ALLOCATOR (ROOM SPLITTING & SHIFT SPILLING) TESTS PASSED 100%!")
