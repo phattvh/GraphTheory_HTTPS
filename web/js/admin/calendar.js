@@ -376,24 +376,18 @@ function renderCustomEventContent(arg) {
   const props = (arg && arg.event && arg.event.extendedProps) || {};
   const roomText = Array.isArray(props.rooms) ? props.rooms.join(", ") : String(props.rooms || "");
 
-  const isHourMode = currentSlotMode === "hour" && currentCalendarView === "timeGridWeek";
   const wrapper = document.createElement("div");
-  wrapper.className = isHourMode
-    ? "flex flex-col justify-start h-full px-1 py-0.5 leading-snug overflow-hidden"
-    : "flex flex-col justify-center h-full px-1 py-0.5 leading-tight overflow-hidden";
+  wrapper.className =
+    "flex flex-col justify-center h-full px-1 py-0.5 leading-snug whitespace-normal break-words";
 
   const titleEl = document.createElement("div");
-  titleEl.className = isHourMode
-    ? "font-bold text-xs whitespace-normal break-words"
-    : "font-bold text-xs truncate";
+  titleEl.className = "font-bold text-xs whitespace-normal break-words";
   titleEl.textContent = props.ma_mon
     ? `${props.ma_mon} - ${props.ten_mon}`
     : (arg.event && arg.event.title) || "";
 
   const metaEl = document.createElement("div");
-  metaEl.className = isHourMode
-    ? "text-[11px] opacity-90 whitespace-normal break-words mt-0.5"
-    : "text-[11px] opacity-90 truncate";
+  metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
   metaEl.textContent = roomText
     ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`
     : props.khung_gio_ca

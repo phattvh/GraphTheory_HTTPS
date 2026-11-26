@@ -94,6 +94,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         assert removed_text not in html, f"web/calendar.html vẫn còn chuỗi cần xóa: {removed_text}"
 
     assert "Nghỉ chuyển ca" not in js and "Nghỉ trưa" not in js, "Không được còn các hàng nghỉ giữa ca"
+    assert "truncate" not in js, "Tên môn thi dài phải tự động xuống dòng, không dùng truncate (...)"
     assert "innerHTML" not in js, "web/js/admin/calendar.js không được dùng innerHTML để tránh XSS"
 
 
