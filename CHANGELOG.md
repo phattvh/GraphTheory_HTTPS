@@ -7,9 +7,18 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 ## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
 
 ### Đã thêm (Added)
+- **Xử lý vượt sức chứa FFD — Room Splitting & Shift Spilling (TV1 — Ngày 5):**
+  - Bổ sung `split_course_into_rooms`, `allocate_shift_rooms_with_overflow`, `allocate_exam_rooms_with_spilling`, `allocate_graph_schedule_with_overflow` (`UC08.3`) trong `backend/algorithms/room_allocator.py`.
+  - Gia cố biên: không tách ca vô ích cho môn vượt ngưỡng sức chứa đơn khi `allow_room_splitting=False` hoặc khi chỉ có môn quá tải toàn trường, và chuẩn hóa an toàn khóa `shift_id` lẫn kiểu.
+  - Thêm bộ kiểm thử `tests/overflow_allocator_test.py` (9 kịch bản) và đăng ký vào `Makefile`.
+- **API CRUD Sinh viên & Phòng thi (TV2 — Ngày 5):**
+  - Mở rộng `backend/routers/master_data.py` thêm 10 endpoint CRUD `/api/v1/sinh-vien` (`UC03`) và `/api/v1/phong-thi` (`UC06`), bảo vệ toàn bộ bằng `require_admin`, gom helper dùng chung (`_apply_text_search`, `_create_unique_record`, `_update_record`, `_delete_record`).
+  - Mở rộng `tests/master_data_api_test.py` (20 endpoint) và `tests/rbac_test.py` (bao gồm kiểm tra `409` khi xóa SV còn tài khoản liên kết).
 - **Hoàn thiện Reverse Proxy Caddy (TV3 — Ngày 5):**
   - Bật nén `encode zstd gzip`, bổ sung header `Permissions-Policy`, tách định tuyến rõ `handle /api/v1/*` (kèm `Cache-Control: no-store`), `handle /docs*`, `handle /redoc*`, `handle /openapi.json` và `handle /` (`Cache-Control: no-cache`) trong `Caddyfile`.
   - Thêm bộ kiểm thử `tests/caddy_config_test.py` (`caddy validate`, giải nén `gzip`, kiểm tra định tuyến & OWASP headers) và đăng ký vào `Makefile`.
+- **Sự kiện mẫu FullCalendar có giờ ca, phòng thi & 4 màu phân biệt (TV4 — Ngày 5):**
+  - Cập nhật `renderCustomEventContent` & tăng chiều cao thẻ lên `5.25rem` trong `web/js/admin/calendar.js`, mở rộng kiểm thử 4 bộ màu & DOM trong `tests/calendar_ui_test.py`.
 - **Chuẩn hóa kho mã nguồn mở & tự động hóa kiểm thử (TV3):**
   - Thêm `Makefile` chuẩn hóa toàn bộ lệnh vận hành (`make up`, `make down`, `make logs`, `make test`, `make test-host`, `make test-backend`, `make clean`).
   - Nâng cấp `README.md` (logo vector, bảng kiến trúc thành phần, hướng dẫn Quick Start 1 lệnh) và bổ sung `docs/README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
