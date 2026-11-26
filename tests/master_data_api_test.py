@@ -85,8 +85,8 @@ def request_json(
         return err.code, (json.loads(raw) if raw else None)
 
 
-def test_openapi_exposes_ky_thi_and_mon_hoc_endpoints():
-    """Swagger/OpenAPI phải hiển thị đầy đủ 10 route CRUD cho Kỳ thi và Môn học."""
+def test_openapi_exposes_master_data_endpoints():
+    """Swagger/OpenAPI phải hiển thị đầy đủ 20 route CRUD cho Kỳ thi, Môn học, Sinh viên và Phòng thi."""
     status_code, spec = request_json("GET", "/openapi.json")
     assert status_code == 200, f"GET /openapi.json failed: {status_code}"
     paths = spec.get("paths", {})
@@ -96,12 +96,16 @@ def test_openapi_exposes_ky_thi_and_mon_hoc_endpoints():
         "/api/v1/ky-thi/{ky_thi_id}": {"get", "put", "delete"},
         "/api/v1/mon-hoc": {"get", "post"},
         "/api/v1/mon-hoc/{mon_hoc_id}": {"get", "put", "delete"},
+        "/api/v1/sinh-vien": {"get", "post"},
+        "/api/v1/sinh-vien/{sinh_vien_id}": {"get", "put", "delete"},
+        "/api/v1/phong-thi": {"get", "post"},
+        "/api/v1/phong-thi/{phong_thi_id}": {"get", "put", "delete"},
     }
     for path, methods in expected.items():
         assert path in paths, f"Thiếu route {path} trong OpenAPI"
         missing_methods = methods - set(paths[path].keys())
         assert not missing_methods, f"Route {path} thiếu method: {missing_methods}"
-    print(f"✓ Test 1: OpenAPI ({BASE_URL}) hiển thị đủ 10 endpoint CRUD Kỳ thi & Môn học.")
+    print(f"✓ Test 1: OpenAPI ({BASE_URL}) hiển thị đủ 20 endpoint CRUD Kỳ thi, Môn học, Sinh viên & Phòng thi.")
 
 
 def test_ky_thi_crud_lifecycle_and_edge_cases():
@@ -307,9 +311,164 @@ def test_mon_hoc_crud_lifecycle_and_edge_cases():
             request_json("DELETE", f"/api/v1/mon-hoc/{leftover_id}")
 
 
+def test_sinh_vien_crud_lifecycle_and_edge_cases():
+    """Kiểm thử toàn bộ vòng đời CRUD /api/v1/sinh-vien (Ngày 5 - UC03)."""
+    created_ids: list[int] = []
+    unique_mssv = "TEST_D5_221199"
+    try:
+        # 1. Tạo mới sinh viên (auto-trim + optional fields)
+        s_create, created = request_json(
+            "POST",
+            "/api/v1/sinh-vien",
+            {
+                "mssv": f"  {unique_mssv}  ",
+                "ho_ten": "  Nguyễn Văn Test D5  ",
+                "email": "  testd5@univ.edu.vn  ",
+                "lop_sinh_hoat": "  22CNTT1  ",
+            },
+        )
+        assert s_create == 201, f"Expected 201, got {s_create}: {created}"
+        sv_id = created["id"]
+        created_ids.append(sv_id)
+        assert created["mssv"] == unique_mssv
+        assert created["ho_ten"] == "Nguyễn Văn Test D5"
+        assert created["email"] == "testd5@univ.edu.vn"
+        assert created["lop_sinh_hoat"] == "22CNTT1"
+
+        # 2. Chặn trùng MSSV (409) & dữ liệu sai (422)
+        s_dup, _ = request_json(
+            "POST",
+            "/api/v1/sinh-vien",
+            {"mssv": unique_mssv, "ho_ten": "Trùng MSSV"},
+        )
+        assert s_dup == 409, f"Expected 409 on duplicate mssv, got {s_dup}"
+
+        invalid_payloads = [
+            {"mssv": "   ", "ho_ten": "Thiếu MSSV"},
+            {"mssv": "SV_BAD_EMAIL", "ho_ten": "Sai email", "email": "not-email"},
+            {"mssv": "SV_EXTRA", "ho_ten": "Thừa field", "unknown": 1},
+        ]
+        for payload in invalid_payloads:
+            s_inv, _ = request_json("POST", "/api/v1/sinh-vien", payload)
+            assert s_inv == 422, f"Expected 422 for {payload}, got {s_inv}"
+
+        # 3. Tìm kiếm & lấy chi tiết & biên ID
+        s_list, items = request_json(
+            "GET", f"/api/v1/sinh-vien?q={urllib.parse.quote('22CNTT1')}"
+        )
+        assert s_list == 200 and any(item["id"] == sv_id for item in items)
+
+        s_get, detail = request_json("GET", f"/api/v1/sinh-vien/{sv_id}")
+        assert s_get == 200 and detail["mssv"] == unique_mssv
+
+        for bad_id in ("0", "-1", "99999999999999999999999"):
+            s_bad, _ = request_json("GET", f"/api/v1/sinh-vien/{bad_id}")
+            assert s_bad == 422
+        assert request_json("GET", "/api/v1/sinh-vien/999999999")[0] == 404
+
+        # 4. Cập nhật từng phần (PUT): xóa email -> None, chặn ho_ten=None
+        assert request_json("PUT", f"/api/v1/sinh-vien/{sv_id}", {"ho_ten": None})[0] == 422
+        s_upd, updated = request_json(
+            "PUT",
+            f"/api/v1/sinh-vien/{sv_id}",
+            {"ho_ten": "Nguyễn Văn Test D5 Updated", "email": "   ", "lop_sinh_hoat": "22CNTT2"},
+        )
+        assert s_upd == 200
+        assert updated["ho_ten"] == "Nguyễn Văn Test D5 Updated"
+        assert updated["email"] is None
+        assert updated["lop_sinh_hoat"] == "22CNTT2"
+
+        # 5. Xóa sinh viên (204) & kiểm tra 404
+        assert request_json("DELETE", f"/api/v1/sinh-vien/{sv_id}")[0] == 204
+        created_ids.remove(sv_id)
+        assert request_json("GET", f"/api/v1/sinh-vien/{sv_id}")[0] == 404
+        print("✓ Test 4: CRUD Sinh viên (/api/v1/sinh-vien) và kiểm tra biên đạt 100%.")
+    finally:
+        for leftover_id in created_ids:
+            request_json("DELETE", f"/api/v1/sinh-vien/{leftover_id}")
+
+
+def test_phong_thi_crud_lifecycle_and_edge_cases():
+    """Kiểm thử toàn bộ vòng đời CRUD /api/v1/phong-thi (Ngày 5 - UC06)."""
+    created_ids: list[int] = []
+    unique_code = "TEST_D5_P901"
+    try:
+        # 1. Tạo mới phòng thi
+        s_create, created = request_json(
+            "POST",
+            "/api/v1/phong-thi",
+            {
+                "ma_phong": f"  {unique_code}  ",
+                "ten_phong": "  Phòng Test D5 - 901  ",
+                "suc_chua": 60,
+                "toa_nha": "  Nhà D5  ",
+                "dang_su_dung": True,
+            },
+        )
+        assert s_create == 201, f"Expected 201, got {s_create}: {created}"
+        room_id = created["id"]
+        created_ids.append(room_id)
+        assert created["ma_phong"] == unique_code
+        assert created["suc_chua"] == 60
+        assert created["toa_nha"] == "Nhà D5"
+        assert created["dang_su_dung"] is True
+
+        # 2. Chặn trùng mã phòng (409) & dữ liệu biên sai (422)
+        assert (
+            request_json(
+                "POST",
+                "/api/v1/phong-thi",
+                {"ma_phong": unique_code, "ten_phong": "Trùng", "suc_chua": 40},
+            )[0]
+            == 409
+        )
+        for bad_room in (
+            {"ma_phong": " ", "ten_phong": "R", "suc_chua": 40},
+            {"ma_phong": "P_ZERO", "ten_phong": "R", "suc_chua": 0},
+            {"ma_phong": "P_BOOL", "ten_phong": "R", "suc_chua": True},
+            {"ma_phong": "P_HUGE", "ten_phong": "R", "suc_chua": 99999},
+        ):
+            assert request_json("POST", "/api/v1/phong-thi", bad_room)[0] == 422
+
+        # 3. Lọc theo dang_su_dung & tìm theo tòa nhà
+        s_list, active_rooms = request_json(
+            "GET", f"/api/v1/phong-thi?dang_su_dung=true&q={urllib.parse.quote('Nhà D5')}"
+        )
+        assert s_list == 200 and any(r["id"] == room_id for r in active_rooms)
+
+        s_inactive, inactive_rooms = request_json(
+            "GET", f"/api/v1/phong-thi?dang_su_dung=false&q={unique_code}"
+        )
+        assert s_inactive == 200 and inactive_rooms == []
+
+        # 4. Cập nhật từng phần (PUT)
+        assert request_json("PUT", f"/api/v1/phong-thi/{room_id}", {"suc_chua": None})[0] == 422
+        assert request_json("PUT", f"/api/v1/phong-thi/{room_id}", {"dang_su_dung": None})[0] == 422
+        s_upd, updated = request_json(
+            "PUT",
+            f"/api/v1/phong-thi/{room_id}",
+            {"suc_chua": 85, "dang_su_dung": False, "toa_nha": "  "},
+        )
+        assert s_upd == 200
+        assert updated["suc_chua"] == 85
+        assert updated["dang_su_dung"] is False
+        assert updated["toa_nha"] is None
+
+        # 5. Xóa phòng thi (204) & kiểm tra 404
+        assert request_json("DELETE", f"/api/v1/phong-thi/{room_id}")[0] == 204
+        created_ids.remove(room_id)
+        assert request_json("GET", f"/api/v1/phong-thi/{room_id}")[0] == 404
+        print("✓ Test 5: CRUD Phòng thi (/api/v1/phong-thi) và kiểm tra biên đạt 100%.")
+    finally:
+        for leftover_id in created_ids:
+            request_json("DELETE", f"/api/v1/phong-thi/{leftover_id}")
+
+
 if __name__ == "__main__":
-    print(f"=== BẮT ĐẦU KIỂM THỬ NGÀY 4 (TV2 CRUD KyThi & MonHoc qua {BASE_URL}) ===")
-    test_openapi_exposes_ky_thi_and_mon_hoc_endpoints()
+    print(f"=== BẮT ĐẦU KIỂM THỬ NGÀY 4-5 (TV2 CRUD Kỳ thi, Môn học, Sinh viên, Phòng thi qua {BASE_URL}) ===")
+    test_openapi_exposes_master_data_endpoints()
     test_ky_thi_crud_lifecycle_and_edge_cases()
     test_mon_hoc_crud_lifecycle_and_edge_cases()
-    print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ NGÀY 4 ĐÃ ĐẠT 100% ===")
+    test_sinh_vien_crud_lifecycle_and_edge_cases()
+    test_phong_thi_crud_lifecycle_and_edge_cases()
+    print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ NGÀY 4-5 ĐÃ ĐẠT 100% ===")
