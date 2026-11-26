@@ -36,19 +36,25 @@ Sau khi khởi chạy thành công:
 - **Cổng Sinh viên:** `https://localhost/student.html`
 - **Swagger UI (FastAPI):** `https://localhost/docs`
 
-## Kiểm thử tự động
+## Lệnh vận hành & Kiểm thử (`Makefile`)
 
-Chạy toàn bộ bộ kiểm thử (từ host và bên trong container `fastapi`) bằng một lệnh duy nhất:
+Dự án chuẩn hóa toàn bộ thao tác Docker và **17 bộ kiểm thử tự động** thông qua [Makefile](Makefile). Chạy `make help` (hoặc `make`) để xem nhanh danh sách lệnh:
 
-```bash
-make test
-```
-
-Xem danh sách lệnh hỗ trợ bằng `make help` hoặc hướng dẫn chi tiết trong [CONTRIBUTING.md](CONTRIBUTING.md).
+| Lệnh | Mô tả |
+| :--- | :--- |
+| `make help` | Hiển thị danh sách toàn bộ lệnh hỗ trợ |
+| `make up` | Khởi chạy 3 container Docker (`postgres`, `fastapi`, `caddy`) |
+| `make down` | Dừng toàn bộ container Docker |
+| `make logs` | Xem log realtime (100 dòng gần nhất) của các container |
+| `make test` | Chạy toàn bộ **17 bộ kiểm thử** (`test-host` + `test-backend`) |
+| `make test-host` | Chạy 8 bộ test HTTP HTTPS, giao diện/runtime JS (`layout`, `login`, `student_room_ui`, `calendar_ui`) và `docs_test.py` |
+| `make test-backend` | Chạy 9 bộ test CSDL, ORM/Schemas, thuật toán (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`), RBAC & bảo mật (`-W error`) trong container `fastapi` |
+| `make clean` | Dọn thư mục cache (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `htmlcov`) |
 
 ## Tham gia phát triển
 
 - Quy trình nhánh Git, Conventional Commits & kiểm thử: xem [CONTRIBUTING.md](CONTRIBUTING.md).
+- Quy tắc làm việc Git & kiểm thử nội bộ nhóm: xem [AGENTS.md](AGENTS.md).
 - Kiến trúc bảo mật & báo cáo lỗ hổng: xem [SECURITY.md](SECURITY.md).
 - Mục lục toàn bộ tài liệu thiết kế: xem [docs/README.md](docs/README.md).
 
