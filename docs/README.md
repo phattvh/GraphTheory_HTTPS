@@ -20,8 +20,10 @@ Thư mục `docs/` lưu trữ toàn bộ tài liệu phân tích, thiết kế k
 - [08. Kế hoạch triển khai 21 ngày (5 thành viên)](08.%20Implementation%20plan.md)
 - [09. Cấu trúc thư mục dự án (Project Structure)](09.%20Project%20structure.md)
 
-## Tài liệu quản trị repo
+## Tài liệu quản trị & vận hành repo
 
 - [Hướng dẫn đóng góp & Quy ước Git](../CONTRIBUTING.md)
+- [Quy tắc làm việc Git & Kiểm thử nội bộ](../AGENTS.md)
 - [Chính sách bảo mật](../SECURITY.md)
 - [Nhật ký thay đổi (Changelog)](../CHANGELOG.md)
+- [Lệnh vận hành & Kiểm thử tự động (`Makefile`)](../Makefile)
