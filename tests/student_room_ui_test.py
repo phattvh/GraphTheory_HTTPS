@@ -361,7 +361,8 @@ sandbox.renderRegistrationTable();
 const it001Count = vm.runInContext('registrationRecords.filter((r) => r.ma_mon === "IT001").length', sandbox);
 assert.strictEqual(elements["registration-table-body"].children.length, it001Count);
 assert.ok(elements["registration-count-label"].textContent.includes("IT001"));
-assert.ok(!elements["registration-count-label"].textContent.includes("- Lý thuyết Đồ thị"));
+const it001Option = elements["registration-course-filter"].children.find((o) => o.value === "IT001");
+assert.strictEqual(it001Option.textContent, "IT001 - Lý thuyết Đồ thị");
 
 // Chuyển lại tất cả môn học
 elements["registration-course-filter"].value = "ALL";

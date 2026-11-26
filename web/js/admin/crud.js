@@ -510,12 +510,12 @@ function deleteExam(maKyThi) {
 }
 
 let courseRecords = [
-  { ma_mon: "IT001", ten_mon: "Lý thuyết Đồ thị (Graph Theory)", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT001", ten_mon: "Lý thuyết Đồ thị", thoi_luong_phut: 90, so_tin_chi: 3 },
   { ma_mon: "IT002", ten_mon: "Cấu trúc Dữ liệu & Giải thuật", thoi_luong_phut: 90, so_tin_chi: 4 },
   { ma_mon: "IT003", ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", thoi_luong_phut: 90, so_tin_chi: 3 },
-  { ma_mon: "IT004", ten_mon: "Lập trình Web (FastAPI & Python)", thoi_luong_phut: 120, so_tin_chi: 4 },
-  { ma_mon: "IT005", ten_mon: "An toàn & Bảo mật Thông tin (HTTPS/JWT)", thoi_luong_phut: 90, so_tin_chi: 3 },
-  { ma_mon: "IT006", ten_mon: "Trí tuệ Nhân tạo (AI Foundations)", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT004", ten_mon: "Lập trình Web", thoi_luong_phut: 120, so_tin_chi: 4 },
+  { ma_mon: "IT005", ten_mon: "An toàn & Bảo mật Thông tin", thoi_luong_phut: 90, so_tin_chi: 3 },
+  { ma_mon: "IT006", ten_mon: "Trí tuệ Nhân tạo", thoi_luong_phut: 90, so_tin_chi: 3 },
   { ma_mon: "IT007", ten_mon: "Mạng Máy tính & Truyền thông", thoi_luong_phut: 90, so_tin_chi: 3 },
   { ma_mon: "IT008", ten_mon: "Toán Rời rạc & Tổ hợp", thoi_luong_phut: 90, so_tin_chi: 3 },
 ];
@@ -867,14 +867,13 @@ function populateRegistrationFilterOptions() {
 
   const optAll = document.createElement("option");
   optAll.value = "ALL";
-  optAll.textContent = `Tất cả môn học (${registrationRecords.length} lượt ĐK)`;
+  optAll.textContent = "Tất cả môn học";
   filterEl.appendChild(optAll);
 
   courseRecords.forEach((course) => {
-    const count = registrationRecords.filter((r) => r.ma_mon === course.ma_mon).length;
     const opt = document.createElement("option");
     opt.value = course.ma_mon;
-    opt.textContent = `${course.ma_mon} (${count} SV)`;
+    opt.textContent = `${course.ma_mon} - ${course.ten_mon}`;
     filterEl.appendChild(opt);
   });
 
@@ -976,7 +975,7 @@ function populateRegistrationFormSelects() {
     courseRecords.forEach((mh) => {
       const opt = document.createElement("option");
       opt.value = mh.ma_mon;
-      opt.textContent = mh.ma_mon;
+      opt.textContent = `${mh.ma_mon} - ${mh.ten_mon}`;
       courseSelect.appendChild(opt);
     });
   }
