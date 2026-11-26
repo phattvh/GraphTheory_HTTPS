@@ -25,6 +25,10 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
   - Nhúng `FullCalendar v6.1.15` (kèm gói ngôn ngữ tiếng Việt `vi.global.min.js`) trên `web/calendar.html` và triển khai `web/js/admin/calendar.js` (`UC10` UI): chế độ xem Tuần (`timeGridWeek`) / Tháng (`dayGridMonth`), gộp gọn 4 hàng Ca thi cố định không có giờ nghỉ, ẩn cột Chủ nhật, tự động thu nhỏ cột ngày trống & đồng bộ chiều cao thẻ môn thi, thanh tìm kiếm hợp nhất và bộ chọn Năm học / Học kỳ (`HK1`/`HK2`/`HK3`) / Tuần / Tháng.
   - Gia cố & dọn mã: chống race condition đồng bộ layout (`clearTimeout`), hỗ trợ `Date` cross-realm trong `formatSlotLabelByMode`, gỡ bỏ ~245 dòng mã thừa không còn DOM, bảo đảm 100% DOM bằng `textContent` (không `innerHTML`).
   - Thêm bộ kiểm thử `tests/calendar_ui_test.py` (kèm runtime Node.js & kiểm tra Caddy HTTPS) và đăng ký vào `Makefile`.
+- **Giao diện Quản lý Đăng ký dự thi (`UC05`, TV5 — Ngày 4):**
+  - Bổ sung bảng & modal CRUD Đăng ký thi (`#crud-panel-dang_ky_thi`, `#registration-crud-modal`) trong `web/index.html` và `web/js/admin/crud.js`, hỗ trợ lọc theo Môn học, tìm kiếm theo mã/tên môn/MSSV/lớp, chặn trùng bộ `(ma_ky_thi, ma_mon, mssv)` và xuất CSV an toàn.
+  - Gia cố biên UI: giữ option dự phòng khi sửa bản ghi có danh mục cha đã xóa, đồng bộ bảng đăng ký khi sửa/xóa Kỳ thi, reset trạng thái sửa khi bấm `Escape` (`closeAllCrudModals`) và hiển thị trạng thái rỗng khi lọc ra 0 kết quả.
+  - Mở rộng bộ kiểm thử `tests/student_room_ui_test.py` (kiểm tra cấu trúc DOM & runtime Node.js cho Sinh viên, Phòng thi và Đăng ký thi).
 - **API CRUD Danh mục Kỳ thi & Môn học (TV2 — Ngày 4):**
   - Triển khai 10 endpoint CRUD đầy đủ cho `/api/v1/ky-thi` (`UC02`) và `/api/v1/mon-hoc` (`UC04`) trong `backend/routers/master_data.py`, hỗ trợ tìm kiếm escape SQL `LIKE`, phân trang `skip`/`limit`, và kiểm tra chéo ngày bắt đầu/kết thúc.
   - Thêm bộ kiểm thử tích hợp `tests/master_data_api_test.py`.
