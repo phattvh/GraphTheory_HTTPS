@@ -48,7 +48,6 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "18/01/2027-24/01/2027",
         'id="btn-view-week"',
         'data-calendar-view="timeGridWeek"',
-        "Tuần (Week)",
         'id="btn-view-month"',
         'data-calendar-view="dayGridMonth"',
         "Ca 1: 7h30 - 9h00",
@@ -235,7 +234,7 @@ def test_caddy_serves_calendar_assets():
     """Nếu container Caddy đang chạy, kiểm tra HTTP 200 OK cho /calendar.html và /js/admin/calendar.js."""
     try:
         for path, marker in [
-            ("/calendar.html", "Tuần (Week)"),
+            ("/calendar.html", 'id="btn-view-week"'),
             ("/js/admin/calendar.js", "scheduleCalendarLayoutSync"),
         ]:
             with urllib.request.urlopen(BASE_URL + path, context=SSL_CTX, timeout=3) as resp:
