@@ -11,6 +11,10 @@ from .room_allocator import (
     allocate_shift_rooms_ffd,
     allocate_exam_rooms_ffd,
     allocate_graph_schedule_rooms_ffd,
+    split_course_into_rooms,
+    allocate_shift_rooms_with_overflow,
+    allocate_exam_rooms_with_spilling,
+    allocate_graph_schedule_with_overflow,
 )
 
 __all__ = [
@@ -23,4 +27,8 @@ __all__ = [
     "allocate_shift_rooms_ffd",
     "allocate_exam_rooms_ffd",
     "allocate_graph_schedule_rooms_ffd",
+    "split_course_into_rooms",
+    "allocate_shift_rooms_with_overflow",
+    "allocate_exam_rooms_with_spilling",
+    "allocate_graph_schedule_with_overflow",
 ]

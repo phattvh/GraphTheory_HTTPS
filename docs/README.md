@@ -23,7 +23,6 @@ Thư mục `docs/` lưu trữ toàn bộ tài liệu phân tích, thiết kế k
 ## Tài liệu quản trị & vận hành repo
 
 - [Hướng dẫn đóng góp & Quy ước Git](../CONTRIBUTING.md)
-- [Quy tắc làm việc Git & Kiểm thử nội bộ](../AGENTS.md)
 - [Chính sách bảo mật](../SECURITY.md)
 - [Nhật ký thay đổi (Changelog)](../CHANGELOG.md)
 - [Lệnh vận hành & Kiểm thử tự động (`Makefile`)](../Makefile)
