@@ -88,19 +88,9 @@ function renderStatsKpiCards(dataset) {
     coursesEl.textContent = `${data.total_courses} Môn`;
   }
 
-  const edgesEl = document.getElementById("kpi-total-edges");
-  if (edgesEl) {
-    edgesEl.textContent = `${data.total_edges} cạnh xung đột |E| trong đồ thị`;
-  }
-
   const studentsEl = document.getElementById("kpi-total-students");
   if (studentsEl) {
     studentsEl.textContent = `${formatNumberVi(data.total_students)} SV`;
-  }
-
-  const regEl = document.getElementById("kpi-total-registrations");
-  if (regEl) {
-    regEl.textContent = `${formatNumberVi(data.total_registrations)} lượt đăng ký dự thi (dang_ky_thi)`;
   }
 
   const shiftsEl = document.getElementById("kpi-min-shifts");
