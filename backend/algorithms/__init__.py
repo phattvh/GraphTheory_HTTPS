@@ -7,6 +7,11 @@ from .coloring import (
     welsh_powell_coloring,
     compare_coloring_algorithms,
 )
+from .room_allocator import (
+    allocate_shift_rooms_ffd,
+    allocate_exam_rooms_ffd,
+    allocate_graph_schedule_rooms_ffd,
+)
 
 __all__ = [
     "build_conflict_graph",
@@ -15,4 +20,7 @@ __all__ = [
     "get_schedule_summary",
     "welsh_powell_coloring",
     "compare_coloring_algorithms",
+    "allocate_shift_rooms_ffd",
+    "allocate_exam_rooms_ffd",
+    "allocate_graph_schedule_rooms_ffd",
 ]
