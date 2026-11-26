@@ -259,7 +259,7 @@
               </svg>
             </div>
 
-            <!-- Ô chọn Tuần (Tự động ẩn đi khi bấm sang chế độ xem Tháng) -->
+            <!-- Ô chọn Tuần (Hiện khi ở chế độ xem Tuần, ẩn khi ở chế độ xem Tháng) -->
             <div id="calendar-week-select-group" class="https-outlined-select-group">
               <label for="calendar-select-week" class="https-outlined-select-label">Tuần</label>
               <select id="calendar-select-week" onchange="handleAcademicPeriodChange('week')"
@@ -269,6 +269,23 @@
                 <option value="2026-12-15" selected>14/12/2026-20/12/2026</option>
                 <option value="2026-12-21">21/12/2026-27/12/2026</option>
                 <option value="2027-01-18">18/01/2027-24/01/2027</option>
+              </select>
+              <svg class="https-outlined-select-arrow" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true">
+                <path d="M0 0.5L5 5.5L10 0.5H0Z" />
+              </svg>
+            </div>
+
+            <!-- Ô chọn Tháng (Ẩn khi ở chế độ xem Tuần, hiện ra giống ô Tuần khi bấm sang chế độ xem Tháng) -->
+            <div id="calendar-month-select-group" class="https-outlined-select-group hidden">
+              <label for="calendar-select-month" class="https-outlined-select-label">Tháng</label>
+              <select id="calendar-select-month" onchange="handleAcademicPeriodChange('month')"
+                aria-label="Chọn tháng thi"
+                class="https-outlined-select min-w-[156px] tabular-nums">
+                <option value="2026-11-01">Tháng 11/2026</option>
+                <option value="2026-12-15" selected>Tháng 12/2026</option>
+                <option value="2027-01-01">Tháng 01/2027</option>
+                <option value="2027-05-01">Tháng 05/2027</option>
+                <option value="2027-06-01">Tháng 06/2027</option>
               </select>
               <svg class="https-outlined-select-arrow" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true">
                 <path d="M0 0.5L5 5.5L10 0.5H0Z" />

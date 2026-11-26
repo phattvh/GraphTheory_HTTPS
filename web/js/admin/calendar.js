@@ -564,6 +564,7 @@ function updateCalendarViewButtons(viewName) {
   const weekBtn = document.getElementById("btn-view-week");
   const monthBtn = document.getElementById("btn-view-month");
   const weekSelectGroup = document.getElementById("calendar-week-select-group");
+  const monthSelectGroup = document.getElementById("calendar-month-select-group");
   const viewBadge = document.getElementById("calendar-view-badge");
   const rangeHeading = document.getElementById("calendar-current-range");
   const fcContainer = document.getElementById("admin-fullcalendar");
@@ -574,6 +575,9 @@ function updateCalendarViewButtons(viewName) {
 
   if (weekSelectGroup && weekSelectGroup.classList) {
     weekSelectGroup.classList.toggle("hidden", isMonth);
+  }
+  if (monthSelectGroup && monthSelectGroup.classList) {
+    monthSelectGroup.classList.toggle("hidden", !isMonth);
   }
 
   const activeWeekClass =
@@ -679,38 +683,64 @@ function switchCalendarView(viewName) {
 }
 
 /**
- * Xử lý khi người dùng chọn Năm học, Học kỳ hoặc Tuần từ 3 ô dropdown điều hướng.
- * @param {string} changedField ('year' | 'semester' | 'week')
+ * Xử lý khi người dùng chọn Năm học, Học kỳ, Tuần hoặc Tháng từ các ô dropdown điều hướng.
+ * @param {string} changedField ('year' | 'semester' | 'week' | 'month')
  */
 function handleAcademicPeriodChange(changedField = "week") {
   const yearSelect = document.getElementById("calendar-select-year");
   const semesterSelect = document.getElementById("calendar-select-semester");
   const weekSelect = document.getElementById("calendar-select-week");
+  const monthSelect = document.getElementById("calendar-select-month");
   const rangeHeading = document.getElementById("calendar-current-range");
 
   const yearVal = yearSelect ? yearSelect.value : "2026-2027";
   const semesterVal = semesterSelect ? semesterSelect.value : "HK1";
+  const isMonthView = currentCalendarView === "dayGridMonth";
 
-  if (changedField === "semester" && weekSelect) {
+  if (changedField === "semester") {
     if (semesterVal === "HK2") {
-      weekSelect.value = "2027-01-18";
+      if (weekSelect) weekSelect.value = "2027-01-18";
+      if (monthSelect) monthSelect.value = "2027-01-01";
     } else if (semesterVal === "HK1") {
-      weekSelect.value = "2026-12-15";
+      if (weekSelect) weekSelect.value = "2026-12-15";
+      if (monthSelect) monthSelect.value = "2026-12-15";
     }
   }
 
-  const targetDate = weekSelect && weekSelect.value ? weekSelect.value : "2026-12-15";
+  let targetDate = "2026-12-15";
+  if (changedField === "month" || isMonthView) {
+    targetDate = monthSelect && monthSelect.value ? monthSelect.value : "2026-12-15";
+  } else {
+    targetDate = weekSelect && weekSelect.value ? weekSelect.value : "2026-12-15";
+  }
+
   if (adminCalendarInstance && typeof adminCalendarInstance.gotoDate === "function") {
     adminCalendarInstance.gotoDate(targetDate);
   }
 
   updateCalendarViewButtons(currentCalendarView);
 
-  if (rangeHeading && weekSelect && weekSelect.options && weekSelect.selectedIndex >= 0) {
+  const semesterLabel =
+    semesterVal === "HK2" ? "Học Kỳ 2" : semesterVal === "HK3" ? "Học Kỳ Hè" : "Học Kỳ 1";
+
+  if (
+    rangeHeading &&
+    isMonthView &&
+    monthSelect &&
+    monthSelect.options &&
+    monthSelect.selectedIndex >= 0
+  ) {
+    const selectedMonthOpt = monthSelect.options[monthSelect.selectedIndex];
+    const monthLabel = selectedMonthOpt ? selectedMonthOpt.text : targetDate;
+    rangeHeading.textContent = `${semesterLabel} (${yearVal}) • ${monthLabel}`;
+  } else if (
+    rangeHeading &&
+    weekSelect &&
+    weekSelect.options &&
+    weekSelect.selectedIndex >= 0
+  ) {
     const selectedOption = weekSelect.options[weekSelect.selectedIndex];
     const weekLabel = selectedOption ? selectedOption.text : targetDate;
-    const semesterLabel =
-      semesterVal === "HK2" ? "Học Kỳ 2" : semesterVal === "HK3" ? "Học Kỳ Hè" : "Học Kỳ 1";
     rangeHeading.textContent = `${semesterLabel} (${yearVal}) • Tuần: ${weekLabel}`;
   }
 

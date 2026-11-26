@@ -38,6 +38,8 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         'id="calendar-select-semester"',
         'id="calendar-week-select-group"',
         'id="calendar-select-week"',
+        'id="calendar-month-select-group"',
+        'id="calendar-select-month"',
         'id="btn-print-calendar"',
         "Năm học",
         "Học kỳ",
@@ -110,6 +112,7 @@ const elements = {
   "btn-view-week": { value: "shift", className: "", setAttribute: function(k, v) { this[k] = v; } },
   "btn-view-month": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "calendar-week-select-group": { classList: makeClassList() },
+  "calendar-month-select-group": { classList: makeClassList(["hidden"]) },
   "calendar-view-badge": { textContent: "" },
   "calendar-current-range": { textContent: "" },
   "calendar-search-input": { value: "" },
@@ -195,18 +198,20 @@ assert.strictEqual(
   "Ca 4: 15h30 - 17h00"
 );
 
-// 3. Chuyển sang chế độ xem Tháng (dayGridMonth) sẽ ẩn ô chọn Tuần (#calendar-week-select-group),
-// sau đó chọn tùy chọn trong ô dropdown Tuần sẽ tự quay về Tuần và hiện lại ô chọn Tuần
+// 3. Chuyển sang chế độ xem Tháng (dayGridMonth) sẽ ẩn ô chọn Tuần (#calendar-week-select-group)
+// và hiện ô chọn Tháng (#calendar-month-select-group); chuyển lại về Tuần sẽ hiện lại ô Tuần và ẩn ô Tháng
 assert.strictEqual(sandbox.switchCalendarView("dayGridMonth"), "dayGridMonth");
 assert.strictEqual(renderedView, "dayGridMonth");
 assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "true");
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "false");
 assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), true);
+assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), false);
 
 assert.strictEqual(sandbox.switchCalendarSlotMode("hour"), "hour");
 assert.strictEqual(renderedView, "timeGridWeek");
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
 assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), false);
+assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), true);
 assert.strictEqual(elements["btn-view-week"].value, "hour");
 assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "18:00:00");
