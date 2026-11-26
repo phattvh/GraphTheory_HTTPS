@@ -17,6 +17,10 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
   - Tái cấu trúc `GET /api/v1/auth/me` trong `backend/routers/auth.py` để dùng chung `get_current_user`.
   - Bảo vệ toàn bộ 10 endpoint CRUD `/api/v1/ky-thi` và `/api/v1/mon-hoc` trong `backend/routers/master_data.py`: tài khoản `sinh_vien` chỉ xem được kỳ thi trạng thái `cong_bo`, bị chặn `403` với kỳ thi nháp và mọi thao tác quản trị.
   - Thêm bộ kiểm thử tích hợp `tests/rbac_test.py` và cập nhật `tests/master_data_api_test.py` sử dụng Bearer JWT quản trị.
+- **Phân bổ phòng thi First-Fit Decreasing — FFD (TV1 — Ngày 4):**
+  - Triển khai 3 hàm phân phòng `allocate_shift_rooms_ffd`, `allocate_exam_rooms_ffd`, `allocate_graph_schedule_rooms_ffd` (`UC08.3`) trong `backend/algorithms/room_allocator.py`, hỗ trợ tái sử dụng phòng qua nhiều ca, phân loại nguyên nhân `unallocated_courses` (hết phòng vs vượt sức chứa) và tích hợp trực tiếp với DSatur / Welsh–Powell.
+  - Gia cố biên dữ liệu: chuẩn hóa cờ `dang_su_dung` (`0`/`"false"`), bắt `OverflowError` cho `float("inf")`, khử trùng `ma_mon` trong cùng ca, fallback tra cứu khi có khoảng trắng thừa và sắp xếp an toàn khóa `shift_id`.
+  - Thêm bộ kiểm thử `tests/room_allocator_test.py` (11 test case) và đăng ký vào `Makefile`.
 - **API CRUD Danh mục Kỳ thi & Môn học (TV2 — Ngày 4):**
   - Triển khai 10 endpoint CRUD đầy đủ cho `/api/v1/ky-thi` (`UC02`) và `/api/v1/mon-hoc` (`UC04`) trong `backend/routers/master_data.py`, hỗ trợ tìm kiếm escape SQL `LIKE`, phân trang `skip`/`limit`, và kiểm tra chéo ngày bắt đầu/kết thúc.
   - Thêm bộ kiểm thử tích hợp `tests/master_data_api_test.py`.

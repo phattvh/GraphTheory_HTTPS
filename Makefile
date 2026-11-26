@@ -40,6 +40,7 @@ test-backend:
 	$(COMPOSE) exec -T fastapi python tests/graph_builder_test.py
 	$(COMPOSE) exec -T fastapi python tests/dsatur_test.py
 	$(COMPOSE) exec -T fastapi python tests/welsh_powell_test.py
+	$(COMPOSE) exec -T fastapi python tests/room_allocator_test.py
 	$(COMPOSE) exec -T fastapi python tests/rbac_test.py
 	$(COMPOSE) exec -T fastapi python -W error tests/security_test.py
 
