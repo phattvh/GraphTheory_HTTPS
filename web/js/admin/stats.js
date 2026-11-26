@@ -256,14 +256,8 @@ function buildTopDegreeChartConfig(dataset) {
         {
           label: "Bậc đỉnh deg(v) (số môn xung đột)",
           data: list.map((item) => item.deg),
-          backgroundColor: [
-            "rgba(37, 99, 235, 0.88)",
-            "rgba(59, 130, 246, 0.82)",
-            "rgba(16, 185, 129, 0.82)",
-            "rgba(245, 158, 11, 0.82)",
-            "rgba(139, 92, 246, 0.82)",
-          ],
-          borderColor: ["#1d4ed8", "#2563eb", "#059669", "#d97706", "#7c3aed"],
+          backgroundColor: "rgba(37, 99, 235, 0.85)",
+          borderColor: "#1d4ed8",
           borderWidth: 1.5,
           borderRadius: 6,
         },
