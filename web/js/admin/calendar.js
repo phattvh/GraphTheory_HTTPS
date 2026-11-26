@@ -340,14 +340,6 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentS
       );
       eventStart = `${item.ngay_thi}T${startTime}`;
       eventEnd = `${item.ngay_thi}T${endTime}`;
-    } else if (totalInSlot > 1) {
-      const baseStartTime = String(item.start).split("T")[1] || "07:30:00";
-      const slotMinutes = 90;
-      const sliceMinutes = slotMinutes / totalInSlot;
-      const startTime = addMinutesToTimeString(baseStartTime, indexInSlot * sliceMinutes);
-      const endTime = addMinutesToTimeString(baseStartTime, (indexInSlot + 1) * sliceMinutes);
-      eventStart = `${item.ngay_thi}T${startTime}`;
-      eventEnd = `${item.ngay_thi}T${endTime}`;
     }
 
     return {
@@ -384,17 +376,24 @@ function renderCustomEventContent(arg) {
   const props = (arg && arg.event && arg.event.extendedProps) || {};
   const roomText = Array.isArray(props.rooms) ? props.rooms.join(", ") : String(props.rooms || "");
 
+  const isHourMode = currentSlotMode === "hour" && currentCalendarView === "timeGridWeek";
   const wrapper = document.createElement("div");
-  wrapper.className = "flex flex-col justify-center h-full px-1 py-0.5 leading-tight overflow-hidden";
+  wrapper.className = isHourMode
+    ? "flex flex-col justify-start h-full px-1 py-0.5 leading-snug overflow-hidden"
+    : "flex flex-col justify-center h-full px-1 py-0.5 leading-tight overflow-hidden";
 
   const titleEl = document.createElement("div");
-  titleEl.className = "font-bold text-xs truncate";
+  titleEl.className = isHourMode
+    ? "font-bold text-xs whitespace-normal break-words"
+    : "font-bold text-xs truncate";
   titleEl.textContent = props.ma_mon
     ? `${props.ma_mon} - ${props.ten_mon}`
     : (arg.event && arg.event.title) || "";
 
   const metaEl = document.createElement("div");
-  metaEl.className = "text-[11px] opacity-90 truncate";
+  metaEl.className = isHourMode
+    ? "text-[11px] opacity-90 whitespace-normal break-words mt-0.5"
+    : "text-[11px] opacity-90 truncate";
   metaEl.textContent = roomText
     ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`
     : props.khung_gio_ca

@@ -224,8 +224,8 @@ assert.strictEqual(elements["btn-view-week"].value, "hour");
 assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "18:00:00");
 assert.strictEqual(currentEvents[0].start, "2026-12-15T07:30:00");
-assert.strictEqual(currentEvents[0].end, "2026-12-15T08:15:00");
-assert.strictEqual(currentEvents[1].start, "2026-12-15T08:15:00");
+assert.strictEqual(currentEvents[0].end, "2026-12-15T09:00:00");
+assert.strictEqual(currentEvents[1].start, "2026-12-15T07:30:00");
 assert.strictEqual(currentEvents[1].end, "2026-12-15T09:00:00");
 
 assert.strictEqual(sandbox.switchCalendarSlotMode("shift"), "shift");
