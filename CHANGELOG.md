@@ -7,6 +7,9 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 ## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
 
 ### Đã thêm (Added)
+- **Script nạp dữ liệu mẫu chuẩn (`scripts/seed.py`, TV3 — Ngày 6):**
+  - Tạo `scripts/seed.py` (idempotent, giao dịch ACID, `random.Random(42)` lặp lại được) nạp 1 kỳ thi (`KTHK1_2026`), 15 môn học (`IT001`–`IT015`), 100 sinh viên (`22110001`–`22110100`), 10 phòng thi (`A101`–`C303`), 300 lượt đăng ký thi và 1 tài khoản sinh viên mẫu (`sv01`).
+  - Thêm lệnh `make seed`, bộ kiểm thử `tests/seed_test.py` (kiểm tra idempotency, số lượng và chạy thử end-to-end `build_conflict_graph -> dsatur_coloring -> allocate_graph_schedule_with_overflow`) và đăng ký vào `Makefile` (**21/21 bộ test**).
 - **Xử lý vượt sức chứa FFD — Room Splitting & Shift Spilling (TV1 — Ngày 5):**
   - Bổ sung `split_course_into_rooms`, `allocate_shift_rooms_with_overflow`, `allocate_exam_rooms_with_spilling`, `allocate_graph_schedule_with_overflow` (`UC08.3`) trong `backend/algorithms/room_allocator.py`.
   - Gia cố biên: không tách ca vô ích cho môn vượt ngưỡng sức chứa đơn khi `allow_room_splitting=False` hoặc khi chỉ có môn quá tải toàn trường, và chuẩn hóa an toàn khóa `shift_id` lẫn kiểu.
