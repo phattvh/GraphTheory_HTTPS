@@ -86,7 +86,7 @@ def request_json(
 
 
 def test_openapi_exposes_master_data_endpoints():
-    """Swagger/OpenAPI phải hiển thị đầy đủ 20 route CRUD cho Kỳ thi, Môn học, Sinh viên và Phòng thi."""
+    """Swagger/OpenAPI phải hiển thị đầy đủ 24 route CRUD (Kỳ thi, Môn học, Sinh viên, Phòng thi & Đăng ký thi)."""
     status_code, spec = request_json("GET", "/openapi.json")
     assert status_code == 200, f"GET /openapi.json failed: {status_code}"
     paths = spec.get("paths", {})
@@ -100,12 +100,15 @@ def test_openapi_exposes_master_data_endpoints():
         "/api/v1/sinh-vien/{sinh_vien_id}": {"get", "put", "delete"},
         "/api/v1/phong-thi": {"get", "post"},
         "/api/v1/phong-thi/{phong_thi_id}": {"get", "put", "delete"},
+        "/api/v1/dang-ky-thi": {"get", "post"},
+        "/api/v1/dang-ky-thi/{dang_ky_id}": {"get", "delete"},
+        "/api/v1/ky-thi/{ky_thi_id}/dang-ky-thi": {"get"},
     }
     for path, methods in expected.items():
         assert path in paths, f"Thiếu route {path} trong OpenAPI"
         missing_methods = methods - set(paths[path].keys())
         assert not missing_methods, f"Route {path} thiếu method: {missing_methods}"
-    print(f"✓ Test 1: OpenAPI ({BASE_URL}) hiển thị đủ 20 endpoint CRUD Kỳ thi, Môn học, Sinh viên & Phòng thi.")
+    print(f"✓ Test 1: OpenAPI ({BASE_URL}) hiển thị đủ 24 endpoint CRUD Danh mục & Đăng ký thi.")
 
 
 def test_ky_thi_crud_lifecycle_and_edge_cases():
@@ -464,11 +467,142 @@ def test_phong_thi_crud_lifecycle_and_edge_cases():
             request_json("DELETE", f"/api/v1/phong-thi/{leftover_id}")
 
 
+def test_dang_ky_thi_crud_and_exam_listing():
+    """Kiểm thử thêm/xóa và lấy danh sách đăng ký thi theo kỳ thi (Ngày 6 - UC05)."""
+    exam_id = None
+    sv_id = None
+    course_id = None
+    reg_id = None
+    try:
+        s_kt, kt = request_json(
+            "POST",
+            "/api/v1/ky-thi",
+            {
+                "ma_ky_thi": "KT_TEST_D6_REG",
+                "ten_ky_thi": "Kỳ thi Test Đăng ký Ngày 6",
+                "ngay_bat_dau": "2026-09-01",
+                "ngay_ket_thuc": "2026-09-10",
+            },
+        )
+        assert s_kt == 201, f"Create exam failed: {s_kt} {kt}"
+        exam_id = kt["id"]
+
+        s_sv, sv = request_json(
+            "POST",
+            "/api/v1/sinh-vien",
+            {
+                "mssv": "TESTD6_221101",
+                "ho_ten": "Trần Đăng Ký D6",
+                "email": "d6@univ.edu.vn",
+                "lop_sinh_hoat": "22CNTT-D6",
+            },
+        )
+        assert s_sv == 201, f"Create student failed: {s_sv} {sv}"
+        sv_id = sv["id"]
+
+        s_mh, mh = request_json(
+            "POST",
+            "/api/v1/mon-hoc",
+            {"ma_mon": "TEST_D6_IT01", "ten_mon": "Đồ thị Test D6", "thoi_luong_phut": 90},
+        )
+        assert s_mh == 201, f"Create course failed: {s_mh} {mh}"
+        course_id = mh["id"]
+
+        # 1. Chặn khóa ngoại không tồn tại -> 404
+        assert (
+            request_json(
+                "POST",
+                "/api/v1/dang-ky-thi",
+                {"ky_thi_id": 999999999, "sinh_vien_id": sv_id, "mon_hoc_id": course_id},
+            )[0]
+            == 404
+        )
+        assert (
+            request_json(
+                "POST",
+                "/api/v1/dang-ky-thi",
+                {"ky_thi_id": exam_id, "sinh_vien_id": 999999999, "mon_hoc_id": course_id},
+            )[0]
+            == 404
+        )
+        assert (
+            request_json(
+                "POST",
+                "/api/v1/dang-ky-thi",
+                {"ky_thi_id": exam_id, "sinh_vien_id": sv_id, "mon_hoc_id": 999999999},
+            )[0]
+            == 404
+        )
+
+        # 2. Thêm đăng ký thi (POST -> 201) + kiểm tra metadata JOIN
+        s_reg, reg = request_json(
+            "POST",
+            "/api/v1/dang-ky-thi",
+            {"ky_thi_id": exam_id, "sinh_vien_id": sv_id, "mon_hoc_id": course_id},
+        )
+        assert s_reg == 201, f"Create registration failed: {s_reg} {reg}"
+        reg_id = reg["id"]
+        assert reg["ma_ky_thi"] == "KT_TEST_D6_REG"
+        assert reg["mssv"] == "TESTD6_221101"
+        assert reg["ho_ten"] == "Trần Đăng Ký D6"
+        assert reg["ma_mon"] == "TEST_D6_IT01"
+        assert reg["ten_mon"] == "Đồ thị Test D6"
+
+        # 3. Chặn đăng ký trùng (uq_dang_ky -> 409 Conflict)
+        s_dup, _ = request_json(
+            "POST",
+            "/api/v1/dang-ky-thi",
+            {"ky_thi_id": exam_id, "sinh_vien_id": sv_id, "mon_hoc_id": course_id},
+        )
+        assert s_dup == 409, f"Expected 409 on duplicate registration, got {s_dup}"
+
+        # 4. Lấy danh sách đăng ký theo kỳ thi (cả query param & nested route)
+        s_list, list_q = request_json(
+            "GET", f"/api/v1/dang-ky-thi?ky_thi_id={exam_id}&q=TESTD6_221101"
+        )
+        assert s_list == 200 and len(list_q) == 1 and list_q[0]["id"] == reg_id
+
+        s_nested, list_nested = request_json("GET", f"/api/v1/ky-thi/{exam_id}/dang-ky-thi")
+        assert s_nested == 200 and len(list_nested) == 1 and list_nested[0]["id"] == reg_id
+        assert request_json("GET", "/api/v1/ky-thi/999999999/dang-ky-thi")[0] == 404
+
+        s_get, detail = request_json("GET", f"/api/v1/dang-ky-thi/{reg_id}")
+        assert s_get == 200 and detail["mssv"] == "TESTD6_221101"
+
+        # 5. Xóa đăng ký thi (204) & xác nhận đã xóa (404)
+        assert request_json("DELETE", f"/api/v1/dang-ky-thi/{reg_id}")[0] == 204
+        reg_id = None
+        assert request_json("GET", f"/api/v1/ky-thi/{exam_id}/dang-ky-thi")[1] == []
+
+        # 6. Tạo lại đăng ký rồi xóa kỳ thi -> kiểm tra CASCADE tự dọn dang_ky_thi
+        s_reg2, reg2 = request_json(
+            "POST",
+            "/api/v1/dang-ky-thi",
+            {"ky_thi_id": exam_id, "sinh_vien_id": sv_id, "mon_hoc_id": course_id},
+        )
+        assert s_reg2 == 201
+        reg2_id = reg2["id"]
+        assert request_json("DELETE", f"/api/v1/ky-thi/{exam_id}")[0] == 204
+        exam_id = None
+        assert request_json("GET", f"/api/v1/dang-ky-thi/{reg2_id}")[0] == 404
+        print("✓ Test 6: API Đăng ký thi (/api/v1/dang-ky-thi & CASCADE khi xóa kỳ thi) đạt 100%.")
+    finally:
+        if reg_id is not None:
+            request_json("DELETE", f"/api/v1/dang-ky-thi/{reg_id}")
+        if exam_id is not None:
+            request_json("DELETE", f"/api/v1/ky-thi/{exam_id}")
+        if sv_id is not None:
+            request_json("DELETE", f"/api/v1/sinh-vien/{sv_id}")
+        if course_id is not None:
+            request_json("DELETE", f"/api/v1/mon-hoc/{course_id}")
+
+
 if __name__ == "__main__":
-    print(f"=== BẮT ĐẦU KIỂM THỬ NGÀY 4-5 (TV2 CRUD Kỳ thi, Môn học, Sinh viên, Phòng thi qua {BASE_URL}) ===")
+    print(f"=== BẮT ĐẦU KIỂM THỬ NGÀY 4-6 (TV2 CRUD Danh mục & Đăng ký thi qua {BASE_URL}) ===")
     test_openapi_exposes_master_data_endpoints()
     test_ky_thi_crud_lifecycle_and_edge_cases()
     test_mon_hoc_crud_lifecycle_and_edge_cases()
     test_sinh_vien_crud_lifecycle_and_edge_cases()
     test_phong_thi_crud_lifecycle_and_edge_cases()
-    print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ NGÀY 4-5 ĐÃ ĐẠT 100% ===")
+    test_dang_ky_thi_crud_and_exam_listing()
+    print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ NGÀY 4-6 ĐÃ ĐẠT 100% ===")
