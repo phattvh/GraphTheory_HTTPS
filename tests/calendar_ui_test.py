@@ -28,6 +28,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
     for required_marker in [
         "https://cdn.tailwindcss.com",
         "fullcalendar@6.1.15/index.global.min.js",
+        "@fullcalendar/core@6.1.15/locales/vi.global.min.js",
         'data-admin-page="calendar"',
         'id="tab-calendar"',
         'id="admin-fullcalendar-shell"',
@@ -219,6 +220,17 @@ const allEvents = sandbox.resetCalendarFilters();
 assert.strictEqual(elements["calendar-search-input"].value, "");
 assert.strictEqual(allEvents.length, 15);
 assert.strictEqual(currentEvents.length, 15);
+
+// 5. Kiểm tra formatSlotLabelByMode hoạt động an toàn với Date khác realm (Node vm)
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T01:00:00"), "shift"),
+  "Ca 1: 7h30 - 9h00"
+);
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T04:00:00"), "shift"),
+  "Ca 4: 15h30 - 17h00"
+);
+assert.strictEqual(sandbox.formatSlotLabelByMode(null, "shift"), "");
 """
     res = subprocess.run(
         ["node", "-e", script],
