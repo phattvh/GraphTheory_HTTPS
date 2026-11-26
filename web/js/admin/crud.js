@@ -911,7 +911,7 @@ function renderRegistrationTable() {
 
   if (countEl) {
     if (selectedCourse && selectedCourse !== "ALL") {
-      countEl.textContent = `Danh sách Sinh viên đăng ký môn ${selectedCourse} (${filtered.length} sinh viên)`;
+      countEl.textContent = `Danh sách Sinh viên đăng ký môn (${filtered.length} sinh viên)`;
     } else {
       countEl.textContent = `Danh sách Đăng ký dự thi theo Môn học (${filtered.length} lượt đăng ký)`;
     }
