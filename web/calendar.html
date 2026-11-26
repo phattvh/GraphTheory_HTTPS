@@ -147,74 +147,54 @@
           </div>
         </header>
 
-        <!-- Thanh công cụ Bộ lọc (Môn học / Phòng thi / Ca thi / Kiểu chia khung giờ) & Chuyển đổi chế độ xem -->
+        <!-- Thanh công cụ Bộ lọc (Môn học / Phòng thi / Ca thi) & Chuyển đổi chế độ xem -->
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 no-print">
           <!-- Cụm bộ lọc trái -->
           <div class="flex flex-wrap items-center gap-2.5">
-            <div class="flex items-center gap-1.5">
-              <label for="calendar-filter-course" class="text-xs font-semibold text-slate-700">Môn học:</label>
-              <select id="calendar-filter-course" onchange="filterCalendarEvents()"
-                aria-label="Lọc theo môn học"
-                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
-                <option value="ALL">Lọc Môn học: Tất cả 15 môn</option>
-                <option value="IT001">IT001: Lý thuyết Đồ thị</option>
-                <option value="IT002">IT002: Cấu trúc Dữ liệu &amp; GT</option>
-                <option value="IT003">IT003: Hệ Quản trị CSDL</option>
-                <option value="IT004">IT004: Lập trình Web</option>
-                <option value="IT005">IT005: An toàn Thông tin</option>
-                <option value="IT006">IT006: Trí tuệ Nhân tạo</option>
-                <option value="IT007">IT007: Mạng Máy tính</option>
-                <option value="IT008">IT008: Toán Rời rạc &amp; Tổ hợp</option>
-                <option value="IT009">IT009: Giải tích 1</option>
-                <option value="IT010">IT010: Đại số Tuyến tính</option>
-                <option value="IT011">IT011: Kiến trúc Máy tính</option>
-                <option value="IT012">IT012: Lập trình OOP</option>
-                <option value="IT013">IT013: Công nghệ Phần mềm</option>
-                <option value="IT014">IT014: Hệ điều hành</option>
-                <option value="IT015">IT015: Xác suất Thống kê</option>
-              </select>
-            </div>
+            <select id="calendar-filter-course" onchange="filterCalendarEvents()"
+              aria-label="Lọc theo môn học"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+              <option value="ALL">Lọc Môn học: Tất cả 15 môn</option>
+              <option value="IT001">IT001: Lý thuyết Đồ thị</option>
+              <option value="IT002">IT002: Cấu trúc Dữ liệu &amp; GT</option>
+              <option value="IT003">IT003: Hệ Quản trị CSDL</option>
+              <option value="IT004">IT004: Lập trình Web</option>
+              <option value="IT005">IT005: An toàn Thông tin</option>
+              <option value="IT006">IT006: Trí tuệ Nhân tạo</option>
+              <option value="IT007">IT007: Mạng Máy tính</option>
+              <option value="IT008">IT008: Toán Rời rạc &amp; Tổ hợp</option>
+              <option value="IT009">IT009: Giải tích 1</option>
+              <option value="IT010">IT010: Đại số Tuyến tính</option>
+              <option value="IT011">IT011: Kiến trúc Máy tính</option>
+              <option value="IT012">IT012: Lập trình OOP</option>
+              <option value="IT013">IT013: Công nghệ Phần mềm</option>
+              <option value="IT014">IT014: Hệ điều hành</option>
+              <option value="IT015">IT015: Xác suất Thống kê</option>
+            </select>
 
-            <div class="flex items-center gap-1.5">
-              <label for="calendar-filter-room" class="text-xs font-semibold text-slate-700">Phòng thi:</label>
-              <select id="calendar-filter-room" onchange="filterCalendarEvents()"
-                aria-label="Lọc theo phòng thi"
-                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
-                <option value="ALL">Lọc Phòng thi: Tất cả 10 phòng</option>
-                <option value="A101">Phòng A101 (100 chỗ)</option>
-                <option value="A102">Phòng A102 (80 chỗ)</option>
-                <option value="A103">Phòng A103 (90 chỗ)</option>
-                <option value="B201">Phòng B201 (100 chỗ)</option>
-                <option value="B202">Phòng B202 (80 chỗ)</option>
-                <option value="B203">Phòng B203 (80 chỗ)</option>
-                <option value="C301">Phòng C301 (60 chỗ)</option>
-                <option value="C302">Phòng C302 (60 chỗ)</option>
-              </select>
-            </div>
+            <select id="calendar-filter-room" onchange="filterCalendarEvents()"
+              aria-label="Lọc theo phòng thi"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+              <option value="ALL">Lọc Phòng thi: Tất cả 10 phòng</option>
+              <option value="A101">Phòng A101 (100 chỗ)</option>
+              <option value="A102">Phòng A102 (80 chỗ)</option>
+              <option value="A103">Phòng A103 (90 chỗ)</option>
+              <option value="B201">Phòng B201 (100 chỗ)</option>
+              <option value="B202">Phòng B202 (80 chỗ)</option>
+              <option value="B203">Phòng B203 (80 chỗ)</option>
+              <option value="C301">Phòng C301 (60 chỗ)</option>
+              <option value="C302">Phòng C302 (60 chỗ)</option>
+            </select>
 
-            <div class="flex items-center gap-1.5">
-              <label for="calendar-filter-shift" class="text-xs font-semibold text-slate-700">Ca thi:</label>
-              <select id="calendar-filter-shift" onchange="filterCalendarEvents()"
-                aria-label="Lọc theo ca thi"
-                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
-                <option value="ALL">Lọc Ca thi: Tất cả các ca</option>
-                <option value="1">Ca 1: 7h30 - 9h00</option>
-                <option value="2">Ca 2: 9h30 - 11h00</option>
-                <option value="3">Ca 3: 13h30 - 15h00</option>
-                <option value="4">Ca 4: 15h30 - 17h00</option>
-              </select>
-            </div>
-
-            <!-- Tùy chọn chia trục giờ theo Ca thi (Ca 1: 7h30-9h, Ca 2: 9h30-11h...) hoặc theo Giờ -->
-            <div class="flex items-center gap-1.5">
-              <label for="calendar-slot-mode" class="text-xs font-semibold text-slate-700">Khung giờ:</label>
-              <select id="calendar-slot-mode" onchange="switchCalendarSlotMode(this.value)"
-                aria-label="Tùy chọn chia ca theo giờ"
-                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
-                <option value="shift" selected>Chia theo Ca (Ca 1: 7h30-9h, Ca 2: 9h30-11h...)</option>
-                <option value="hour">Chia theo Giờ chuẩn (07:00, 08:00, 09:00...)</option>
-              </select>
-            </div>
+            <select id="calendar-filter-shift" onchange="filterCalendarEvents()"
+              aria-label="Lọc theo ca thi"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+              <option value="ALL">Lọc Ca thi: Tất cả các ca</option>
+              <option value="1">Ca 1: 7h30 - 9h00</option>
+              <option value="2">Ca 2: 9h30 - 11h00</option>
+              <option value="3">Ca 3: 13h30 - 15h00</option>
+              <option value="4">Ca 4: 15h30 - 17h00</option>
+            </select>
 
             <button type="button" id="btn-calendar-reset-filter" onclick="resetCalendarFilters()"
               class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
@@ -222,7 +202,7 @@
             </button>
           </div>
 
-          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần / Theo Ca / Tháng bên phải -->
+          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần (2 tùy chọn: Chia Ca / Theo Giờ) + Tháng bên phải -->
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" id="btn-calendar-prev" onclick="navigateCalendar('prev')"
               aria-label="Kỳ trước"
@@ -241,17 +221,17 @@
 
             <span class="h-4 w-[1px] bg-slate-200 mx-0.5" aria-hidden="true"></span>
 
-            <!-- Chuyển chế độ xem Tuần (timeGridWeek) / Theo Ca (shiftGridWeek) / Tháng (dayGridMonth) -->
-            <button type="button" id="btn-view-week" data-calendar-view="timeGridWeek"
-              aria-pressed="true" onclick="switchCalendarView('timeGridWeek')"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer">
-              Tuần (Week)
-            </button>
-            <button type="button" id="btn-view-shift" data-calendar-view="shiftGridWeek"
-              aria-pressed="false" onclick="switchCalendarView('shiftGridWeek')"
-              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer">
-              Chia Ca (Ca 1-4)
-            </button>
+            <!-- Ô gộp chế độ xem Tuần với mũi tên xuống gồm 2 tùy chọn: Chia Ca (Ca 1-4) & Theo Giờ (Week) -->
+            <select id="btn-view-week" data-calendar-view="timeGridWeek"
+              aria-label="Chế độ xem Tuần (Chia Ca hoặc Theo Giờ)"
+              aria-pressed="true"
+              onclick="if (typeof currentCalendarView !== 'undefined' && currentCalendarView !== 'timeGridWeek') switchCalendarView('timeGridWeek')"
+              onchange="switchCalendarSlotMode(this.value)"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer">
+              <option value="shift" class="bg-white text-slate-800 font-medium" selected>Tuần: Chia Ca (Ca 1-4)</option>
+              <option value="hour" class="bg-white text-slate-800 font-medium">Tuần: Theo Giờ (07:00 - 18:00)</option>
+            </select>
+
             <button type="button" id="btn-view-month" data-calendar-view="dayGridMonth"
               aria-pressed="false" onclick="switchCalendarView('dayGridMonth')"
               class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer">

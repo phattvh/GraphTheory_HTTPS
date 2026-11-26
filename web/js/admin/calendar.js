@@ -557,12 +557,11 @@ function renderShiftMatrixTable(eventsList = SAMPLE_EXAM_EVENTS) {
 }
 
 /**
- * Đồng bộ trạng thái nút bấm Tuần (timeGridWeek) / Chia Ca (shiftGridWeek) / Tháng (dayGridMonth).
+ * Đồng bộ trạng thái ô chọn Tuần (timeGridWeek - Chia Ca / Theo Giờ) và nút Tháng (dayGridMonth).
  * @param {string} viewName
  */
 function updateCalendarViewButtons(viewName) {
   const weekBtn = document.getElementById("btn-view-week");
-  const shiftBtn = document.getElementById("btn-view-shift");
   const monthBtn = document.getElementById("btn-view-month");
   const viewBadge = document.getElementById("calendar-view-badge");
   const rangeHeading = document.getElementById("calendar-current-range");
@@ -572,21 +571,24 @@ function updateCalendarViewButtons(viewName) {
   const isShiftOnly = viewName === "shiftGridWeek";
   const isWeek = !isMonth && !isShiftOnly;
 
-  const activeClass =
+  const activeWeekClass =
+    "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer";
+  const inactiveWeekClass =
+    "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200/70 focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer";
+  const activeBtnClass =
     "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer";
-  const inactiveClass =
+  const inactiveBtnClass =
     "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer";
 
   if (weekBtn) {
-    weekBtn.className = isWeek ? activeClass : inactiveClass;
+    weekBtn.className = isWeek ? activeWeekClass : inactiveWeekClass;
     weekBtn.setAttribute("aria-pressed", isWeek ? "true" : "false");
-  }
-  if (shiftBtn) {
-    shiftBtn.className = isShiftOnly ? activeClass : inactiveClass;
-    shiftBtn.setAttribute("aria-pressed", isShiftOnly ? "true" : "false");
+    if (typeof weekBtn.value === "string" && weekBtn.value !== currentSlotMode) {
+      weekBtn.value = currentSlotMode;
+    }
   }
   if (monthBtn) {
-    monthBtn.className = isMonth ? activeClass : inactiveClass;
+    monthBtn.className = isMonth ? activeBtnClass : inactiveBtnClass;
     monthBtn.setAttribute("aria-pressed", isMonth ? "true" : "false");
   }
 
@@ -596,9 +598,7 @@ function updateCalendarViewButtons(viewName) {
   }
 
   if (viewBadge) {
-    if (isShiftOnly) {
-      viewBadge.textContent = "Chế độ xem: Chia theo 4 Ca chuẩn (Ca 1: 7h30-9h, Ca 2: 9h30-11h...)";
-    } else if (isMonth) {
+    if (isMonth) {
       viewBadge.textContent = "Chế độ xem: Tháng (dayGridMonth)";
     } else {
       const slotDesc =
@@ -621,16 +621,24 @@ function updateCalendarViewButtons(viewName) {
 }
 
 /**
- * Chuyển đổi tùy chọn chia khung giờ trục dọc:
- * - "shift": Gộp mỗi ca thành đúng 1 hàng duy nhất (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00), bỏ hàng nghỉ giữa ca.
- * - "hour": Chia theo Giờ chuẩn (07:00, 08:00, 09:00...)
+ * Chuyển đổi tùy chọn trong ô dropdown Tuần:
+ * - "shift": Tuần: Chia Ca (Ca 1-4) (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00)
+ * - "hour": Tuần: Theo Giờ (07:00 - 18:00)
+ * Đồng thời tự động chuyển lịch sang chế độ xem Tuần (timeGridWeek) nếu đang ở chế độ Tháng.
  * @param {string} mode
  */
 function switchCalendarSlotMode(mode) {
   currentSlotMode = mode === "hour" ? "hour" : "shift";
-  const slotSelect = document.getElementById("calendar-slot-mode");
-  if (slotSelect && slotSelect.value !== currentSlotMode) {
-    slotSelect.value = currentSlotMode;
+  const weekSelect = document.getElementById("btn-view-week");
+  if (weekSelect && typeof weekSelect.value === "string" && weekSelect.value !== currentSlotMode) {
+    weekSelect.value = currentSlotMode;
+  }
+
+  if (currentCalendarView !== "timeGridWeek") {
+    currentCalendarView = "timeGridWeek";
+    if (adminCalendarInstance && typeof adminCalendarInstance.changeView === "function") {
+      adminCalendarInstance.changeView("timeGridWeek");
+    }
   }
 
   if (adminCalendarInstance && typeof adminCalendarInstance.setOption === "function") {
