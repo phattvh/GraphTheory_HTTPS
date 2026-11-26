@@ -155,8 +155,8 @@ function renderEdgeInspector(edgeData) {
   const listEl = document.getElementById("graph-inspector-details");
   if (!badgeEl || !listEl || !edgeData) return;
 
-  const srcNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && el.data.id === edgeData.source);
-  const tgtNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && el.data.id === edgeData.target);
+  const srcNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && !el.data.source && el.data.id === edgeData.source);
+  const tgtNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && !el.data.source && el.data.id === edgeData.target);
   const srcShift = srcNode ? srcNode.data.shift : "?";
   const tgtShift = tgtNode ? tgtNode.data.shift : "?";
 
@@ -233,6 +233,10 @@ function changeGraphLayout(layoutName) {
 function initConflictGraph() {
   const container = document.getElementById("cy");
   if (!container || typeof window.cytoscape !== "function") return null;
+
+  if (cyInstance && typeof cyInstance.destroy === "function") {
+    cyInstance.destroy();
+  }
 
   const fallback = document.getElementById("cy-fallback-svg");
   if (fallback) fallback.classList.add("hidden");
