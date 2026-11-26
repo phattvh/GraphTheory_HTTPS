@@ -598,15 +598,7 @@ function updateCalendarViewButtons(viewName) {
   }
 
   if (viewBadge) {
-    if (isMonth) {
-      viewBadge.textContent = "Chế độ xem: Tháng (dayGridMonth)";
-    } else {
-      const slotDesc =
-        currentSlotMode === "shift"
-          ? "Chia theo Ca: Ca 1 7h30-9h, Ca 2 9h30-11h..."
-          : "Chia theo Giờ chuẩn 07:00 - 18:00";
-      viewBadge.textContent = `Chế độ xem: Tuần (${slotDesc})`;
-    }
+    viewBadge.textContent = isMonth ? "Chế độ xem: Tháng" : "Chế độ xem: Tuần";
   }
 
   if (rangeHeading) {
