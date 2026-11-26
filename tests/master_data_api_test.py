@@ -34,12 +34,37 @@ def _detect_base_url() -> str:
 
 
 BASE_URL = _detect_base_url()
+ADMIN_USERNAME = os.getenv("TEST_ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASS", "admin123")
+_ADMIN_TOKEN: Optional[str] = None
+
+
+def _get_admin_token() -> str:
+    global _ADMIN_TOKEN
+    if _ADMIN_TOKEN:
+        return _ADMIN_TOKEN
+    status_code, body = request_json(
+        "POST",
+        "/api/v1/auth/login",
+        {"ten_dang_nhap": ADMIN_USERNAME, "mat_khau": ADMIN_PASSWORD},
+        auth=False,
+    )
+    assert status_code == 200 and body and body.get("access_token"), (
+        f"Đăng nhập admin thất bại ({status_code}): {body}"
+    )
+    _ADMIN_TOKEN = body["access_token"]
+    return _ADMIN_TOKEN
 
 
 def request_json(
-    method: str, path: str, body: Optional[dict[str, Any]] = None
+    method: str,
+    path: str,
+    body: Optional[dict[str, Any]] = None,
+    auth: bool = True,
 ) -> Tuple[int, Any]:
     headers = {"Accept": "application/json"}
+    if auth:
+        headers["Authorization"] = f"Bearer {_get_admin_token()}"
     data = None
     if body is not None:
         data = json.dumps(body).encode("utf-8")
