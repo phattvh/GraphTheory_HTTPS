@@ -24,11 +24,12 @@ from backend.schemas.master_data import (
     MonHocUpdate,
 )
 
+# TODO(TV3 Day 4): Gắn Depends(get_current_user) / Depends(require_admin) theo docs/06. Security and authorization.md
 router = APIRouter(prefix="/api/v1")
 
 ModelT = TypeVar("ModelT")
 PositiveBigIntId = Annotated[int, Path(..., gt=0, le=MAX_PG_BIGINT)]
-SkipParam = Annotated[int, Query(ge=0, le=MAX_PG_BIGINT)]
+SkipParam = Annotated[int, Query(ge=0, le=100_000)]
 LimitParam = Annotated[int, Query(ge=1, le=500)]
 
 
@@ -143,7 +144,7 @@ def update_ky_thi(
     effective_end = update_data.get("ngay_ket_thuc", exam.ngay_ket_thuc)
     if effective_end < effective_start:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             detail="Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.",
         )
 
@@ -164,7 +165,7 @@ def delete_ky_thi(ky_thi_id: PositiveBigIntId, db: Session = Depends(get_db)):
     """Xóa kỳ thi (CASCADE dọn sạch dang_ky_thi, ca_thi, lich_thi liên quan)."""
     exam = _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
     db.delete(exam)
-    db.commit()
+    _commit_or_409(db, "Không thể xóa kỳ thi do ràng buộc dữ liệu liên quan.")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -249,5 +250,5 @@ def delete_mon_hoc(mon_hoc_id: PositiveBigIntId, db: Session = Depends(get_db)):
     """Xóa môn học theo ID."""
     course = _get_or_404(db, MonHoc, mon_hoc_id, "Không tìm thấy môn học.")
     db.delete(course)
-    db.commit()
+    _commit_or_409(db, "Không thể xóa môn học do ràng buộc dữ liệu liên quan.")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
