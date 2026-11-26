@@ -44,10 +44,18 @@
     }
     #admin-fullcalendar .fc-timegrid-slot-label,
     #admin-fullcalendar .fc-daygrid-day-number {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 600;
-      color: #475569;
+      color: #334155;
       font-variant-numeric: tabular-nums;
+    }
+    #admin-fullcalendar .fc-timegrid-axis-cushion,
+    #admin-fullcalendar .fc-timegrid-slot-label-cushion {
+      white-space: nowrap;
+      padding: 2px 6px;
+    }
+    #admin-fullcalendar.is-shift-axis .fc-timegrid-slot {
+      height: 2.35rem;
     }
     #admin-fullcalendar .fc-event {
       border-radius: 6px;
@@ -109,28 +117,28 @@
             </p>
           </div>
 
-          <!-- Bảng chú giải màu sắc số Ca 1 -> Ca 4 (Không dùng nested card border) -->
+          <!-- Bảng chú giải màu sắc số Ca 1 -> Ca 4 -->
           <div class="flex flex-wrap items-center gap-3 text-xs" aria-label="Chú giải màu ca thi">
             <span class="inline-flex items-center gap-1.5 font-semibold text-blue-900">
               <span class="w-2.5 h-2.5 rounded-full bg-blue-600" aria-hidden="true"></span>
-              Ca 1 (07:30 - 09:00)
+              Ca 1: 7h30 - 9h00
             </span>
             <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-900">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-600" aria-hidden="true"></span>
-              Ca 2 (09:30 - 11:00)
+              Ca 2: 9h30 - 11h00
             </span>
             <span class="inline-flex items-center gap-1.5 font-semibold text-amber-900">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-600" aria-hidden="true"></span>
-              Ca 3 (13:30 - 15:00)
+              Ca 3: 13h30 - 15h00
             </span>
             <span class="inline-flex items-center gap-1.5 font-semibold text-violet-900">
               <span class="w-2.5 h-2.5 rounded-full bg-violet-600" aria-hidden="true"></span>
-              Ca 4 (15:30 - 17:00)
+              Ca 4: 15h30 - 17h00
             </span>
           </div>
         </header>
 
-        <!-- Thanh công cụ Bộ lọc (Môn học / Phòng thi / Ca thi) & Chuyển đổi chế độ xem Tháng/Tuần -->
+        <!-- Thanh công cụ Bộ lọc (Môn học / Phòng thi / Ca thi / Kiểu chia khung giờ) & Chuyển đổi chế độ xem -->
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 no-print">
           <!-- Cụm bộ lọc trái -->
           <div class="flex flex-wrap items-center gap-2.5">
@@ -181,10 +189,21 @@
                 aria-label="Lọc theo ca thi"
                 class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
                 <option value="ALL">Lọc Ca thi: Tất cả các ca</option>
-                <option value="1">Ca 1 (07:30 - 09:00)</option>
-                <option value="2">Ca 2 (09:30 - 11:00)</option>
-                <option value="3">Ca 3 (13:30 - 15:00)</option>
-                <option value="4">Ca 4 (15:30 - 17:00)</option>
+                <option value="1">Ca 1: 7h30 - 9h00</option>
+                <option value="2">Ca 2: 9h30 - 11h00</option>
+                <option value="3">Ca 3: 13h30 - 15h00</option>
+                <option value="4">Ca 4: 15h30 - 17h00</option>
+              </select>
+            </div>
+
+            <!-- Tùy chọn chia trục giờ theo Ca thi (Ca 1: 7h30-9h, Ca 2: 9h30-11h...) hoặc theo Giờ -->
+            <div class="flex items-center gap-1.5">
+              <label for="calendar-slot-mode" class="text-xs font-semibold text-slate-700">Khung giờ:</label>
+              <select id="calendar-slot-mode" onchange="switchCalendarSlotMode(this.value)"
+                aria-label="Tùy chọn chia ca theo giờ"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+                <option value="shift" selected>Chia theo Ca (Ca 1: 7h30-9h, Ca 2: 9h30-11h...)</option>
+                <option value="hour">Chia theo Giờ chuẩn (07:00, 08:00, 09:00...)</option>
               </select>
             </div>
 
@@ -194,7 +213,7 @@
             </button>
           </div>
 
-          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần / Tháng bên phải -->
+          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần / Theo Ca / Tháng bên phải -->
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" id="btn-calendar-prev" onclick="navigateCalendar('prev')"
               aria-label="Kỳ trước"
@@ -213,11 +232,16 @@
 
             <span class="h-4 w-[1px] bg-slate-200 mx-0.5" aria-hidden="true"></span>
 
-            <!-- Chuyển chế độ xem Tuần (timeGridWeek) / Tháng (dayGridMonth) -->
+            <!-- Chuyển chế độ xem Tuần (timeGridWeek) / Theo Ca (shiftGridWeek) / Tháng (dayGridMonth) -->
             <button type="button" id="btn-view-week" data-calendar-view="timeGridWeek"
               aria-pressed="true" onclick="switchCalendarView('timeGridWeek')"
               class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer">
               Tuần (Week)
+            </button>
+            <button type="button" id="btn-view-shift" data-calendar-view="shiftGridWeek"
+              aria-pressed="false" onclick="switchCalendarView('shiftGridWeek')"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer">
+              Chia Ca (Ca 1-4)
             </button>
             <button type="button" id="btn-view-month" data-calendar-view="dayGridMonth"
               aria-pressed="false" onclick="switchCalendarView('dayGridMonth')"
@@ -232,13 +256,13 @@
           </div>
         </div>
 
-        <!-- Khung chính hiển thị FullCalendar (Tuần / Tháng) & Bảng Ma trận Ca thi -->
+        <!-- Khung chính hiển thị FullCalendar (Tuần / Tháng) & Bảng Ma trận Chia Ca theo Giờ -->
         <div id="admin-fullcalendar-shell" class="bg-white p-6 rounded-xl border border-slate-200 space-y-6">
           <!-- Tiêu đề động đồng bộ với chế độ xem FullCalendar -->
           <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
             <div class="flex flex-wrap items-center gap-3">
               <span id="calendar-view-badge" class="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-800">
-                Chế độ xem: Tuần (timeGridWeek)
+                Chế độ xem: Tuần (Chia theo Ca: Ca 1 7h30-9h, Ca 2 9h30-11h...)
               </span>
               <h3 id="calendar-current-range" class="font-bold text-slate-900 tabular-nums">
                 Tuần thi: Thứ Hai 15/12/2026 - Thứ Bảy 20/12/2026
@@ -250,7 +274,7 @@
           </div>
 
           <!-- Container mount trực tiếp của thư viện FullCalendar.js -->
-          <div id="admin-fullcalendar" class="min-h-[520px] w-full" aria-label="Lịch thi toàn trường FullCalendar"></div>
+          <div id="admin-fullcalendar" class="is-shift-axis min-h-[520px] w-full" aria-label="Lịch thi toàn trường FullCalendar"></div>
 
           <!-- Thanh chi tiết Ca thi / Môn thi khi người dùng chọn sự kiện trên FullCalendar -->
           <div id="calendar-event-inspector" class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -259,19 +283,19 @@
                 Chi tiết ca thi đang chọn: IT002 - Cấu trúc Dữ liệu &amp; Giải thuật (Bậc xung đột deg(v) = 11)
               </div>
               <div class="text-slate-600" id="calendar-inspector-meta">
-                Ca 1 (07:30 - 09:00, Thứ Hai 15/12/2026) • Phòng thi FFD: A101, A102 • Sĩ số: 180 SV (Nhấp vào môn thi trên lịch để xem chi tiết)
+                Ca 1: 7h30 - 9h00 (Thứ Ba 15/12/2026) • Phòng thi FFD: A101, A102 • Sĩ số: 180 SV (Nhấp vào môn thi trên lịch để xem chi tiết)
               </div>
             </div>
             <span id="calendar-inspector-badge" class="px-3 py-1 rounded-full font-semibold bg-blue-100 text-blue-900">
-              Ca 1 • Màu sắc số #1
+              Ca 1: 7h30 - 9h00 • Màu #1
             </span>
           </div>
 
-          <!-- Bảng tổng hợp Ma trận 4 Ca thi × Ngày thi (Dùng bảng ngữ nghĩa chuẩn, không lồng card) -->
+          <!-- Bảng tổng hợp Ma trận 4 Ca thi × Ngày thi (Ca 1: 7h30-9h, Ca 2: 9h30-11h, Ca 3: 13h30-15h, Ca 4: 15h30-17h) -->
           <div id="calendar-shift-matrix" class="pt-4 border-t border-slate-200 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h4 class="font-bold uppercase text-slate-600">
-                Bảng tổng hợp Ma trận Ca thi × Ngày thi (Tuần cao điểm 15/12 - 19/12/2026)
+                Bảng Lịch Thi Chia Theo 4 Ca Chuẩn (Ca 1: 7h30-9h00 • Ca 2: 9h30-11h00 • Ca 3: 13h30-15h00 • Ca 4: 15h30-17h00)
               </h4>
               <span class="text-xs text-slate-500">Đảm bảo 0 cạnh xung đột cùng ca thi</span>
             </div>
@@ -280,20 +304,20 @@
               <table class="shift-matrix-table w-full text-xs border-collapse">
                 <thead>
                   <tr>
-                    <th class="w-40">Khung giờ / Ca thi</th>
-                    <th>Thứ Hai (15/12)</th>
-                    <th>Thứ Ba (16/12)</th>
-                    <th>Thứ Tư (17/12)</th>
-                    <th>Thứ Năm (18/12)</th>
-                    <th>Thứ Sáu (19/12)</th>
+                    <th class="w-44">Ca thi / Khung giờ</th>
+                    <th>Thứ Ba (15/12)</th>
+                    <th>Thứ Tư (16/12)</th>
+                    <th>Thứ Năm (17/12)</th>
+                    <th>Thứ Sáu (18/12)</th>
+                    <th>Thứ Bảy (19/12)</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="calendar-shift-matrix-body">
                   <!-- Ca 1 -->
                   <tr>
                     <td class="font-bold text-slate-800 bg-slate-50/70">
-                      Ca 1 (07:30 - 09:00)<br/>
-                      <span class="font-normal text-slate-500">[Màu 1]</span>
+                      Ca 1: 7h30 - 9h00<br/>
+                      <span class="font-normal text-slate-500">Buổi sáng (Màu 1)</span>
                     </td>
                     <td class="bg-blue-50/50 space-y-1">
                       <div class="font-bold text-blue-900">IT002 - CTDL &amp; GT</div>
@@ -319,8 +343,8 @@
                   <!-- Ca 2 -->
                   <tr>
                     <td class="font-bold text-slate-800 bg-slate-50/70">
-                      Ca 2 (09:30 - 11:00)<br/>
-                      <span class="font-normal text-slate-500">[Màu 2]</span>
+                      Ca 2: 9h30 - 11h00<br/>
+                      <span class="font-normal text-slate-500">Buổi sáng (Màu 2)</span>
                     </td>
                     <td class="bg-emerald-50/50 space-y-1">
                       <div class="font-bold text-emerald-900">IT001 - Lý thuyết Đồ thị</div>
@@ -343,8 +367,8 @@
                   <!-- Ca 3 -->
                   <tr>
                     <td class="font-bold text-slate-800 bg-slate-50/70">
-                      Ca 3 (13:30 - 15:00)<br/>
-                      <span class="font-normal text-slate-500">[Màu 3]</span>
+                      Ca 3: 13h30 - 15h00<br/>
+                      <span class="font-normal text-slate-500">Buổi chiều (Màu 3)</span>
                     </td>
                     <td class="bg-amber-50/50 space-y-1">
                       <div class="font-bold text-amber-900">IT008 - Toán Rời rạc</div>
@@ -367,8 +391,8 @@
                   <!-- Ca 4 -->
                   <tr>
                     <td class="font-bold text-slate-800 bg-slate-50/70">
-                      Ca 4 (15:30 - 17:00)<br/>
-                      <span class="font-normal text-slate-500">[Màu 4]</span>
+                      Ca 4: 15h30 - 17h00<br/>
+                      <span class="font-normal text-slate-500">Buổi chiều (Màu 4)</span>
                     </td>
                     <td class="bg-violet-50/50 space-y-1">
                       <div class="font-bold text-violet-900">IT003 - Hệ QT CSDL</div>
