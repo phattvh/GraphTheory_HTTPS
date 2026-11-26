@@ -323,6 +323,55 @@ def test_dirty_course_and_graph_inputs():
     assert res_dirty_graph["total_allocations_count"] == 1
 
 
+def test_security_and_hardening_edge_cases():
+    """Kiểm tra vá các lỗ hổng biên: dang_su_dung=0/'false', float('inf'), trùng môn, khoảng trắng và shift None/lẫn kiểu."""
+    # 1. dang_su_dung=0 / 'false' / '0' phải bị loại bỏ như phòng đang khóa
+    rooms = [
+        {"ma_phong": "P_ACTIVE", "suc_chua": 50, "dang_su_dung": True},
+        {"ma_phong": "P_ZERO", "suc_chua": 100, "dang_su_dung": 0},
+        {"ma_phong": "P_STR_FALSE", "suc_chua": 100, "dang_su_dung": "false"},
+        {"ma_phong": "P_STR_ZERO", "suc_chua": 100, "dang_su_dung": "0"},
+        {"ma_phong": "P_INF", "suc_chua": float("inf")},
+    ]
+    res_rooms = allocate_shift_rooms_ffd([], rooms)
+    assert res_rooms["free_rooms"] == ["P_ACTIVE"]
+
+    # 2. float('inf') / float('-inf') không gây OverflowError và trùng ma_mon trong cùng ca chỉ xếp 1 phòng
+    courses = [
+        {"ma_mon": "CS101", "size": 40},
+        {"ma_mon": "CS101", "size": 40},
+        {"ma_mon": "CS_INF", "size": float("inf")},
+        {"ma_mon": "CS_NEG_INF", "size": float("-inf")},
+    ]
+    res_shift = allocate_shift_rooms_ffd(
+        courses,
+        [
+            {"ma_phong": "R1", "suc_chua": 50},
+            {"ma_phong": "R2", "suc_chua": 40},
+            {"ma_phong": "R3", "suc_chua": 30},
+        ],
+    )
+    assert res_shift["is_fully_allocated"] is True
+    assert len(res_shift["allocations"]) == 3
+    cs101_allocs = [a for a in res_shift["allocations"] if a["ma_mon"] == "CS101"]
+    assert len(cs101_allocs) == 1
+
+    # 3. Whitespace ma_mon vẫn tra đúng sĩ số/tên môn, không rơi về 0; shift None & key lẫn kiểu không crash
+    exam_res = allocate_exam_rooms_ffd(
+        shifts={1: [" CS101 "], "2": None},
+        course_sizes={"CS101": 45},
+        rooms=[{"ma_phong": "R_SMALL", "suc_chua": 30}, {"ma_phong": "R_BIG", "suc_chua": 50}],
+        course_names={"CS101": "Cơ sở lập trình"},
+    )
+    assert exam_res["is_all_successful"] is True
+    alloc = exam_res["shifts_allocation"][1]["allocations"][0]
+    assert alloc["ma_mon"] == "CS101"
+    assert alloc["so_sinh_vien"] == 45
+    assert alloc["ma_phong"] == "R_BIG"
+    assert alloc["ten_mon"] == "Cơ sở lập trình"
+    assert exam_res["shifts_allocation"]["2"]["allocations"] == []
+
+
 if __name__ == "__main__":
     test_empty_input()
     test_exact_fit()
@@ -334,4 +383,5 @@ if __name__ == "__main__":
     test_out_of_rooms_reason()
     test_inactive_duplicate_and_invalid_rooms()
     test_dirty_course_and_graph_inputs()
+    test_security_and_hardening_edge_cases()
     print("\nALL ROOM ALLOCATOR FFD TESTS PASSED 100%!")
