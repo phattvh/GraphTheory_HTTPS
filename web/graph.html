@@ -27,9 +27,46 @@
             <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
               Đối chứng: Welsh–Powell
             </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
-              Layout: CoSE Force-Directed ▾
-            </button>
+            <select
+              id="graph-layout-select"
+              aria-label="Chọn bố cục đồ thị"
+              onchange="changeGraphLayout(this.value)"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 focus:outline-none focus:border-blue-500"
+            >
+              <option value="cose">Layout: CoSE Force-Directed</option>
+              <option value="circle">Layout: Circle (Vòng tròn)</option>
+              <option value="grid">Layout: Grid (Lưới)</option>
+            </select>
+            <div class="inline-flex items-center gap-1 pl-2 border-l border-slate-200">
+              <button
+                id="btn-graph-zoom-in"
+                type="button"
+                onclick="zoomInGraph()"
+                title="Phóng to"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
+              >
+                +
+              </button>
+              <button
+                id="btn-graph-zoom-out"
+                type="button"
+                onclick="zoomOutGraph()"
+                title="Thu nhỏ"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
+              >
+                −
+              </button>
+              <button
+                id="btn-graph-fit"
+                type="button"
+                onclick="resetGraphView()"
+                title="Căn vừa khung hình"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
+              >
+                ⊡ Vừa khung
+              </button>
+              <span id="graph-zoom-label" class="text-[11px] font-mono text-slate-500 pl-1">100%</span>
+            </div>
           </div>
           <button type="button" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white shadow-sm">
             ⚡ Chạy Xếp lịch Tự động (DSatur + FFD)
@@ -75,34 +112,30 @@
               </svg>
             </div>
 
-            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-3 mt-3 border-t border-slate-100 font-medium">
-              <span>🔵 Ca 1: IT002, IT005</span>
-              <span>🟢 Ca 2: IT001, IT006</span>
+            <div id="graph-legend" class="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-3 mt-3 border-t border-slate-100 font-medium">
+              <span>🔵 Ca 1: IT002, IT005, IT009</span>
+              <span>🟢 Ca 2: IT001, IT006, IT010</span>
               <span>🟡 Ca 3: IT008, IT004</span>
               <span>🟣 Ca 4: IT003, IT007</span>
+              <span class="text-slate-500 font-normal ml-auto">10 đỉnh • 15 cạnh • Kéo để pan, cuộn chuột để zoom</span>
             </div>
           </div>
 
           <div class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <h3 class="text-sm font-bold text-slate-900">Chi tiết Đỉnh đang chọn (Node Inspector)</h3>
             <div>
-              <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+              <span id="graph-inspector-badge" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
                 Đỉnh: IT002 • Màu 1 (Ca thi số 1)
               </span>
             </div>
 
-            <ul class="text-xs text-slate-700 space-y-2 leading-relaxed">
+            <ul id="graph-inspector-details" class="text-xs text-slate-700 space-y-2 leading-relaxed">
               <li>• <strong>Tên môn:</strong> Cấu trúc Dữ liệu &amp; Giải thuật</li>
               <li>• <strong>Số sinh viên đăng ký:</strong> 180 SV</li>
               <li>• <strong>Độ bão hòa DSatur (Saturation):</strong> 3</li>
-              <li>• <strong>Bậc của đỉnh deg(v):</strong> 11 môn xung đột</li>
+              <li>• <strong>Bậc của đỉnh deg(v):</strong> 4 môn xung đột</li>
               <li>• <strong>Xung đột mạnh nhất:</strong> IT001 (42 SV chung), IT008 (38 SV chung)</li>
-              <li>• <strong>Phân phòng (First-Fit Decreasing):</strong>
-                <div class="pl-3 mt-1 text-slate-600 space-y-0.5">
-                  <div>- Phòng A101 (Sức chứa 100): 100 SV</div>
-                  <div>- Phòng A102 (Sức chứa 80): 80 SV</div>
-                </div>
-              </li>
+              <li>• <strong>Phân phòng (First-Fit Decreasing):</strong> A101 (100 SV) • A102 (80 SV)</li>
             </ul>
 
             <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
