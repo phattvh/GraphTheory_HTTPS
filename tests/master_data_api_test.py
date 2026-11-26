@@ -139,13 +139,35 @@ def test_ky_thi_crud_lifecycle_and_edge_cases():
             s_bad, _ = request_json("GET", f"/api/v1/ky-thi/{bad_id}")
             assert s_bad == 422, f"Expected 422 for id={bad_id}, got {s_bad}"
 
-        # 5. Chặn PUT chỉ truyền ngay_ket_thuc nhỏ hơn ngay_bat_dau hiện có trong DB
+        # 5. Chặn PUT chỉ truyền 1 đầu ngày làm ngay_ket_thuc < ngay_bat_dau trong DB
         s_bad_date, _ = request_json(
             "PUT",
             f"/api/v1/ky-thi/{exam_id}",
             {"ngay_ket_thuc": "2026-07-15"},
         )
         assert s_bad_date == 422, f"Expected 422 for end < db start, got {s_bad_date}"
+
+        s_bad_start, _ = request_json(
+            "PUT",
+            f"/api/v1/ky-thi/{exam_id}",
+            {"ngay_bat_dau": "2026-09-01"},
+        )
+        assert s_bad_start == 422, f"Expected 422 for start > db end, got {s_bad_start}"
+
+        # PUT body rỗng (no-op hợp lệ -> 200) và PUT/DELETE vào ID không tồn tại (-> 404)
+        s_noop, noop_body = request_json("PUT", f"/api/v1/ky-thi/{exam_id}", {})
+        assert s_noop == 200 and noop_body["id"] == exam_id
+        s_put_404, _ = request_json("PUT", "/api/v1/ky-thi/999999999", {"ten_ky_thi": "Không tồn tại"})
+        assert s_put_404 == 404
+        s_del_404, _ = request_json("DELETE", "/api/v1/ky-thi/999999999")
+        assert s_del_404 == 404
+
+        # Biên phân trang skip & limit
+        for bad_query in ("limit=0", "limit=501", "skip=-1", "skip=100001"):
+            s_pg, _ = request_json("GET", f"/api/v1/ky-thi?{bad_query}")
+            assert s_pg == 422, f"Expected 422 for {bad_query}, got {s_pg}"
+        s_pg_ok, pg_items = request_json("GET", "/api/v1/ky-thi?skip=0&limit=1")
+        assert s_pg_ok == 200 and len(pg_items) <= 1
 
         # 6. Cập nhật hợp lệ (PUT)
         s_upd, updated = request_json(
@@ -226,8 +248,14 @@ def test_mon_hoc_crud_lifecycle_and_edge_cases():
 
         s_notfound, _ = request_json("GET", "/api/v1/mon-hoc/999999999")
         assert s_notfound == 404
+        s_put_404, _ = request_json("PUT", "/api/v1/mon-hoc/999999999", {"ten_mon": "Không tồn tại"})
+        assert s_put_404 == 404
+        s_del_404, _ = request_json("DELETE", "/api/v1/mon-hoc/999999999")
+        assert s_del_404 == 404
 
-        # 4. Cập nhật từng phần (PUT), bao gồm cho phép so_tin_chi=None và chặn ten_mon=None
+        # 4. Cập nhật từng phần (PUT), bao gồm cho phép so_tin_chi=None, body rỗng {} và chặn ten_mon=None
+        s_noop, noop_course = request_json("PUT", f"/api/v1/mon-hoc/{course_id}", {})
+        assert s_noop == 200 and noop_course["id"] == course_id
         s_null_ten, _ = request_json("PUT", f"/api/v1/mon-hoc/{course_id}", {"ten_mon": None})
         assert s_null_ten == 422
 
