@@ -88,7 +88,6 @@ def test_registration_management_ui_elements():
         'onchange="renderRegistrationTable()"',
         'id="registration-search-input"',
         'oninput="renderRegistrationTable()"',
-        'id="registration-course-summary"',
         "openImportModal('dang_ky_thi')",
         'id="btn-open-registration-modal"',
         'onclick="openRegistrationModal()"',
@@ -102,6 +101,7 @@ def test_registration_management_ui_elements():
         "handleCrudModalBackdropClick(event, 'registration-crud-modal')",
     ]:
         assert marker in html, f"Thiếu phần tử UI Đăng ký thi (UC05): {marker}"
+    assert 'id="registration-course-summary"' not in html, "Đã xóa thanh pill tóm tắt môn học thừa"
 
 
 def test_crud_js_logic_structure():
@@ -132,7 +132,6 @@ def test_crud_js_logic_structure():
         "function startEditRoom",
         "function deleteRoom",
         "registrationRecords",
-        "function filterRegistrationByCourse",
         "function renderRegistrationTable",
         "function openRegistrationModal",
         "function closeRegistrationModal",
@@ -249,7 +248,6 @@ const elements = {
   "registration-count-label": makeEl("h3"),
   "registration-course-filter": makeEl("select"),
   "registration-search-input": makeEl("input"),
-  "registration-course-summary": makeEl("div"),
   "reg-form-ky-thi":       makeEl("select"),
   "reg-form-ma-mon":       makeEl("select"),
   "reg-form-mssv":         makeEl("select"),
@@ -356,16 +354,18 @@ const regBefore = vm.runInContext("registrationRecords.length", sandbox);
 assert.ok(regBefore >= 5, "Phải có dữ liệu đăng ký thi mẫu");
 sandbox.renderRegistrationTable();
 assert.strictEqual(elements["registration-table-body"].children.length, regBefore);
-assert.ok(elements["registration-course-summary"].children.length > 1);
 
 // Lọc danh sách sinh viên đăng ký theo từng môn học (VD: IT001)
-sandbox.filterRegistrationByCourse("IT001");
+elements["registration-course-filter"].value = "IT001";
+sandbox.renderRegistrationTable();
 const it001Count = vm.runInContext('registrationRecords.filter((r) => r.ma_mon === "IT001").length', sandbox);
 assert.strictEqual(elements["registration-table-body"].children.length, it001Count);
 assert.ok(elements["registration-count-label"].textContent.includes("IT001"));
+assert.ok(!elements["registration-count-label"].textContent.includes("- Lý thuyết Đồ thị"));
 
 // Chuyển lại tất cả môn học
-sandbox.filterRegistrationByCourse("ALL");
+elements["registration-course-filter"].value = "ALL";
+sandbox.renderRegistrationTable();
 assert.strictEqual(elements["registration-table-body"].children.length, regBefore);
 
 // Kiểm tra chặn đăng ký trùng (ma_ky_thi, ma_mon, mssv)
