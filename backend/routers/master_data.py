@@ -12,7 +12,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.models.models import KyThi, MonHoc
+from backend.core.security import get_current_user, require_admin
+from backend.models.models import KyThi, MonHoc, NguoiDung
 from backend.schemas.master_data import (
     ExamStatus,
     KyThiCreate,
@@ -24,7 +25,6 @@ from backend.schemas.master_data import (
     MonHocUpdate,
 )
 
-# TODO(TV3 Day 4): Gắn Depends(get_current_user) / Depends(require_admin) theo docs/06. Security and authorization.md
 router = APIRouter(prefix="/api/v1")
 
 ModelT = TypeVar("ModelT")
@@ -88,11 +88,16 @@ def list_ky_thi(
     ),
     skip: SkipParam = 0,
     limit: LimitParam = 100,
+    current_user: NguoiDung = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Lấy danh sách kỳ thi (hỗ trợ tìm kiếm, lọc trạng thái và phân trang)."""
+    """Lấy danh sách kỳ thi (admin xem toàn bộ; sinh_vien chỉ xem kỳ thi cong_bo)."""
     query = db.query(KyThi)
-    if trang_thai is not None:
+    if current_user.vai_tro != "admin":
+        if trang_thai is not None and trang_thai != "cong_bo":
+            return []
+        query = query.filter(KyThi.trang_thai == "cong_bo")
+    elif trang_thai is not None:
         query = query.filter(KyThi.trang_thai == trang_thai)
     if q is not None and q.strip():
         pattern = f"%{_escape_like(q.strip())}%"
@@ -106,9 +111,19 @@ def list_ky_thi(
 
 
 @router.get("/ky-thi/{ky_thi_id}", response_model=KyThiOut, tags=["Kỳ thi (UC02)"])
-def get_ky_thi(ky_thi_id: PositiveBigIntId, db: Session = Depends(get_db)):
-    """Lấy chi tiết một kỳ thi theo ID."""
-    return _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
+def get_ky_thi(
+    ky_thi_id: PositiveBigIntId,
+    current_user: NguoiDung = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Lấy chi tiết một kỳ thi theo ID (sinh_vien chỉ được xem kỳ thi cong_bo)."""
+    exam = _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
+    if current_user.vai_tro != "admin" and exam.trang_thai != "cong_bo":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kỳ thi chưa được công bố.",
+        )
+    return exam
 
 
 @router.post(
@@ -117,8 +132,12 @@ def get_ky_thi(ky_thi_id: PositiveBigIntId, db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     tags=["Kỳ thi (UC02)"],
 )
-def create_ky_thi(payload: KyThiCreate, db: Session = Depends(get_db)):
-    """Tạo mới một kỳ thi."""
+def create_ky_thi(
+    payload: KyThiCreate,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Tạo mới một kỳ thi (chỉ admin)."""
     conflict_msg = f"Mã kỳ thi '{payload.ma_ky_thi}' đã tồn tại."
     _ensure_unique_value(db, KyThi, KyThi.ma_ky_thi, payload.ma_ky_thi, conflict_msg)
 
@@ -133,9 +152,10 @@ def create_ky_thi(payload: KyThiCreate, db: Session = Depends(get_db)):
 def update_ky_thi(
     ky_thi_id: PositiveBigIntId,
     payload: KyThiUpdate,
+    _admin: NguoiDung = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Cập nhật thông tin kỳ thi (ngày bắt đầu/kết thúc, tên, số ca, trạng thái)."""
+    """Cập nhật thông tin kỳ thi (chỉ admin)."""
     exam = _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
     update_data = payload.model_dump(exclude_unset=True)
 
@@ -161,8 +181,12 @@ def update_ky_thi(
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Kỳ thi (UC02)"],
 )
-def delete_ky_thi(ky_thi_id: PositiveBigIntId, db: Session = Depends(get_db)):
-    """Xóa kỳ thi (CASCADE dọn sạch dang_ky_thi, ca_thi, lich_thi liên quan)."""
+def delete_ky_thi(
+    ky_thi_id: PositiveBigIntId,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Xóa kỳ thi (chỉ admin; CASCADE dọn sạch dang_ky_thi, ca_thi, lich_thi)."""
     exam = _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
     db.delete(exam)
     _commit_or_409(db, "Không thể xóa kỳ thi do ràng buộc dữ liệu liên quan.")
@@ -179,9 +203,10 @@ def list_mon_hoc(
     ),
     skip: SkipParam = 0,
     limit: LimitParam = 100,
+    _admin: NguoiDung = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Lấy danh sách môn học (hỗ trợ tìm kiếm theo mã/tên và phân trang)."""
+    """Lấy danh sách môn học (chỉ admin)."""
     query = db.query(MonHoc)
     if q is not None and q.strip():
         pattern = f"%{_escape_like(q.strip())}%"
@@ -200,8 +225,12 @@ def list_mon_hoc(
 
 
 @router.get("/mon-hoc/{mon_hoc_id}", response_model=MonHocOut, tags=["Môn học (UC04)"])
-def get_mon_hoc(mon_hoc_id: PositiveBigIntId, db: Session = Depends(get_db)):
-    """Lấy chi tiết một môn học theo ID."""
+def get_mon_hoc(
+    mon_hoc_id: PositiveBigIntId,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Lấy chi tiết một môn học theo ID (chỉ admin)."""
     return _get_or_404(db, MonHoc, mon_hoc_id, "Không tìm thấy môn học.")
 
 
@@ -211,8 +240,12 @@ def get_mon_hoc(mon_hoc_id: PositiveBigIntId, db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     tags=["Môn học (UC04)"],
 )
-def create_mon_hoc(payload: MonHocCreate, db: Session = Depends(get_db)):
-    """Tạo mới một môn học / học phần."""
+def create_mon_hoc(
+    payload: MonHocCreate,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Tạo mới một môn học / học phần (chỉ admin)."""
     conflict_msg = f"Mã môn '{payload.ma_mon}' đã tồn tại."
     _ensure_unique_value(db, MonHoc, MonHoc.ma_mon, payload.ma_mon, conflict_msg)
 
@@ -227,9 +260,10 @@ def create_mon_hoc(payload: MonHocCreate, db: Session = Depends(get_db)):
 def update_mon_hoc(
     mon_hoc_id: PositiveBigIntId,
     payload: MonHocUpdate,
+    _admin: NguoiDung = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Cập nhật thông tin môn học (tên môn, thời lượng phút, số tín chỉ)."""
+    """Cập nhật thông tin môn học (chỉ admin)."""
     course = _get_or_404(db, MonHoc, mon_hoc_id, "Không tìm thấy môn học.")
     update_data = payload.model_dump(exclude_unset=True)
 
@@ -246,8 +280,12 @@ def update_mon_hoc(
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Môn học (UC04)"],
 )
-def delete_mon_hoc(mon_hoc_id: PositiveBigIntId, db: Session = Depends(get_db)):
-    """Xóa môn học theo ID."""
+def delete_mon_hoc(
+    mon_hoc_id: PositiveBigIntId,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Xóa môn học theo ID (chỉ admin)."""
     course = _get_or_404(db, MonHoc, mon_hoc_id, "Không tìm thấy môn học.")
     db.delete(course)
     _commit_or_409(db, "Không thể xóa môn học do ràng buộc dữ liệu liên quan.")
