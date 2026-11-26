@@ -67,6 +67,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
     for js_marker in [
         "function initExamFullCalendar",
         "function getCalendarViewConfig",
+        "function adjustCalendarColumnWidths",
         "function formatSlotLabelByMode",
         "function renderCustomEventContent",
         "function switchCalendarSlotMode",
@@ -78,6 +79,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "function renderShiftMatrixTable",
         "SHIFT_AXIS_ROWS",
         "SHIFT_COMPACT_TIME_RANGES",
+        "hiddenDays: [0]",
         "slotEventOverlap: false",
         'eventDisplay: "block"',
         "timeGridWeek",
@@ -186,6 +188,7 @@ assert.strictEqual(renderedView, "timeGridWeek");
 assert.strictEqual(cal.config.slotMinTime, "01:00:00");
 assert.strictEqual(cal.config.slotMaxTime, "05:00:00");
 assert.strictEqual(cal.config.slotDuration, "01:00:00");
+assert.deepStrictEqual(Array.from(cal.config.hiddenDays), [0]);
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
 assert.strictEqual(elements["btn-view-week"].value, "shift");
 assert.strictEqual(currentEvents.length, 15);

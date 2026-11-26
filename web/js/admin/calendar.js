@@ -259,6 +259,89 @@ const EXAM_WEEK_DAYS = ["2026-12-15", "2026-12-16", "2026-12-17", "2026-12-18", 
 let adminCalendarInstance = null;
 let currentCalendarView = "timeGridWeek";
 let currentSlotMode = "shift"; // "shift" (Gộp 4 hàng Ca 1..Ca 4, không có hàng nghỉ) | "hour" (07:00, 08:00...)
+let activeFilteredEvents = [...SAMPLE_EXAM_EVENTS];
+
+/**
+ * Tự động thu nhỏ các cột ngày không có môn thi để nhường chỗ rộng rãi cho các cột ngày có môn thi.
+ * @param {Array<Record<string, any>>} eventsList
+ */
+function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
+  const calendarEl = document.getElementById("admin-fullcalendar");
+  if (!calendarEl || typeof calendarEl.querySelectorAll !== "function") return null;
+
+  const headerCells = Array.from(
+    calendarEl.querySelectorAll(".fc-col-header-cell[data-date]")
+  );
+  if (headerCells.length === 0) return null;
+
+  const visibleDates = headerCells
+    .map((cell) => cell.getAttribute("data-date"))
+    .filter(Boolean);
+
+  const datesWithExams = new Set(
+    (eventsList || []).map((ev) => String(ev.ngay_thi || String(ev.start || "").slice(0, 10)))
+  );
+
+  const isWeekView = currentCalendarView !== "dayGridMonth";
+  const activeCount = visibleDates.filter((d) => datesWithExams.has(d)).length;
+  const emptyCount = visibleDates.length - activeCount;
+
+  // Nếu đang ở chế độ xem Tuần và có cả ngày có môn thi lẫn ngày trống thì thu nhỏ cột ngày trống (76px)
+  const shouldCollapseEmpty = isWeekView && activeCount > 0 && emptyCount > 0;
+  const emptyWidthCss = "76px";
+  const activeWidthCss = shouldCollapseEmpty
+    ? `calc((100% - ${emptyCount * 76}px) / ${activeCount})`
+    : "";
+
+  visibleDates.forEach((dateStr) => {
+    const hasExam = datesWithExams.has(dateStr);
+    const widthVal = shouldCollapseEmpty ? (hasExam ? activeWidthCss : emptyWidthCss) : "";
+
+    const matchingCells = Array.from(
+      calendarEl.querySelectorAll(`[data-date="${dateStr}"]`)
+    );
+    matchingCells.forEach((cell) => {
+      if (cell.style) {
+        cell.style.width = widthVal;
+      }
+      if (cell.classList) {
+        cell.classList.toggle("is-empty-day-col", shouldCollapseEmpty && !hasExam);
+        cell.classList.toggle("is-active-day-col", shouldCollapseEmpty && hasExam);
+      }
+    });
+  });
+
+  // Đồng bộ thẻ <col> trong <colgroup> của các bảng FullCalendar nếu có
+  const tables = Array.from(
+    calendarEl.querySelectorAll(".fc-col-header, .fc-timegrid-cols table")
+  );
+  tables.forEach((tbl) => {
+    if (!tbl || typeof tbl.querySelectorAll !== "function") return;
+    const cols = Array.from(tbl.querySelectorAll("colgroup col"));
+    const dateCells = Array.from(tbl.querySelectorAll("tr:first-child > [data-date]"));
+    if (cols.length >= dateCells.length && dateCells.length === visibleDates.length) {
+      const offset = cols.length - visibleDates.length;
+      visibleDates.forEach((dateStr, idx) => {
+        const hasExam = datesWithExams.has(dateStr);
+        const colEl = cols[offset + idx];
+        if (colEl && colEl.style) {
+          colEl.style.width = shouldCollapseEmpty
+            ? hasExam
+              ? activeWidthCss
+              : emptyWidthCss
+            : "";
+        }
+      });
+    }
+  });
+
+  return {
+    visibleDates,
+    activeCount,
+    emptyCount,
+    collapsed: shouldCollapseEmpty,
+  };
+}
 
 /**
  * Định dạng nhãn trục giờ của FullCalendar:
@@ -416,6 +499,7 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     initialDate: "2026-12-15",
     locale: "vi",
     firstDay: 1,
+    hiddenDays: [0],
     allDaySlot: false,
     slotMinTime: isShiftAxis ? "01:00:00" : "07:00:00",
     slotMaxTime: isShiftAxis ? "05:00:00" : "18:00:00",
@@ -425,6 +509,9 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, slotMode),
     eventDisplay: "block",
     eventContent: (arg) => renderCustomEventContent(arg),
+    datesSet: () => {
+      adjustCalendarColumnWidths(activeFilteredEvents);
+    },
     expandRows: true,
     height: "auto",
     nowIndicator: false,
@@ -675,6 +762,7 @@ function switchCalendarView(viewName) {
     adminCalendarInstance.changeView(targetView);
   }
   updateCalendarViewButtons(targetView);
+  adjustCalendarColumnWidths(activeFilteredEvents);
   return targetView;
 }
 
@@ -815,6 +903,8 @@ function filterCalendarEvents() {
     return searchableText.includes(query);
   });
 
+  activeFilteredEvents = filtered;
+
   if (adminCalendarInstance && typeof adminCalendarInstance.removeAllEvents === "function") {
     adminCalendarInstance.removeAllEvents();
     const fcEvents = buildFullCalendarEvents(filtered, currentSlotMode);
@@ -822,6 +912,7 @@ function filterCalendarEvents() {
   }
 
   renderShiftMatrixTable(filtered);
+  adjustCalendarColumnWidths(filtered);
 
   if (summaryEl) {
     summaryEl.textContent = queryRaw
@@ -867,6 +958,7 @@ function initExamFullCalendar() {
   adminCalendarInstance = new window.FullCalendar.Calendar(calendarEl, config);
   adminCalendarInstance.render();
   updateCalendarViewButtons(currentCalendarView);
+  adjustCalendarColumnWidths(activeFilteredEvents);
   return adminCalendarInstance;
 }
 
