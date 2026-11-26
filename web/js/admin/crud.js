@@ -20,6 +20,7 @@ const CRUD_MODAL_IDS = [
   "student-crud-modal",
   "exam-crud-modal",
   "room-crud-modal",
+  "registration-crud-modal",
   "import-data-modal",
   "delete-confirm-modal",
 ];
@@ -104,6 +105,7 @@ function handleCrudModalBackdropClick(event, modalId) {
     else if (modalId === "student-crud-modal") closeStudentModal();
     else if (modalId === "exam-crud-modal") closeExamModal();
     else if (modalId === "room-crud-modal") closeRoomModal();
+    else if (modalId === "registration-crud-modal") closeRegistrationModal();
     else if (modalId === "import-data-modal") closeImportModal();
     else if (modalId === "delete-confirm-modal") closeDeleteAlert();
     else closeCrudModal(modalId);
@@ -137,6 +139,8 @@ function switchCrudEntity(entity) {
     renderCourseTable();
   } else if (validEntity === "phong_thi") {
     renderRoomTable();
+  } else if (validEntity === "dang_ky_thi") {
+    renderRegistrationTable();
   }
 }
 
@@ -268,6 +272,7 @@ function saveStudentForm(event) {
 
   closeStudentModal();
   renderStudentTable();
+  renderRegistrationTable();
 }
 
 function startEditStudent(mssv) {
@@ -299,6 +304,7 @@ function deleteStudent(mssv) {
       studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
       if (editingMssv === mssv) closeStudentModal();
       renderStudentTable();
+      renderRegistrationTable();
     }
   );
 }
@@ -625,6 +631,7 @@ function saveCourseForm(event) {
 
   closeCourseModal();
   renderCourseTable();
+  renderRegistrationTable();
 }
 
 function startEditCourse(maMon) {
@@ -656,6 +663,7 @@ function deleteCourse(maMon) {
       courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
       if (editingCourseCode === maMon) closeCourseModal();
       renderCourseTable();
+      renderRegistrationTable();
     }
   );
 }
@@ -824,6 +832,323 @@ function deleteRoom(maPhong) {
   );
 }
 
+let registrationRecords = [
+  { id: 1, ma_ky_thi: "KTHK1_2026", ma_mon: "IT001", mssv: "22110399" },
+  { id: 2, ma_ky_thi: "KTHK1_2026", ma_mon: "IT001", mssv: "22110001" },
+  { id: 3, ma_ky_thi: "KTHK1_2026", ma_mon: "IT001", mssv: "22110002" },
+  { id: 4, ma_ky_thi: "KTHK1_2026", ma_mon: "IT002", mssv: "22110399" },
+  { id: 5, ma_ky_thi: "KTHK1_2026", ma_mon: "IT002", mssv: "22110003" },
+  { id: 6, ma_ky_thi: "KTHK1_2026", ma_mon: "IT003", mssv: "22110001" },
+  { id: 7, ma_ky_thi: "KTHK1_2026", ma_mon: "IT003", mssv: "22110004" },
+  { id: 8, ma_ky_thi: "KTHK1_2026", ma_mon: "IT004", mssv: "22110002" },
+  { id: 9, ma_ky_thi: "KTHK1_2026", ma_mon: "IT005", mssv: "22110399" },
+];
+
+let nextRegistrationId = 10;
+let editingRegistrationId = null;
+
+function enrichRegistrationRecord(reg) {
+  const course = courseRecords.find((c) => c.ma_mon === reg.ma_mon);
+  const student = studentRecords.find((s) => s.mssv === reg.mssv);
+  return {
+    ...reg,
+    ten_mon: course ? course.ten_mon : "Học phần chưa cập nhật",
+    ho_ten: student ? student.ho_ten : "Sinh viên chưa cập nhật",
+    lop_sinh_hoat: student ? student.lop_sinh_hoat : "—",
+  };
+}
+
+function populateRegistrationFilterOptions() {
+  const filterEl = document.getElementById("registration-course-filter");
+  if (!filterEl) return;
+
+  const currentVal = filterEl.value || "ALL";
+  filterEl.replaceChildren();
+
+  const optAll = document.createElement("option");
+  optAll.value = "ALL";
+  optAll.textContent = `Tất cả môn học (${registrationRecords.length} lượt ĐK)`;
+  filterEl.appendChild(optAll);
+
+  courseRecords.forEach((course) => {
+    const count = registrationRecords.filter((r) => r.ma_mon === course.ma_mon).length;
+    const opt = document.createElement("option");
+    opt.value = course.ma_mon;
+    opt.textContent = `${course.ma_mon} - ${course.ten_mon} (${count} SV)`;
+    filterEl.appendChild(opt);
+  });
+
+  const exists = currentVal === "ALL" || courseRecords.some((c) => c.ma_mon === currentVal);
+  filterEl.value = exists ? currentVal : "ALL";
+}
+
+function filterRegistrationByCourse(maMon) {
+  const filterEl = document.getElementById("registration-course-filter");
+  if (filterEl) {
+    filterEl.value = maMon || "ALL";
+  }
+  renderRegistrationTable();
+}
+
+function renderRegistrationCourseSummary(selectedCourse) {
+  const summaryEl = document.getElementById("registration-course-summary");
+  if (!summaryEl) return;
+
+  summaryEl.replaceChildren();
+
+  const allBtn = document.createElement("button");
+  allBtn.type = "button";
+  const isAllActive = !selectedCourse || selectedCourse === "ALL";
+  allBtn.className = isAllActive
+    ? "px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-sm transition"
+    : "px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition";
+  allBtn.textContent = `Tất cả (${registrationRecords.length})`;
+  allBtn.onclick = () => filterRegistrationByCourse("ALL");
+  summaryEl.appendChild(allBtn);
+
+  courseRecords.forEach((course) => {
+    const count = registrationRecords.filter((r) => r.ma_mon === course.ma_mon).length;
+    if (count === 0 && selectedCourse !== course.ma_mon) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const isActive = selectedCourse === course.ma_mon;
+    btn.className = isActive
+      ? "px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-sm transition font-mono"
+      : "px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition font-mono";
+    btn.textContent = `${course.ma_mon}: ${count} SV`;
+    btn.title = `${course.ma_mon} - ${course.ten_mon} (${count} sinh viên đăng ký)`;
+    btn.onclick = () => filterRegistrationByCourse(course.ma_mon);
+    summaryEl.appendChild(btn);
+  });
+}
+
+function renderRegistrationTable() {
+  const tbody = document.getElementById("registration-table-body");
+  const countEl = document.getElementById("registration-count-label");
+  const searchEl = document.getElementById("registration-search-input");
+  const filterEl = document.getElementById("registration-course-filter");
+  if (!tbody) return;
+
+  populateRegistrationFilterOptions();
+  const selectedCourse = filterEl ? filterEl.value : "ALL";
+  renderRegistrationCourseSummary(selectedCourse);
+
+  const q = (searchEl ? searchEl.value : "").trim().toLowerCase();
+  const enriched = registrationRecords.map(enrichRegistrationRecord);
+
+  const filtered = enriched.filter((item) => {
+    if (selectedCourse && selectedCourse !== "ALL" && item.ma_mon !== selectedCourse) {
+      return false;
+    }
+    if (!q) return true;
+    return (
+      item.ma_ky_thi.toLowerCase().includes(q) ||
+      item.ma_mon.toLowerCase().includes(q) ||
+      item.ten_mon.toLowerCase().includes(q) ||
+      item.mssv.toLowerCase().includes(q) ||
+      item.ho_ten.toLowerCase().includes(q) ||
+      item.lop_sinh_hoat.toLowerCase().includes(q)
+    );
+  });
+
+  if (countEl) {
+    if (selectedCourse && selectedCourse !== "ALL") {
+      const course = courseRecords.find((c) => c.ma_mon === selectedCourse);
+      const courseTitle = course ? `${course.ma_mon} - ${course.ten_mon}` : selectedCourse;
+      countEl.textContent = `Danh sách Sinh viên đăng ký môn ${courseTitle} (${filtered.length} sinh viên)`;
+    } else {
+      countEl.textContent = `Danh sách Đăng ký dự thi theo Môn học (${filtered.length} lượt đăng ký)`;
+    }
+  }
+
+  tbody.replaceChildren();
+  filtered.forEach((item) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-slate-50";
+
+    const tdExam = document.createElement("td");
+    tdExam.className = "py-2.5 px-3 text-center font-mono text-slate-600 font-semibold";
+    tdExam.textContent = item.ma_ky_thi;
+
+    const tdCourseCode = document.createElement("td");
+    tdCourseCode.className = "py-2.5 px-3 text-center font-mono font-semibold text-blue-700";
+    tdCourseCode.textContent = item.ma_mon;
+
+    const tdCourseName = document.createElement("td");
+    tdCourseName.className = "py-2.5 px-3 font-medium text-slate-800";
+    tdCourseName.textContent = item.ten_mon;
+
+    const tdMssv = document.createElement("td");
+    tdMssv.className = "py-2.5 px-3 text-center font-semibold text-slate-900 font-mono";
+    tdMssv.textContent = item.mssv;
+
+    const tdStudentName = document.createElement("td");
+    tdStudentName.className = "py-2.5 px-3";
+    tdStudentName.textContent = item.ho_ten;
+
+    const tdClass = document.createElement("td");
+    tdClass.className = "py-2.5 px-3 text-center font-mono text-blue-700 font-semibold";
+    tdClass.textContent = item.lop_sinh_hoat;
+
+    const tdAct = createTableActionCell(
+      () => startEditRegistration(item.id),
+      () => deleteRegistration(item.id)
+    );
+    tr.append(tdExam, tdCourseCode, tdCourseName, tdMssv, tdStudentName, tdClass, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+
+function populateRegistrationFormSelects() {
+  const examSelect = document.getElementById("reg-form-ky-thi");
+  const courseSelect = document.getElementById("reg-form-ma-mon");
+  const studentSelect = document.getElementById("reg-form-mssv");
+
+  if (examSelect) {
+    examSelect.replaceChildren();
+    examRecords.forEach((kt) => {
+      const opt = document.createElement("option");
+      opt.value = kt.ma_ky_thi;
+      opt.textContent = `${kt.ma_ky_thi} - ${kt.ten_ky_thi}`;
+      examSelect.appendChild(opt);
+    });
+  }
+
+  if (courseSelect) {
+    courseSelect.replaceChildren();
+    courseRecords.forEach((mh) => {
+      const opt = document.createElement("option");
+      opt.value = mh.ma_mon;
+      opt.textContent = `${mh.ma_mon} - ${mh.ten_mon}`;
+      courseSelect.appendChild(opt);
+    });
+  }
+
+  if (studentSelect) {
+    studentSelect.replaceChildren();
+    studentRecords.forEach((sv) => {
+      const opt = document.createElement("option");
+      opt.value = sv.mssv;
+      opt.textContent = `${sv.mssv} - ${sv.ho_ten} (${sv.lop_sinh_hoat})`;
+      studentSelect.appendChild(opt);
+    });
+  }
+}
+
+function resetRegistrationForm() {
+  editingRegistrationId = null;
+  populateRegistrationFormSelects();
+  const form = document.getElementById("registration-crud-form");
+  const errEl = document.getElementById("registration-form-error");
+  if (form) form.reset();
+  if (errEl) errEl.textContent = "";
+}
+
+function openRegistrationModal() {
+  resetRegistrationForm();
+  const filterEl = document.getElementById("registration-course-filter");
+  const courseSelect = document.getElementById("reg-form-ma-mon");
+  if (filterEl && filterEl.value && filterEl.value !== "ALL" && courseSelect) {
+    courseSelect.value = filterEl.value;
+  }
+  const titleEl = document.getElementById("registration-modal-title");
+  const submitEl = document.getElementById("registration-modal-submit");
+  if (titleEl) titleEl.textContent = "Thêm Đăng ký thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm Đăng ký thi";
+  openCrudModal("registration-crud-modal", "reg-form-ma-mon");
+}
+
+function closeRegistrationModal() {
+  resetRegistrationForm();
+  closeCrudModal("registration-crud-modal");
+}
+
+function saveRegistrationForm(event) {
+  event.preventDefault();
+  const examSelect = document.getElementById("reg-form-ky-thi");
+  const courseSelect = document.getElementById("reg-form-ma-mon");
+  const studentSelect = document.getElementById("reg-form-mssv");
+  const errEl = document.getElementById("registration-form-error");
+
+  const ma_ky_thi = (examSelect ? examSelect.value : "").trim().toUpperCase();
+  const ma_mon = (courseSelect ? courseSelect.value : "").trim().toUpperCase();
+  const mssv = (studentSelect ? studentSelect.value : "").trim().toUpperCase();
+
+  if (!ma_ky_thi || !ma_mon || !mssv) {
+    if (errEl) errEl.textContent = "Vui lòng chọn đầy đủ kỳ thi, môn học và sinh viên đăng ký.";
+    return;
+  }
+
+  const duplicate = registrationRecords.find(
+    (r) =>
+      r.ma_ky_thi === ma_ky_thi &&
+      r.ma_mon === ma_mon &&
+      r.mssv === mssv &&
+      r.id !== editingRegistrationId
+  );
+  if (duplicate) {
+    if (errEl) {
+      errEl.textContent = `Sinh viên ${mssv} đã đăng ký môn ${ma_mon} trong kỳ thi ${ma_ky_thi}.`;
+    }
+    return;
+  }
+
+  if (editingRegistrationId !== null) {
+    const idx = registrationRecords.findIndex((r) => r.id === editingRegistrationId);
+    if (idx >= 0) {
+      registrationRecords[idx] = { id: editingRegistrationId, ma_ky_thi, ma_mon, mssv };
+    }
+  } else {
+    registrationRecords.unshift({
+      id: nextRegistrationId++,
+      ma_ky_thi,
+      ma_mon,
+      mssv,
+    });
+  }
+
+  closeRegistrationModal();
+  renderRegistrationTable();
+}
+
+function startEditRegistration(regId) {
+  const reg = registrationRecords.find((r) => r.id === regId);
+  if (!reg) return;
+  populateRegistrationFormSelects();
+  editingRegistrationId = regId;
+  const examSelect = document.getElementById("reg-form-ky-thi");
+  const courseSelect = document.getElementById("reg-form-ma-mon");
+  const studentSelect = document.getElementById("reg-form-mssv");
+  if (examSelect) examSelect.value = reg.ma_ky_thi;
+  if (courseSelect) courseSelect.value = reg.ma_mon;
+  if (studentSelect) studentSelect.value = reg.mssv;
+
+  const errEl = document.getElementById("registration-form-error");
+  if (errEl) errEl.textContent = "";
+  const titleEl = document.getElementById("registration-modal-title");
+  const submitEl = document.getElementById("registration-modal-submit");
+  if (titleEl) titleEl.textContent = "Chỉnh sửa Đăng ký thi";
+  if (submitEl) submitEl.textContent = "Lưu thay đổi";
+  openCrudModal("registration-crud-modal", "reg-form-ma-mon");
+}
+
+function deleteRegistration(regId) {
+  const reg = registrationRecords.find((r) => r.id === regId);
+  const item = reg ? enrichRegistrationRecord(reg) : null;
+  const label = item
+    ? `${item.mssv} (${item.ho_ten}) - Môn ${item.ma_mon}`
+    : String(regId);
+  openDeleteAlert(
+    "Xác nhận xóa Đăng ký thi",
+    `Bạn có chắc chắn muốn xóa đăng ký dự thi của sinh viên "${label}"? Hành động này không thể hoàn tác.`,
+    () => {
+      registrationRecords = registrationRecords.filter((r) => r.id !== regId);
+      if (editingRegistrationId === regId) closeRegistrationModal();
+      renderRegistrationTable();
+    }
+  );
+}
+
 const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
 let selectedImportFile = null;
 
@@ -975,6 +1300,12 @@ function exportSelectedEntityData() {
       r.toa_nha || "",
       r.dang_su_dung ? "true" : "false",
     ]);
+  } else if (entity === "dang_ky_thi") {
+    headers = ["ma_ky_thi", "ma_mon", "ten_mon", "mssv", "ho_ten", "lop_sinh_hoat"];
+    rows = registrationRecords.map((r) => {
+      const item = enrichRegistrationRecord(r);
+      return [item.ma_ky_thi, item.ma_mon, item.ten_mon, item.mssv, item.ho_ten, item.lop_sinh_hoat];
+    });
   } else {
     if (statusEl) {
       statusEl.textContent = "Đã sẵn sàng xuất file Excel khi đồng bộ dữ liệu từ máy chủ.";
@@ -1015,6 +1346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStudentTable();
     renderExamTable();
     renderRoomTable();
+    renderRegistrationTable();
   }
 
   const dropzone = document.getElementById("import-dropzone");
