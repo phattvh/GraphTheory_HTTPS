@@ -231,6 +231,28 @@ assert.strictEqual(
   "Ca 4: 15h30 - 17h00"
 );
 assert.strictEqual(sandbox.formatSlotLabelByMode(null, "shift"), "");
+
+// 6. Kiểm tra TV4 Ngày 5: Sự kiện mẫu có đầy đủ môn thi, thời gian ca, phòng thi và 4 màu phân biệt theo ca
+const distinctBgColors = new Set(currentEvents.map((e) => e.backgroundColor));
+const distinctBorderColors = new Set(currentEvents.map((e) => e.borderColor));
+const distinctTextColors = new Set(currentEvents.map((e) => e.textColor));
+assert.strictEqual(distinctBgColors.size, 4, "Phải có đúng 4 màu nền phân biệt cho 4 ca thi");
+assert.strictEqual(distinctBorderColors.size, 4, "Phải có đúng 4 màu viền phân biệt cho 4 ca thi");
+assert.strictEqual(distinctTextColors.size, 4, "Phải có đúng 4 màu chữ phân biệt cho 4 ca thi");
+
+currentEvents.forEach((ev) => {
+  assert.ok(ev.extendedProps.ma_mon && ev.extendedProps.ten_mon, "Sự kiện phải có mã môn và tên môn");
+  assert.ok(ev.extendedProps.khung_gio_ca, "Sự kiện phải có thời gian ca thi");
+  assert.ok(Array.isArray(ev.extendedProps.rooms) && ev.extendedProps.rooms.length > 0, "Sự kiện phải có danh sách phòng thi");
+});
+
+const renderedDom = sandbox.renderCustomEventContent({ event: currentEvents[0] });
+assert.ok(renderedDom && Array.isArray(renderedDom.domNodes) && renderedDom.domNodes.length === 1);
+const cardNode = renderedDom.domNodes[0];
+assert.strictEqual(cardNode.children.length, 2);
+assert.ok(cardNode.children[0].textContent.includes("IT002 - Cấu trúc Dữ liệu & Giải thuật"));
+assert.ok(cardNode.children[1].textContent.includes("Ca 1: 7h30 - 9h00"));
+assert.ok(cardNode.children[1].textContent.includes("A101, A102"));
 """
     res = subprocess.run(
         ["node", "-e", script],

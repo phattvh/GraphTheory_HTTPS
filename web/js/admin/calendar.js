@@ -1,12 +1,10 @@
 /**
- * Khởi tạo & Điều khiển Lịch thi Toàn trường trên FullCalendar (UC10 UI — TV4 Ngày 4)
+ * Khởi tạo & Điều khiển Lịch thi Toàn trường trên FullCalendar (UC10 UI — TV4 Ngày 4 & Ngày 5)
  * File: web/js/admin/calendar.js
  * Hỗ trợ:
- * - Chuyển đổi chế độ xem: Tuần (timeGridWeek), Chia Ca (shiftGridWeek), Tháng (dayGridMonth)
- * - Tùy chọn chia khung giờ trục dọc:
- *   + "shift": Gộp mỗi ca thành đúng 1 hàng duy nhất (Ca 1: 7h30 - 9h00, Ca 2: 9h30 - 11h00,
- *     Ca 3: 13h30 - 15h00, Ca 4: 15h30 - 17h00), loại bỏ hoàn toàn các hàng lẻ 30p và hàng nghỉ giữa ca.
- *   + "hour": Chia theo từng giờ chuẩn (07:00, 08:00, 09:00...)
+ * - Chuyển đổi chế độ xem: Tuần (timeGridWeek) & Tháng (dayGridMonth)
+ * - Hiển thị 15 sự kiện mẫu (môn thi, thời gian ca thi, phòng thi, số lượng SV) với 4 bảng màu phân biệt
+ *   theo ca thi / màu đồ thị (Ca 1..Ca 4).
  * - Lọc theo Môn học, Phòng thi, Ca thi.
  */
 
@@ -99,7 +97,7 @@ const SAMPLE_EXAM_EVENTS = [
   {
     id: "evt-it001",
     ma_mon: "IT001",
-    ten_mon: "Lý thuyết Đồ thị (Graph Theory)",
+    ten_mon: "Lý thuyết Đồ thị",
     stt_ca: 2,
     ngay_thi: "2026-12-15",
     start: "2026-12-15T09:30:00",
@@ -111,7 +109,7 @@ const SAMPLE_EXAM_EVENTS = [
   {
     id: "evt-it006",
     ma_mon: "IT006",
-    ten_mon: "Trí tuệ Nhân tạo (AI Foundations)",
+    ten_mon: "Trí tuệ Nhân tạo",
     stt_ca: 2,
     ngay_thi: "2026-12-15",
     start: "2026-12-15T09:30:00",
@@ -135,7 +133,7 @@ const SAMPLE_EXAM_EVENTS = [
   {
     id: "evt-it004",
     ma_mon: "IT004",
-    ten_mon: "Lập trình Web (FastAPI & Python)",
+    ten_mon: "Lập trình Web",
     stt_ca: 3,
     ngay_thi: "2026-12-15",
     start: "2026-12-15T13:30:00",
@@ -147,7 +145,7 @@ const SAMPLE_EXAM_EVENTS = [
   {
     id: "evt-it003",
     ma_mon: "IT003",
-    ten_mon: "Hệ Quản trị CSDL PostgreSQL",
+    ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL",
     stt_ca: 4,
     ngay_thi: "2026-12-15",
     start: "2026-12-15T15:30:00",
@@ -450,7 +448,7 @@ function getMaxCoursesPerShiftSlot(rawEvents = SAMPLE_EXAM_EVENTS) {
 function syncUniformShiftRowHeight(rawEvents = activeFilteredEvents) {
   const calendarEl = document.getElementById("admin-fullcalendar");
   const uniformCapacity = getMaxCoursesPerShiftSlot(rawEvents);
-  const rowHeightRem = (uniformCapacity * 4.5).toFixed(2);
+  const rowHeightRem = (uniformCapacity * 5.25).toFixed(2);
   if (calendarEl && calendarEl.style && typeof calendarEl.style.setProperty === "function") {
     calendarEl.style.setProperty("--https-shift-row-height", `${rowHeightRem}rem`);
   }
@@ -533,21 +531,29 @@ function renderCustomEventContent(arg) {
   wrapper.className =
     "flex flex-col justify-center h-full px-1 py-0.5 leading-snug whitespace-normal break-words";
 
-  const titleEl = document.createElement("div");
-  titleEl.className = "font-bold text-xs whitespace-normal break-words";
-  titleEl.textContent = props.ma_mon
+  const tdCourseName = document.createElement("div");
+  tdCourseName.className = "font-bold text-xs whitespace-normal break-words";
+  tdCourseName.textContent = props.ma_mon
     ? `${props.ma_mon} - ${props.ten_mon}`
     : (arg.event && arg.event.title) || "";
 
-  const metaEl = document.createElement("div");
-  metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
-  metaEl.textContent = roomText
-    ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`
-    : props.khung_gio_ca
-      ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
+  const shiftText = props.khung_gio_ca
+    ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
+    : props.stt_ca
+      ? `Ca ${props.stt_ca}`
       : "";
 
-  wrapper.appendChild(titleEl);
+  const metaEl = document.createElement("div");
+  metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
+  if (roomText && shiftText) {
+    metaEl.textContent = `${shiftText} • Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
+  } else if (roomText) {
+    metaEl.textContent = `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
+  } else {
+    metaEl.textContent = shiftText;
+  }
+
+  wrapper.appendChild(tdCourseName);
   if (metaEl.textContent) {
     wrapper.appendChild(metaEl);
   }
