@@ -1678,7 +1678,7 @@ function openImportModal(entity) {
   }
   const label = (IMPORT_SCHEMAS[target] && IMPORT_SCHEMAS[target].label) || "Dữ liệu";
   if (displayEl) displayEl.textContent = label;
-  if (titleEl) titleEl.textContent = `Nạp & Xuất dữ liệu • ${label}`;
+  if (titleEl) titleEl.textContent = "Nạp & Xuất dữ liệu";
   updateImportEntityGuide();
   openCrudModal("import-data-modal", "import-dropzone");
 }
