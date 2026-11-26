@@ -75,6 +75,8 @@ function closeAllCrudModals() {
   editingExamCode = null;
   editingRoomCode = null;
   editingRegistrationId = null;
+  selectedImportFile = null;
+  parsedImportPreview = null;
   CRUD_MODAL_IDS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.add("hidden");
@@ -1139,10 +1141,513 @@ function deleteRegistration(regId) {
 }
 
 const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+const IMPORT_EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const IMPORT_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const IMPORT_EXAM_STATUSES = ["khoi_tao", "da_xep_lich", "cong_bo"];
 let selectedImportFile = null;
+let parsedImportPreview = null;
+
+function neutralizeFormulaCell(value) {
+  const str = String(value == null ? "" : value).trim();
+  if (!str) return { value: "", neutralized: false };
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return { value: `'${str}`, neutralized: true };
+  }
+  return { value: str, neutralized: false };
+}
+
+function parsePositiveIntInRange(raw, min, max) {
+  const trimmed = String(raw == null ? "" : raw).trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const num = Number(trimmed);
+  if (!Number.isInteger(num) || num < min || num > max) return null;
+  return num;
+}
+
+function parseBooleanFlag(raw, defaultValue) {
+  const trimmed = String(raw == null ? "" : raw).trim().toLowerCase();
+  if (!trimmed) return defaultValue;
+  if (["true", "1", "yes", "co", "có"].includes(trimmed)) return true;
+  if (["false", "0", "no", "khong", "không"].includes(trimmed)) return false;
+  return null;
+}
+
+function isValidIsoDate(str) {
+  if (!IMPORT_DATE_REGEX.test(str)) return false;
+  const [y, m, d] = str.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+function normalizeBusinessCode(cellRes) {
+  return cellRes.neutralized ? cellRes.value : cellRes.value.toUpperCase();
+}
+
+const IMPORT_SCHEMAS = {
+  sinh_vien: {
+    label: "Quản lý Sinh viên",
+    headers: ["mssv", "ho_ten", "email", "lop_sinh_hoat"],
+    required: ["mssv", "ho_ten"],
+    sampleRow: ["22110099", "Nguyễn Minh Khôi", "khoi.nm@univ.edu.vn", "22CNTT1"],
+    validateRow(row) {
+      const errors = [];
+      const mssvRes = neutralizeFormulaCell(row.mssv);
+      const hoTenRes = neutralizeFormulaCell(row.ho_ten);
+      const emailRaw = String(row.email == null ? "" : row.email).trim();
+      const lopRes = neutralizeFormulaCell(row.lop_sinh_hoat);
+      const mssvVal = normalizeBusinessCode(mssvRes);
+      const lopVal = normalizeBusinessCode(lopRes);
+
+      if (!mssvVal) errors.push("thiếu mssv");
+      else if (mssvVal.length > 20) errors.push("mssv tối đa 20 ký tự");
+
+      if (!hoTenRes.value) errors.push("thiếu ho_ten");
+      else if (hoTenRes.value.length > 100) errors.push("ho_ten tối đa 100 ký tự");
+
+      if (emailRaw && (!IMPORT_EMAIL_REGEX.test(emailRaw) || emailRaw.length > 100)) {
+        errors.push("email không hợp lệ");
+      }
+      if (lopVal.length > 50) errors.push("lop_sinh_hoat tối đa 50 ký tự");
+
+      if (errors.length) return { ok: false, errors };
+      return {
+        ok: true,
+        neutralizedCount: (mssvRes.neutralized ? 1 : 0) + (hoTenRes.neutralized ? 1 : 0) + (lopRes.neutralized ? 1 : 0),
+        record: {
+          mssv: mssvVal,
+          ho_ten: hoTenRes.value,
+          email: emailRaw,
+          lop_sinh_hoat: lopVal,
+        },
+      };
+    },
+  },
+  mon_hoc: {
+    label: "Môn học",
+    headers: ["ma_mon", "ten_mon", "thoi_luong_phut", "so_tin_chi"],
+    required: ["ma_mon", "ten_mon"],
+    sampleRow: ["IT3010", "Lý thuyết Đồ thị nâng cao", "90", "3"],
+    validateRow(row) {
+      const errors = [];
+      const maRes = neutralizeFormulaCell(row.ma_mon);
+      const tenRes = neutralizeFormulaCell(row.ten_mon);
+      const maVal = normalizeBusinessCode(maRes);
+      const durRaw = String(row.thoi_luong_phut == null ? "" : row.thoi_luong_phut).trim();
+      const credRaw = String(row.so_tin_chi == null ? "" : row.so_tin_chi).trim();
+
+      if (!maVal) errors.push("thiếu ma_mon");
+      else if (maVal.length > 20) errors.push("ma_mon tối đa 20 ký tự");
+
+      if (!tenRes.value) errors.push("thiếu ten_mon");
+      else if (tenRes.value.length > 255) errors.push("ten_mon tối đa 255 ký tự");
+
+      const thoiLuong = durRaw ? parsePositiveIntInRange(durRaw, 1, 600) : 90;
+      if (thoiLuong === null) errors.push("thoi_luong_phut phải là số nguyên từ 1 đến 600");
+
+      const tinChi = credRaw ? parsePositiveIntInRange(credRaw, 1, 20) : 3;
+      if (tinChi === null) errors.push("so_tin_chi phải là số nguyên từ 1 đến 20");
+
+      if (errors.length) return { ok: false, errors };
+      return {
+        ok: true,
+        neutralizedCount: (maRes.neutralized ? 1 : 0) + (tenRes.neutralized ? 1 : 0),
+        record: {
+          ma_mon: maVal,
+          ten_mon: tenRes.value,
+          thoi_luong_phut: thoiLuong,
+          so_tin_chi: tinChi,
+        },
+      };
+    },
+  },
+  phong_thi: {
+    label: "Phòng thi",
+    headers: ["ma_phong", "ten_phong", "suc_chua", "toa_nha", "dang_su_dung"],
+    required: ["ma_phong", "ten_phong", "suc_chua"],
+    sampleRow: ["TC-301", "Phòng thi Nhà TC - 301", "60", "Nhà TC", "true"],
+    validateRow(row) {
+      const errors = [];
+      const maRes = neutralizeFormulaCell(row.ma_phong);
+      const tenRes = neutralizeFormulaCell(row.ten_phong);
+      const maVal = normalizeBusinessCode(maRes);
+      const sucChua = parsePositiveIntInRange(row.suc_chua, 1, 10000);
+      const toaNhaRes = neutralizeFormulaCell(row.toa_nha);
+      const activeFlag = parseBooleanFlag(row.dang_su_dung, true);
+
+      if (!maVal) errors.push("thiếu ma_phong");
+      else if (maVal.length > 50) errors.push("ma_phong tối đa 50 ký tự");
+
+      if (!tenRes.value) errors.push("thiếu ten_phong");
+      else if (tenRes.value.length > 100) errors.push("ten_phong tối đa 100 ký tự");
+
+      if (sucChua === null) errors.push("suc_chua phải là số nguyên từ 1 đến 10000");
+      if (toaNhaRes.value.length > 50) errors.push("toa_nha tối đa 50 ký tự");
+      if (activeFlag === null) errors.push("dang_su_dung phải là true/false (hoặc 1/0)");
+
+      if (errors.length) return { ok: false, errors };
+      return {
+        ok: true,
+        neutralizedCount: (maRes.neutralized ? 1 : 0) + (tenRes.neutralized ? 1 : 0) + (toaNhaRes.neutralized ? 1 : 0),
+        record: {
+          ma_phong: maVal,
+          ten_phong: tenRes.value,
+          suc_chua: sucChua,
+          toa_nha: toaNhaRes.value,
+          dang_su_dung: activeFlag,
+        },
+      };
+    },
+  },
+  ky_thi: {
+    label: "Kỳ thi",
+    headers: ["ma_ky_thi", "ten_ky_thi", "ngay_bat_dau", "ngay_ket_thuc", "so_ca_moi_ngay", "trang_thai"],
+    required: ["ma_ky_thi", "ten_ky_thi", "ngay_bat_dau", "ngay_ket_thuc"],
+    sampleRow: ["KTHK1_2027", "Thi Cuối Kỳ HK1 (2027 - 2028)", "2027-01-10", "2027-01-20", "4", "khoi_tao"],
+    validateRow(row) {
+      const errors = [];
+      const maRes = neutralizeFormulaCell(row.ma_ky_thi);
+      const tenRes = neutralizeFormulaCell(row.ten_ky_thi);
+      const maVal = normalizeBusinessCode(maRes);
+      const start = String(row.ngay_bat_dau == null ? "" : row.ngay_bat_dau).trim();
+      const end = String(row.ngay_ket_thuc == null ? "" : row.ngay_ket_thuc).trim();
+      const caRaw = String(row.so_ca_moi_ngay == null ? "" : row.so_ca_moi_ngay).trim();
+      const statusRaw = String(row.trang_thai == null ? "" : row.trang_thai).trim() || "khoi_tao";
+
+      if (!maVal) errors.push("thiếu ma_ky_thi");
+      if (!tenRes.value) errors.push("thiếu ten_ky_thi");
+      const validStart = isValidIsoDate(start);
+      const validEnd = isValidIsoDate(end);
+      if (!validStart) errors.push("ngay_bat_dau phải là ngày hợp lệ (YYYY-MM-DD)");
+      if (!validEnd) errors.push("ngay_ket_thuc phải là ngày hợp lệ (YYYY-MM-DD)");
+      if (validStart && validEnd && end < start) {
+        errors.push("ngay_ket_thuc phải >= ngay_bat_dau");
+      }
+      const soCa = caRaw ? parsePositiveIntInRange(caRaw, 1, 20) : 4;
+      if (soCa === null) errors.push("so_ca_moi_ngay phải là số nguyên từ 1 đến 20");
+      if (!IMPORT_EXAM_STATUSES.includes(statusRaw)) {
+        errors.push("trang_thai phải là khoi_tao, da_xep_lich hoặc cong_bo");
+      }
+
+      if (errors.length) return { ok: false, errors };
+      return {
+        ok: true,
+        neutralizedCount: (maRes.neutralized ? 1 : 0) + (tenRes.neutralized ? 1 : 0),
+        record: {
+          ma_ky_thi: maVal,
+          ten_ky_thi: tenRes.value,
+          ngay_bat_dau: start,
+          ngay_ket_thuc: end,
+          so_ca_moi_ngay: soCa,
+          trang_thai: statusRaw,
+        },
+      };
+    },
+  },
+  dang_ky_thi: {
+    label: "Đăng ký thi",
+    headers: ["ma_ky_thi", "ma_mon", "mssv"],
+    required: ["ma_ky_thi", "ma_mon", "mssv"],
+    sampleRow: ["KTHK1_2026", "IT001", "22110001"],
+    validateRow(row) {
+      const errors = [];
+      const kyThiRes = neutralizeFormulaCell(row.ma_ky_thi);
+      const monRes = neutralizeFormulaCell(row.ma_mon);
+      const mssvRes = neutralizeFormulaCell(row.mssv);
+      const kyThiVal = normalizeBusinessCode(kyThiRes);
+      const monVal = normalizeBusinessCode(monRes);
+      const mssvVal = normalizeBusinessCode(mssvRes);
+
+      if (!kyThiVal) errors.push("thiếu ma_ky_thi");
+      if (!monVal) errors.push("thiếu ma_mon");
+      if (!mssvVal) errors.push("thiếu mssv");
+
+      if (errors.length) return { ok: false, errors };
+      return {
+        ok: true,
+        neutralizedCount: (kyThiRes.neutralized ? 1 : 0) + (monRes.neutralized ? 1 : 0) + (mssvRes.neutralized ? 1 : 0),
+        record: {
+          ma_ky_thi: kyThiVal,
+          ma_mon: monVal,
+          mssv: mssvVal,
+        },
+      };
+    },
+  },
+};
+
+function parseCsvText(rawText) {
+  const text = String(rawText == null ? "" : rawText).replace(/^\uFEFF/, "");
+  const rows = [];
+  let currentRow = [];
+  let currentCell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          currentCell += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        currentCell += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      currentRow.push(currentCell);
+      currentCell = "";
+    } else if (ch === "\r" || ch === "\n") {
+      if (ch === "\r" && text[i + 1] === "\n") {
+        i += 1;
+      }
+      currentRow.push(currentCell);
+      if (currentRow.some((cell) => cell.trim() !== "")) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = "";
+    } else {
+      currentCell += ch;
+    }
+  }
+
+  currentRow.push(currentCell);
+  if (currentRow.some((cell) => cell.trim() !== "")) {
+    rows.push(currentRow);
+  }
+
+  if (!rows.length) {
+    return { headers: [], rows: [] };
+  }
+  const headers = rows[0].map((h) => h.trim());
+  return { headers, rows: rows.slice(1) };
+}
+
+function validateImportCsvText(entity, csvText) {
+  const schema = IMPORT_SCHEMAS[entity];
+  if (!schema) {
+    return { ok: false, records: [], errors: ["Danh mục dữ liệu không hợp lệ."], neutralizedCount: 0 };
+  }
+  const parsed = parseCsvText(csvText);
+  if (!parsed.headers.length) {
+    return { ok: false, records: [], errors: ["Tệp CSV rỗng hoặc không có dòng tiêu đề."], neutralizedCount: 0 };
+  }
+
+  const missingCols = schema.required.filter((col) => !parsed.headers.includes(col));
+  if (missingCols.length) {
+    return {
+      ok: false,
+      records: [],
+      errors: [`Thiếu cột bắt buộc: ${missingCols.join(", ")}.`],
+      neutralizedCount: 0,
+    };
+  }
+  if (!parsed.rows.length) {
+    return { ok: false, records: [], errors: ["Tệp CSV không có dòng dữ liệu nào để nạp."], neutralizedCount: 0 };
+  }
+
+  const records = [];
+  const errors = [];
+  let neutralizedCount = 0;
+
+  parsed.rows.forEach((cells, idx) => {
+    const rowNum = idx + 2;
+    const rowObj = Object.create(null);
+    parsed.headers.forEach((col, colIdx) => {
+      rowObj[col] = cells[colIdx] != null ? cells[colIdx] : "";
+    });
+    const res = schema.validateRow(rowObj);
+    if (!res.ok) {
+      errors.push(`Dòng ${rowNum}: ${res.errors.join("; ")}`);
+    } else {
+      neutralizedCount += res.neutralizedCount || 0;
+      records.push(res.record);
+    }
+  });
+
+  return {
+    ok: errors.length === 0,
+    records,
+    errors,
+    neutralizedCount,
+    totalRows: parsed.rows.length,
+  };
+}
+
+function renderImportPreview(result) {
+  const boxEl = document.getElementById("import-preview-box");
+  const summaryEl = document.getElementById("import-preview-summary");
+  const listEl = document.getElementById("import-preview-list");
+  if (!boxEl || !summaryEl || !listEl) return;
+
+  listEl.replaceChildren();
+  if (!result) {
+    boxEl.classList.add("hidden");
+    summaryEl.textContent = "";
+    return;
+  }
+
+  boxEl.classList.remove("hidden");
+  if (result.ok) {
+    const safeNote = result.neutralizedCount
+      ? ` • Đã vô hiệu hóa ${result.neutralizedCount} ô nghi ngờ Formula Injection`
+      : "";
+    summaryEl.textContent = `Kiểm tra hợp lệ: ${result.records.length}/${result.totalRows} dòng sẵn sàng nạp${safeNote}.`;
+    summaryEl.className = "text-xs font-semibold text-emerald-700";
+
+    result.records.slice(0, 5).forEach((rec, i) => {
+      const li = document.createElement("li");
+      li.className = "font-mono text-slate-700 truncate";
+      li.textContent = `${i + 1}. ${Object.values(rec).join(" | ")}`;
+      listEl.appendChild(li);
+    });
+    if (result.records.length > 5) {
+      const liMore = document.createElement("li");
+      liMore.className = "text-slate-500 italic";
+      liMore.textContent = `... và ${result.records.length - 5} dòng khác.`;
+      listEl.appendChild(liMore);
+    }
+  } else {
+    summaryEl.textContent = `Phát hiện ${result.errors.length} lỗi dữ liệu (Rollback — chưa ghi bản ghi nào):`;
+    summaryEl.className = "text-xs font-semibold text-red-700";
+    result.errors.slice(0, 8).forEach((msg) => {
+      const li = document.createElement("li");
+      li.className = "text-red-600";
+      li.textContent = `• ${msg}`;
+      listEl.appendChild(li);
+    });
+  }
+}
+
+function updateImportEntityGuide() {
+  const selectEl = document.getElementById("import-entity-select");
+  const guideEl = document.getElementById("import-required-cols");
+  if (!guideEl) return;
+  const entity = (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+  const schema = IMPORT_SCHEMAS[entity];
+  if (!schema) {
+    guideEl.textContent = "";
+    return;
+  }
+  const colsText = schema.headers
+    .map((col) => (schema.required.includes(col) ? `${col}*` : col))
+    .join(", ");
+  guideEl.textContent = `${colsText}  (* bắt buộc)`;
+}
+
+function handleImportEntityChange() {
+  const selectEl = document.getElementById("import-entity-select");
+  const targetEntity = selectEl ? selectEl.value : activeCrudEntity;
+  updateImportEntityGuide();
+  if (selectedImportFile) {
+    selectImportFile(selectedImportFile, targetEntity);
+  } else {
+    renderImportPreview(null);
+  }
+}
+
+function downloadImportTemplate() {
+  const selectEl = document.getElementById("import-entity-select");
+  const statusEl = document.getElementById("import-form-status");
+  const errEl = document.getElementById("import-form-error");
+  if (errEl) errEl.textContent = "";
+
+  const entity = (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+  const schema = IMPORT_SCHEMAS[entity];
+  if (!schema) return;
+
+  const csvLines = [schema.headers, schema.sampleRow]
+    .map((row) => row.map(sanitizeCsvCell).join(","))
+    .join("\r\n");
+  const blob = new Blob(["\uFEFF" + csvLines], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${entity}_template.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  if (statusEl) {
+    statusEl.textContent = `Đã tải tệp mẫu ${entity}_template.csv.`;
+    statusEl.classList.remove("hidden");
+  }
+}
+
+function applyImportedRecords(entity, records) {
+  let added = 0;
+  let updated = 0;
+
+  if (entity === "sinh_vien") {
+    records.forEach((rec) => {
+      const idx = studentRecords.findIndex((s) => s.mssv === rec.mssv);
+      if (idx >= 0) {
+        studentRecords[idx] = rec;
+        updated += 1;
+      } else {
+        studentRecords.push(rec);
+        added += 1;
+      }
+    });
+  } else if (entity === "mon_hoc") {
+    records.forEach((rec) => {
+      const idx = courseRecords.findIndex((c) => c.ma_mon === rec.ma_mon);
+      if (idx >= 0) {
+        courseRecords[idx] = rec;
+        updated += 1;
+      } else {
+        courseRecords.push(rec);
+        added += 1;
+      }
+    });
+  } else if (entity === "phong_thi") {
+    records.forEach((rec) => {
+      const idx = roomRecords.findIndex((r) => r.ma_phong === rec.ma_phong);
+      if (idx >= 0) {
+        roomRecords[idx] = rec;
+        updated += 1;
+      } else {
+        roomRecords.push(rec);
+        added += 1;
+      }
+    });
+  } else if (entity === "ky_thi") {
+    records.forEach((rec) => {
+      const idx = examRecords.findIndex((e) => e.ma_ky_thi === rec.ma_ky_thi);
+      if (idx >= 0) {
+        examRecords[idx] = rec;
+        updated += 1;
+      } else {
+        examRecords.push(rec);
+        added += 1;
+      }
+    });
+  } else if (entity === "dang_ky_thi") {
+    records.forEach((rec) => {
+      const exists = registrationRecords.some(
+        (r) => r.ma_ky_thi === rec.ma_ky_thi && r.ma_mon === rec.ma_mon && r.mssv === rec.mssv
+      );
+      if (exists) {
+        updated += 1;
+      } else {
+        registrationRecords.push({ id: nextRegistrationId++, ...rec });
+        added += 1;
+      }
+    });
+  }
+
+  switchCrudEntity(entity);
+  return { added, updated };
+}
 
 function resetImportModalState() {
   selectedImportFile = null;
+  parsedImportPreview = null;
   const form = document.getElementById("import-data-form");
   const fileInput = document.getElementById("import-file-input");
   const selectedEl = document.getElementById("import-selected-file");
@@ -1159,6 +1664,7 @@ function resetImportModalState() {
     statusEl.textContent = "";
     statusEl.classList.add("hidden");
   }
+  renderImportPreview(null);
 }
 
 function openImportModal(entity) {
@@ -1168,6 +1674,7 @@ function openImportModal(entity) {
   if (selectEl && CRUD_HEADINGS[target]) {
     selectEl.value = target;
   }
+  updateImportEntityGuide();
   openCrudModal("import-data-modal", "import-entity-select");
 }
 
@@ -1181,15 +1688,21 @@ function triggerImportFilePicker() {
   if (fileInput) fileInput.click();
 }
 
-function selectImportFile(file) {
+function selectImportFile(file, entityOverride) {
   const selectedEl = document.getElementById("import-selected-file");
   const errEl = document.getElementById("import-form-error");
   const statusEl = document.getElementById("import-form-status");
+  const selectEl = document.getElementById("import-entity-select");
+  const entity = entityOverride || (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+
+  parsedImportPreview = null;
   if (errEl) errEl.textContent = "";
   if (statusEl) {
     statusEl.textContent = "";
     statusEl.classList.add("hidden");
   }
+  renderImportPreview(null);
+
   if (!file) {
     selectedImportFile = null;
     if (selectedEl) {
@@ -1219,6 +1732,24 @@ function selectImportFile(file) {
     selectedEl.textContent = `Đã chọn: ${file.name} (${sizeKb} KB)`;
     selectedEl.classList.remove("hidden");
   }
+
+  if (lowerName.endsWith(".csv") && typeof file.text === "function") {
+    const maybeText = file.text();
+    if (typeof maybeText === "string") {
+      parsedImportPreview = validateImportCsvText(entity, maybeText);
+      renderImportPreview(parsedImportPreview);
+    } else if (maybeText && typeof maybeText.then === "function") {
+      maybeText
+        .then((csvText) => {
+          if (selectedImportFile !== file) return;
+          parsedImportPreview = validateImportCsvText(entity, csvText);
+          renderImportPreview(parsedImportPreview);
+        })
+        .catch(() => {
+          if (errEl) errEl.textContent = "Không thể đọc nội dung tệp CSV.";
+        });
+    }
+  }
 }
 
 function handleImportFileInputChange(event) {
@@ -1227,22 +1758,70 @@ function handleImportFileInputChange(event) {
 }
 
 function submitImportForm(event) {
-  event.preventDefault();
+  if (event && typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
   const errEl = document.getElementById("import-form-error");
   const statusEl = document.getElementById("import-form-status");
   const selectEl = document.getElementById("import-entity-select");
   if (errEl) errEl.textContent = "";
+  if (statusEl) statusEl.classList.add("hidden");
 
   if (!selectedImportFile) {
     if (errEl) errEl.textContent = "Vui lòng chọn tệp .xlsx hoặc .csv trước khi nạp dữ liệu.";
     return;
   }
 
+  const entity = (selectEl && selectEl.value) || activeCrudEntity || "mon_hoc";
+  const schema = IMPORT_SCHEMAS[entity];
   const entityLabel =
-    selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0]
+    (schema && schema.label) ||
+    (selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0]
       ? selectEl.selectedOptions[0].textContent
-      : "Dữ liệu";
-  if (statusEl) {
+      : "Dữ liệu");
+
+  const lowerName = String(selectedImportFile.name || "").toLowerCase();
+  if (lowerName.endsWith(".xlsx")) {
+    if (statusEl) {
+      statusEl.textContent = `Đã tiếp nhận tệp "${selectedImportFile.name}" cho danh mục ${entityLabel}. Sẵn sàng đồng bộ qua API Import Transaction ACID.`;
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const finalizeCsvImport = (result) => {
+    parsedImportPreview = result;
+    renderImportPreview(result);
+    if (!result.ok) {
+      if (errEl) {
+        errEl.textContent = `Nạp dữ liệu thất bại (${result.errors.length} lỗi). Đã rollback toàn bộ lô.`;
+      }
+      return;
+    }
+    const { added, updated } = applyImportedRecords(entity, result.records);
+    if (statusEl) {
+      statusEl.textContent = `Đã nạp thành công ${result.records.length} dòng vào ${entityLabel} (thêm mới: ${added}, cập nhật: ${updated}).`;
+      statusEl.classList.remove("hidden");
+    }
+  };
+
+  if (parsedImportPreview) {
+    finalizeCsvImport(parsedImportPreview);
+    return;
+  }
+
+  if (typeof selectedImportFile.text === "function") {
+    const maybeText = selectedImportFile.text();
+    if (typeof maybeText === "string") {
+      finalizeCsvImport(validateImportCsvText(entity, maybeText));
+    } else if (maybeText && typeof maybeText.then === "function") {
+      maybeText
+        .then((csvText) => finalizeCsvImport(validateImportCsvText(entity, csvText)))
+        .catch(() => {
+          if (errEl) errEl.textContent = "Không thể đọc nội dung tệp CSV.";
+        });
+    }
+  } else if (statusEl) {
     statusEl.textContent = `Đã tiếp nhận tệp "${selectedImportFile.name}" cho danh mục ${entityLabel}. Sẵn sàng đồng bộ qua API Import Transaction ACID.`;
     statusEl.classList.remove("hidden");
   }
