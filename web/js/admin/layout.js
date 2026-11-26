@@ -188,13 +188,7 @@ function initAdminShell(activePage) {
         </div>
       </div>
 
-      <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
-        <div class="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 space-y-1">
-          <div class="font-bold text-slate-800">Trạng thái Engine</div>
-          <div>• Thuật toán: <span class="font-semibold text-blue-700">DSatur + FFD</span></div>
-          <div>• Sắc số đạt được: <span class="font-semibold text-emerald-700">χ(G) = 4 ca thi</span></div>
-          <div>• Xung đột lịch SV: <span class="font-bold text-emerald-700">0.0%</span></div>
-        </div>
+      <div class="p-4 border-t border-slate-200 bg-slate-50">
         <button type="button" onclick="handleLogout()"
           class="w-full py-2 px-3 rounded-lg border border-slate-300 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-xs font-semibold text-slate-700 transition">
           🚪 Đăng xuất khỏi hệ thống
