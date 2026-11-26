@@ -12,12 +12,12 @@ Tài liệu thiết kế chi tiết nằm trong thư mục [docs](docs/README.md
 
 ## Thành phần hệ thống
 
-| Thành phần | Công nghệ / Image | Vai trò chính |
-|---|---|---|
-| **Reverse Proxy & Web** | `caddy:2-alpine` | Auto HTTPS (`local_certs`), Security Headers (HSTS, `X-Frame-Options`, `nosniff`), phục vụ giao diện tĩnh `web/` và proxy `/api/*`, `/docs*` |
-| **Backend & Thuật toán** | `python:3.12-slim` (FastAPI, NetworkX, SQLAlchemy, PyJWT, bcrypt) | Xác thực Native JWT + RBAC, CRUD dữ liệu danh mục, dựng đồ thị xung đột $G=(V,E,W)$, tô màu DSatur/Welsh–Powell & phân phòng FFD |
-| **Cơ sở dữ liệu** | `postgres:16-alpine` | Lưu trữ chuẩn 3NF gồm 8 bảng, ràng buộc toàn vẹn `CHECK`/`UNIQUE`/`FK`, chỉ mục B-tree và giao dịch ACID |
-| **Giao diện người dùng** | HTML5, Tailwind CSS CDN, Vanilla JS (`Cytoscape.js`, `FullCalendar`, `Chart.js`) | Cổng Quản trị (CRUD modal nổi, đồ thị tương tác, lịch toàn trường, thống kê) và Cổng Sinh viên tra cứu lịch cá nhân |
+| Thành phần               | Công nghệ / Image                                                                | Vai trò chính                                                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reverse Proxy & Web**  | `caddy:2-alpine`                                                                 | Auto HTTPS (`local_certs`), Security Headers (HSTS, `X-Frame-Options`, `nosniff`), phục vụ giao diện tĩnh `web/` và proxy `/api/*`, `/docs*` |
+| **Backend & Thuật toán** | `python:3.12-slim` (FastAPI, NetworkX, SQLAlchemy, PyJWT, bcrypt)                | Xác thực Native JWT + RBAC, CRUD dữ liệu danh mục, dựng đồ thị xung đột $G=(V,E,W)$, tô màu DSatur/Welsh–Powell & phân phòng FFD             |
+| **Cơ sở dữ liệu**        | `postgres:16-alpine`                                                             | Lưu trữ chuẩn 3NF gồm 8 bảng, ràng buộc toàn vẹn `CHECK`/`UNIQUE`/`FK`, chỉ mục B-tree và giao dịch ACID                                     |
+| **Giao diện người dùng** | HTML5, Tailwind CSS CDN, Vanilla JS (`Cytoscape.js`, `FullCalendar`, `Chart.js`) | Cổng Quản trị (CRUD modal nổi, đồ thị tương tác, lịch toàn trường, thống kê) và Cổng Sinh viên tra cứu lịch cá nhân                          |
 
 ## Khởi chạy nhanh (100% Docker Images)
 
@@ -31,8 +31,9 @@ make up
 ```
 
 Sau khi khởi chạy thành công:
-- **Trang Quản trị (HTTPS):** `https://localhost` *(hoặc HTTP: `http://localhost:8080`)*
-- **Đăng nhập:** `https://localhost/login.html` *(tài khoản mặc định dev: `admin` / `admin123`)*
+
+- **Trang Quản trị (HTTPS):** `https://localhost` _(hoặc HTTP: `http://localhost:8080`)_
+- **Đăng nhập:** `https://localhost/login.html` _(tài khoản mặc định dev: `admin` / `admin123`)_
 - **Cổng Sinh viên:** `https://localhost/student.html`
 - **Swagger UI (FastAPI):** `https://localhost/docs`
 
@@ -40,21 +41,20 @@ Sau khi khởi chạy thành công:
 
 Dự án chuẩn hóa toàn bộ thao tác Docker và **17 bộ kiểm thử tự động** thông qua [Makefile](Makefile). Chạy `make help` (hoặc `make`) để xem nhanh danh sách lệnh:
 
-| Lệnh | Mô tả |
-| :--- | :--- |
-| `make help` | Hiển thị danh sách toàn bộ lệnh hỗ trợ |
-| `make up` | Khởi chạy 3 container Docker (`postgres`, `fastapi`, `caddy`) |
-| `make down` | Dừng toàn bộ container Docker |
-| `make logs` | Xem log realtime (100 dòng gần nhất) của các container |
-| `make test` | Chạy toàn bộ **17 bộ kiểm thử** (`test-host` + `test-backend`) |
-| `make test-host` | Chạy 8 bộ test HTTP HTTPS, giao diện/runtime JS (`layout`, `login`, `student_room_ui`, `calendar_ui`) và `docs_test.py` |
+| Lệnh                | Mô tả                                                                                                                                                             |
+| :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make help`         | Hiển thị danh sách toàn bộ lệnh hỗ trợ                                                                                                                            |
+| `make up`           | Khởi chạy 3 container Docker (`postgres`, `fastapi`, `caddy`)                                                                                                     |
+| `make down`         | Dừng toàn bộ container Docker                                                                                                                                     |
+| `make logs`         | Xem log realtime (100 dòng gần nhất) của các container                                                                                                            |
+| `make test`         | Chạy toàn bộ **17 bộ kiểm thử** (`test-host` + `test-backend`)                                                                                                    |
+| `make test-host`    | Chạy 8 bộ test HTTP HTTPS, giao diện/runtime JS (`layout`, `login`, `student_room_ui`, `calendar_ui`) và `docs_test.py`                                           |
 | `make test-backend` | Chạy 9 bộ test CSDL, ORM/Schemas, thuật toán (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`), RBAC & bảo mật (`-W error`) trong container `fastapi` |
-| `make clean` | Dọn thư mục cache (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `htmlcov`) |
+| `make clean`        | Dọn thư mục cache (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `htmlcov`)                                                                                      |
 
 ## Tham gia phát triển
 
 - Quy trình nhánh Git, Conventional Commits & kiểm thử: xem [CONTRIBUTING.md](CONTRIBUTING.md).
-- Quy tắc làm việc Git & kiểm thử nội bộ nhóm: xem [AGENTS.md](AGENTS.md).
 - Kiến trúc bảo mật & báo cáo lỗ hổng: xem [SECURITY.md](SECURITY.md).
 - Mục lục toàn bộ tài liệu thiết kế: xem [docs/README.md](docs/README.md).
 
