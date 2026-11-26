@@ -127,7 +127,7 @@ function renderStatsTopDegreeTable(dataset) {
 
   const list = Array.isArray(data.top_degree_courses) ? data.top_degree_courses : [];
   if (summaryEl) {
-    summaryEl.textContent = `Hiển thị Top ${list.length} học phần có bậc xung đột cao nhất`;
+    summaryEl.textContent = `${list.length} học phần có bậc xung đột cao nhất`;
   }
 
   tbody.replaceChildren();
