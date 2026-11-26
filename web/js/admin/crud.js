@@ -70,6 +70,11 @@ function closeCrudModal(modalId) {
 
 function closeAllCrudModals() {
   pendingDeleteAction = null;
+  editingCourseCode = null;
+  editingMssv = null;
+  editingExamCode = null;
+  editingRoomCode = null;
+  editingRegistrationId = null;
   CRUD_MODAL_IDS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.add("hidden");
@@ -472,6 +477,7 @@ function saveExamForm(event) {
 
   closeExamModal();
   renderExamTable();
+  renderRegistrationTable();
 }
 
 function startEditExam(maKyThi) {
@@ -505,6 +511,7 @@ function deleteExam(maKyThi) {
       examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
       if (editingExamCode === maKyThi) closeExamModal();
       renderExamTable();
+      renderRegistrationTable();
     }
   );
 }
@@ -918,6 +925,17 @@ function renderRegistrationTable() {
   }
 
   tbody.replaceChildren();
+  if (filtered.length === 0) {
+    const emptyTr = document.createElement("tr");
+    const emptyTd = document.createElement("td");
+    emptyTd.colSpan = 7;
+    emptyTd.className = "py-6 px-3 text-center text-xs text-slate-500";
+    emptyTd.textContent = "Không có lượt đăng ký dự thi nào phù hợp.";
+    emptyTr.appendChild(emptyTd);
+    tbody.appendChild(emptyTr);
+    return;
+  }
+
   filtered.forEach((item) => {
     const tr = document.createElement("tr");
     tr.className = "hover:bg-slate-50";
@@ -953,6 +971,18 @@ function renderRegistrationTable() {
     tr.append(tdExam, tdCourseCode, tdCourseName, tdMssv, tdStudentName, tdClass, tdAct);
     tbody.appendChild(tr);
   });
+}
+
+function ensureSelectOption(selectEl, value, fallbackLabel) {
+  if (!selectEl || !value) return;
+  const options = Array.from(selectEl.options || selectEl.children || []);
+  const exists = options.some((opt) => opt.value === value);
+  if (!exists) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = fallbackLabel || `${value} (Đã xóa khỏi danh mục)`;
+    selectEl.appendChild(opt);
+  }
 }
 
 function populateRegistrationFormSelects() {
@@ -1075,6 +1105,9 @@ function startEditRegistration(regId) {
   const examSelect = document.getElementById("reg-form-ky-thi");
   const courseSelect = document.getElementById("reg-form-ma-mon");
   const studentSelect = document.getElementById("reg-form-mssv");
+  ensureSelectOption(examSelect, reg.ma_ky_thi, `${reg.ma_ky_thi} (Kỳ thi đã xóa)`);
+  ensureSelectOption(courseSelect, reg.ma_mon, `${reg.ma_mon} (Môn học đã xóa)`);
+  ensureSelectOption(studentSelect, reg.mssv, `${reg.mssv} (Sinh viên đã xóa)`);
   if (examSelect) examSelect.value = reg.ma_ky_thi;
   if (courseSelect) courseSelect.value = reg.ma_mon;
   if (studentSelect) studentSelect.value = reg.mssv;
