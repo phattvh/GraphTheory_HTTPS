@@ -8,6 +8,7 @@ from backend.schemas.auth import (
 from backend.schemas.master_data import (
     DangKyThiBase,
     DangKyThiCreate,
+    DangKyThiDetailOut,
     DangKyThiOut,
     KyThiBase,
     KyThiCreate,
@@ -50,4 +51,5 @@ __all__ = [
     "DangKyThiBase",
     "DangKyThiCreate",
     "DangKyThiOut",
+    "DangKyThiDetailOut",
 ]
