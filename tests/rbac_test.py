@@ -80,6 +80,10 @@ def test_unauthenticated_and_invalid_tokens_return_401():
         ("POST", "/api/v1/ky-thi", {"ma_ky_thi": "NOAUTH", "ten_ky_thi": "X", "ngay_bat_dau": "2026-09-01", "ngay_ket_thuc": "2026-09-05"}),
         ("GET", "/api/v1/mon-hoc", None),
         ("POST", "/api/v1/mon-hoc", {"ma_mon": "NOAUTH", "ten_mon": "X"}),
+        ("GET", "/api/v1/sinh-vien", None),
+        ("POST", "/api/v1/sinh-vien", {"mssv": "NOAUTH", "ho_ten": "X"}),
+        ("GET", "/api/v1/phong-thi", None),
+        ("POST", "/api/v1/phong-thi", {"ma_phong": "NOAUTH", "ten_phong": "X", "suc_chua": 30}),
     ]
     for method, path, payload in protected_routes:
         code, headers, _ = request_json(method, path, payload)
@@ -224,6 +228,10 @@ def test_role_guard_student_vs_admin():
             ("POST", "/api/v1/mon-hoc", {"ma_mon": "SV_MH", "ten_mon": "X"}),
             ("PUT", f"/api/v1/mon-hoc/{course_id}", {"ten_mon": "Hacked"}),
             ("DELETE", f"/api/v1/mon-hoc/{course_id}", None),
+            ("GET", "/api/v1/sinh-vien", None),
+            ("POST", "/api/v1/sinh-vien", {"mssv": "SV_TRY", "ho_ten": "X"}),
+            ("GET", "/api/v1/phong-thi", None),
+            ("POST", "/api/v1/phong-thi", {"ma_phong": "P_TRY", "ten_phong": "X", "suc_chua": 30}),
         ]
         for method, path, payload in forbidden_calls:
             code, _, _ = request_json(method, path, payload, token=sv_token)
@@ -234,7 +242,15 @@ def test_role_guard_student_vs_admin():
         c_forged, _, _ = request_json("GET", "/api/v1/mon-hoc", token=forged_role_token)
         assert c_forged == 403, f"Forged admin claim for student user must be 403, got {c_forged}"
 
-        print("✓ Test 2: RBAC chặn 403 đúng với sinh_vien (kể cả giả claim vai_tro) & lọc kỳ thi cong_bo.")
+        # 5. Xóa SinhVien đang có tài khoản sinh_vien gắn MSSV phải trả 409 Conflict thay vì lỗi 500
+        c_del_sv_linked, _, _ = request_json(
+            "DELETE", f"/api/v1/sinh-vien/{sv_profile.id}", token=admin_token
+        )
+        assert c_del_sv_linked == 409, (
+            f"Deleting student linked to user expected 409, got {c_del_sv_linked}"
+        )
+
+        print("✓ Test 2: RBAC chặn 403 đúng với sinh_vien (kể cả giả claim vai_tro), lọc cong_bo & chặn xóa SV đang liên kết (409).")
     finally:
         # Dọn sạch dữ liệu test trong DB
         db.rollback()
