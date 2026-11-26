@@ -289,21 +289,66 @@ function formatSlotLabelByMode(dateObj, mode = currentSlotMode) {
 }
 
 /**
+ * Cộng thêm số phút vào chuỗi thời gian "HH:MM:SS".
+ * @param {string} timeStr
+ * @param {number} minutesToAdd
+ */
+function addMinutesToTimeString(timeStr, minutesToAdd) {
+  const parts = String(timeStr || "00:00:00").split(":").map(Number);
+  const totalMinutes = (parts[0] || 0) * 60 + (parts[1] || 0) + Math.round(minutesToAdd);
+  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const mm = String(totalMinutes % 60).padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+/**
  * Chuyển đổi danh sách ca thi thành định dạng Event Object chuẩn của FullCalendar.
- * Khi mode === "shift", mỗi Ca thi (1..4) được ánh xạ gọn vào đúng 1 hàng Ca duy nhất (không có khoảng trống nghỉ trưa).
+ * Các môn thi cùng ngày + cùng ca được chia thành các dải hàng ngang 100% chiều rộng
+ * nằm gọn bên trong ô ca đó (không bị ép cột dọc 50% gây cắt chữ).
  * @param {Array<Record<string, any>>} rawEvents
  * @param {string} mode
  */
 function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentSlotMode) {
+  // Gom nhóm các môn cùng ngày và cùng ca để chia hàng ngang tuần tự trong ô ca
+  const groupCounts = {};
+  const groupIndices = {};
+  rawEvents.forEach((item) => {
+    const key = `${item.ngay_thi}_ca_${item.stt_ca}`;
+    groupCounts[key] = (groupCounts[key] || 0) + 1;
+  });
+
   return rawEvents.map((item) => {
     const palette = SHIFT_COLOR_PALETTE[item.stt_ca] || SHIFT_COLOR_PALETTE[1];
     const compactSlot = SHIFT_COMPACT_TIME_RANGES[item.stt_ca] || SHIFT_COMPACT_TIME_RANGES[1];
     const roomText = Array.isArray(item.rooms) ? item.rooms.join(", ") : String(item.rooms || "");
 
-    const eventStart =
-      mode === "shift" ? `${item.ngay_thi}T${compactSlot.startSlot}` : item.start;
-    const eventEnd =
-      mode === "shift" ? `${item.ngay_thi}T${compactSlot.endSlot}` : item.end;
+    const key = `${item.ngay_thi}_ca_${item.stt_ca}`;
+    const totalInSlot = groupCounts[key] || 1;
+    const indexInSlot = groupIndices[key] || 0;
+    groupIndices[key] = indexInSlot + 1;
+
+    let eventStart = item.start;
+    let eventEnd = item.end;
+
+    if (mode === "shift") {
+      const slotMinutes = 60;
+      const sliceMinutes = slotMinutes / totalInSlot;
+      const startTime = addMinutesToTimeString(compactSlot.startSlot, indexInSlot * sliceMinutes);
+      const endTime = addMinutesToTimeString(
+        compactSlot.startSlot,
+        (indexInSlot + 1) * sliceMinutes
+      );
+      eventStart = `${item.ngay_thi}T${startTime}`;
+      eventEnd = `${item.ngay_thi}T${endTime}`;
+    } else if (totalInSlot > 1) {
+      const baseStartTime = String(item.start).split("T")[1] || "07:30:00";
+      const slotMinutes = 90;
+      const sliceMinutes = slotMinutes / totalInSlot;
+      const startTime = addMinutesToTimeString(baseStartTime, indexInSlot * sliceMinutes);
+      const endTime = addMinutesToTimeString(baseStartTime, (indexInSlot + 1) * sliceMinutes);
+      eventStart = `${item.ngay_thi}T${startTime}`;
+      eventEnd = `${item.ngay_thi}T${endTime}`;
+    }
 
     return {
       id: item.id,
@@ -329,7 +374,7 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentS
 
 /**
  * Tạo nội dung hiển thị bên trong mỗi thẻ sự kiện của FullCalendar bằng DOM API an toàn.
- * Hiển thị rõ khung giờ thật của ca (VD: Ca 1 • 7h30 - 9h00), mã môn - tên môn và phòng thi.
+ * Bố cục theo hàng ngang gọn gàng: Mã môn - Tên môn + Phòng thi & Sĩ số.
  * @param {Record<string, any>} arg
  */
 function renderCustomEventContent(arg) {
@@ -338,31 +383,27 @@ function renderCustomEventContent(arg) {
   }
   const props = (arg && arg.event && arg.event.extendedProps) || {};
   const roomText = Array.isArray(props.rooms) ? props.rooms.join(", ") : String(props.rooms || "");
-  const shiftTimeText = props.khung_gio_ca
-    ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
-    : arg.timeText || "";
 
   const wrapper = document.createElement("div");
-  wrapper.className = "space-y-0.5 leading-snug overflow-hidden";
-
-  const timeEl = document.createElement("div");
-  timeEl.className = "text-[11px] font-bold opacity-85";
-  timeEl.textContent = shiftTimeText;
+  wrapper.className = "flex flex-col justify-center h-full px-1 py-0.5 leading-tight overflow-hidden";
 
   const titleEl = document.createElement("div");
-  titleEl.className = "font-bold text-xs";
+  titleEl.className = "font-bold text-xs truncate";
   titleEl.textContent = props.ma_mon
     ? `${props.ma_mon} - ${props.ten_mon}`
     : (arg.event && arg.event.title) || "";
 
-  const roomEl = document.createElement("div");
-  roomEl.className = "text-[11px] opacity-90";
-  roomEl.textContent = roomText ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)` : "";
+  const metaEl = document.createElement("div");
+  metaEl.className = "text-[11px] opacity-90 truncate";
+  metaEl.textContent = roomText
+    ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`
+    : props.khung_gio_ca
+      ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
+      : "";
 
-  wrapper.appendChild(timeEl);
   wrapper.appendChild(titleEl);
-  if (roomText) {
-    wrapper.appendChild(roomEl);
+  if (metaEl.textContent) {
+    wrapper.appendChild(metaEl);
   }
   return { domNodes: [wrapper] };
 }
