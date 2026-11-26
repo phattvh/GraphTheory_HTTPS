@@ -254,12 +254,10 @@ const SAMPLE_EXAM_EVENTS = [
   },
 ];
 
-const EXAM_WEEK_DAYS = ["2026-12-15", "2026-12-16", "2026-12-17", "2026-12-18", "2026-12-19"];
-
 let adminCalendarInstance = null;
 let currentCalendarView = "timeGridWeek";
-let currentSlotMode = "shift"; // "shift" (Gộp 4 hàng Ca 1..Ca 4, không có hàng nghỉ) | "hour" (07:00, 08:00...)
 let activeFilteredEvents = [...SAMPLE_EXAM_EVENTS];
+let layoutSyncTimerId = null;
 
 /**
  * Tự động thu nhỏ các cột ngày không có môn thi (76px) để nhường không gian cho các cột ngày có môn thi.
@@ -369,23 +367,31 @@ function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
 
 /**
  * Gọi đồng bộ độ rộng cột ngay lập tức và sau nhịp render tiếp theo của trình duyệt.
+ * Hủy lịch đồng bộ cũ trước khi đặt lịch mới để tránh race condition khi gõ tìm kiếm nhanh.
  */
 function scheduleCalendarLayoutSync(eventsList = activeFilteredEvents) {
   adjustCalendarColumnWidths(eventsList);
   if (typeof setTimeout === "function") {
-    setTimeout(() => adjustCalendarColumnWidths(eventsList), 0);
+    if (layoutSyncTimerId !== null && typeof clearTimeout === "function") {
+      clearTimeout(layoutSyncTimerId);
+    }
+    layoutSyncTimerId = setTimeout(() => {
+      layoutSyncTimerId = null;
+      adjustCalendarColumnWidths(activeFilteredEvents);
+    }, 0);
   }
 }
 
 /**
- * Định dạng nhãn trục giờ của FullCalendar:
- * - Khi mode === "shift": Gộp đúng 4 hàng Ca 1..Ca 4 (không có hàng 08h00, 08h30 hay hàng nghỉ giữa ca).
- * - Khi mode === "hour": Hiển thị theo từng giờ chuẩn (07:00, 08:00...).
+ * Định dạng nhãn trục giờ của FullCalendar theo 4 hàng Ca thi cố định (Ca 1..Ca 4).
+ * Dùng duck-typing getTime() thay vì instanceof Date để hoạt động an toàn cross-realm.
  * @param {Date} dateObj
  * @param {string} mode
  */
-function formatSlotLabelByMode(dateObj, mode = currentSlotMode) {
-  if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return "";
+function formatSlotLabelByMode(dateObj, mode = "shift") {
+  if (!dateObj || typeof dateObj.getTime !== "function" || Number.isNaN(dateObj.getTime())) {
+    return "";
+  }
   const hh = String(dateObj.getHours()).padStart(2, "0");
   const mm = String(dateObj.getMinutes()).padStart(2, "0");
   const key = `${hh}:${mm}`;
@@ -458,7 +464,7 @@ function syncUniformShiftRowHeight(rawEvents = activeFilteredEvents) {
  * @param {Array<Record<string, any>>} rawEvents
  * @param {string} mode
  */
-function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentSlotMode) {
+function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = "shift") {
   const groupIndices = {};
   const uniformCapacity = syncUniformShiftRowHeight(rawEvents);
 
@@ -550,13 +556,11 @@ function renderCustomEventContent(arg) {
 
 /**
  * Trả về cấu hình khởi tạo FullCalendar với chế độ xem Tuần (timeGridWeek) & Tháng (dayGridMonth)
- * cùng tùy chọn gộp 4 hàng Ca thi (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00).
+ * cùng 4 hàng Ca thi cố định (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00).
  * @param {string} initialView
- * @param {string} slotMode
  */
-function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentSlotMode) {
+function getCalendarViewConfig(initialView = "timeGridWeek") {
   const safeView = initialView === "dayGridMonth" ? "dayGridMonth" : "timeGridWeek";
-  const isShiftAxis = slotMode !== "hour";
 
   return {
     initialView: safeView,
@@ -585,125 +589,20 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
       timeGridWeek: {
         type: "timeGrid",
         duration: { weeks: 1 },
-        buttonText: "Tuần (Week)",
+        buttonText: "Tuần",
       },
       dayGridMonth: {
         type: "dayGrid",
         duration: { months: 1 },
-        buttonText: "Tháng (Month)",
+        buttonText: "Tháng",
       },
     },
-    events: buildFullCalendarEvents(SAMPLE_EXAM_EVENTS, slotMode),
-    eventClick: (info) => {
-      if (info && info.event) {
-        updateCalendarInspector(info.event.extendedProps, info.event.start);
-      }
-    },
+    events: buildFullCalendarEvents(SAMPLE_EXAM_EVENTS, "shift"),
   };
 }
 
 /**
- * Cập nhật khung thông tin chi tiết khi người dùng chọn một môn thi trên lịch.
- * @param {Record<string, any>} props
- * @param {Date | string | null} startDate
- */
-function updateCalendarInspector(props, startDate) {
-  if (!props) return;
-  const titleEl = document.getElementById("calendar-inspector-title");
-  const metaEl = document.getElementById("calendar-inspector-meta");
-  const badgeEl = document.getElementById("calendar-inspector-badge");
-  const palette = SHIFT_COLOR_PALETTE[props.stt_ca] || SHIFT_COLOR_PALETTE[1];
-  const rooms = Array.isArray(props.rooms) ? props.rooms.join(", ") : String(props.rooms || "");
-  const dateLabel =
-    startDate instanceof Date
-      ? startDate.toLocaleDateString("vi-VN", {
-          weekday: "long",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-      : props.ngay_thi || "Đợt thi HK1 (12/2026)";
-
-  if (titleEl) {
-    titleEl.textContent = `${props.ma_mon} - ${props.ten_mon} • Bậc xung đột deg(v) = ${props.deg}`;
-  }
-  if (metaEl) {
-    metaEl.textContent = `${palette.label} (${dateLabel}) • Phòng thi FFD: ${rooms} • Sĩ số: ${props.so_luong_sv} SV`;
-  }
-  if (badgeEl) {
-    badgeEl.className = palette.badgeClass;
-    badgeEl.textContent = palette.badgeText;
-  }
-}
-
-/**
- * Kết xuất động bảng Lịch Thi Chia Theo 4 Ca Chuẩn (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00)
- * bằng DOM API an toàn (createElement & textContent).
- * @param {Array<Record<string, any>>} eventsList
- */
-function renderShiftMatrixTable(eventsList = SAMPLE_EXAM_EVENTS) {
-  const tbody = document.getElementById("calendar-shift-matrix-body");
-  if (!tbody || typeof document.createElement !== "function") return;
-
-  const rows = [];
-  for (let shiftNum = 1; shiftNum <= 4; shiftNum += 1) {
-    const palette = SHIFT_COLOR_PALETTE[shiftNum];
-    const tr = document.createElement("tr");
-
-    const labelTd = document.createElement("td");
-    labelTd.className = "font-bold text-slate-800 bg-slate-50/70";
-    const shiftMainText = document.createElement("div");
-    shiftMainText.textContent = palette.label;
-    const shiftSubText = document.createElement("span");
-    shiftSubText.className = "font-normal text-slate-500";
-    shiftSubText.textContent = palette.subLabel;
-    labelTd.appendChild(shiftMainText);
-    labelTd.appendChild(shiftSubText);
-    tr.appendChild(labelTd);
-
-    EXAM_WEEK_DAYS.forEach((dayIso) => {
-      const td = document.createElement("td");
-      const matches = eventsList.filter(
-        (ev) => Number(ev.stt_ca) === shiftNum && ev.ngay_thi === dayIso
-      );
-
-      if (matches.length === 0) {
-        td.className = "text-slate-500";
-        td.textContent = "Trống";
-      } else {
-        td.className = palette.cellBgClass;
-        matches.forEach((ev, idx) => {
-          const itemBox = document.createElement("div");
-          itemBox.className = idx > 0 ? "pt-1.5 border-t border-slate-200/60 cursor-pointer" : "cursor-pointer";
-          itemBox.addEventListener("click", () => updateCalendarInspector(ev, new Date(ev.start)));
-
-          const titleDiv = document.createElement("div");
-          titleDiv.className = palette.titleClass;
-          titleDiv.textContent = `${ev.ma_mon} - ${ev.ten_mon}`;
-
-          const roomDiv = document.createElement("div");
-          roomDiv.className = "text-slate-600";
-          const roomStr = Array.isArray(ev.rooms) ? ev.rooms.join(", ") : String(ev.rooms || "");
-          roomDiv.textContent = `Phòng: ${roomStr} (${ev.so_luong_sv} SV)`;
-
-          itemBox.appendChild(titleDiv);
-          itemBox.appendChild(roomDiv);
-          td.appendChild(itemBox);
-        });
-      }
-      tr.appendChild(td);
-    });
-
-    rows.push(tr);
-  }
-
-  if (typeof tbody.replaceChildren === "function") {
-    tbody.replaceChildren(...rows);
-  }
-}
-
-/**
- * Đồng bộ trạng thái ô chọn Tuần (timeGridWeek - Chia Ca / Theo Giờ) và nút Tháng (dayGridMonth).
+ * Đồng bộ trạng thái nút Tuần (timeGridWeek) / Tháng (dayGridMonth) và khung chọn Tuần/Tháng.
  * @param {string} viewName
  */
 function updateCalendarViewButtons(viewName) {
@@ -716,8 +615,7 @@ function updateCalendarViewButtons(viewName) {
   const fcContainer = document.getElementById("admin-fullcalendar");
 
   const isMonth = viewName === "dayGridMonth";
-  const isShiftOnly = viewName === "shiftGridWeek";
-  const isWeek = !isMonth && !isShiftOnly;
+  const isWeek = !isMonth;
 
   if (weekSelectGroup && weekSelectGroup.classList) {
     weekSelectGroup.classList.toggle("hidden", isMonth);
@@ -726,21 +624,14 @@ function updateCalendarViewButtons(viewName) {
     monthSelectGroup.classList.toggle("hidden", !isMonth);
   }
 
-  const activeWeekClass =
-    "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer";
-  const inactiveWeekClass =
-    "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200/70 focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer";
   const activeBtnClass =
     "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer";
   const inactiveBtnClass =
     "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer";
 
   if (weekBtn) {
-    weekBtn.className = isWeek ? activeWeekClass : inactiveWeekClass;
+    weekBtn.className = isWeek ? activeBtnClass : inactiveBtnClass;
     weekBtn.setAttribute("aria-pressed", isWeek ? "true" : "false");
-    if (typeof weekBtn.value === "string" && weekBtn.value !== currentSlotMode) {
-      weekBtn.value = currentSlotMode;
-    }
   }
   if (monthBtn) {
     monthBtn.className = isMonth ? activeBtnClass : inactiveBtnClass;
@@ -748,8 +639,7 @@ function updateCalendarViewButtons(viewName) {
   }
 
   if (fcContainer && fcContainer.classList) {
-    fcContainer.classList.toggle("hidden", isShiftOnly);
-    fcContainer.classList.toggle("is-shift-axis", currentSlotMode === "shift");
+    fcContainer.classList.add("is-shift-axis");
   }
 
   if (viewBadge) {
@@ -757,7 +647,7 @@ function updateCalendarViewButtons(viewName) {
   }
 
   if (rangeHeading) {
-    if (!isShiftOnly && adminCalendarInstance && adminCalendarInstance.view && adminCalendarInstance.view.title) {
+    if (adminCalendarInstance && adminCalendarInstance.view && adminCalendarInstance.view.title) {
       rangeHeading.textContent = adminCalendarInstance.view.title;
     } else {
       rangeHeading.textContent = isMonth
@@ -768,61 +658,14 @@ function updateCalendarViewButtons(viewName) {
 }
 
 /**
- * Chuyển đổi tùy chọn trong ô dropdown Tuần:
- * - "shift": Tuần: Chia Ca (Ca 1-4) (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00)
- * - "hour": Tuần: Theo Giờ (07:00 - 18:00)
- * Đồng thời tự động chuyển lịch sang chế độ xem Tuần (timeGridWeek) nếu đang ở chế độ Tháng.
- * @param {string} mode
- */
-function switchCalendarSlotMode(mode) {
-  currentSlotMode = mode === "hour" ? "hour" : "shift";
-  const weekSelect = document.getElementById("btn-view-week");
-  if (weekSelect && typeof weekSelect.value === "string" && weekSelect.value !== currentSlotMode) {
-    weekSelect.value = currentSlotMode;
-  }
-
-  if (currentCalendarView !== "timeGridWeek") {
-    currentCalendarView = "timeGridWeek";
-    if (adminCalendarInstance && typeof adminCalendarInstance.changeView === "function") {
-      adminCalendarInstance.changeView("timeGridWeek");
-    }
-  }
-
-  if (adminCalendarInstance && typeof adminCalendarInstance.setOption === "function") {
-    const isShiftAxis = currentSlotMode === "shift";
-    adminCalendarInstance.setOption("slotMinTime", isShiftAxis ? "01:00:00" : "07:00:00");
-    adminCalendarInstance.setOption("slotMaxTime", isShiftAxis ? "05:00:00" : "18:00:00");
-    adminCalendarInstance.setOption("slotDuration", "01:00:00");
-    adminCalendarInstance.setOption("slotLabelInterval", "01:00:00");
-    adminCalendarInstance.setOption("slotEventOverlap", false);
-    adminCalendarInstance.setOption("slotLabelContent", (arg) =>
-      formatSlotLabelByMode(arg.date, currentSlotMode)
-    );
-  }
-
-  filterCalendarEvents();
-  updateCalendarViewButtons(currentCalendarView);
-  return currentSlotMode;
-}
-
-/**
- * Chuyển đổi chế độ hiển thị của FullCalendar giữa Tuần (timeGridWeek), Chia Ca (shiftGridWeek) và Tháng (dayGridMonth).
+ * Chuyển đổi chế độ hiển thị của FullCalendar giữa Tuần (timeGridWeek) và Tháng (dayGridMonth).
  * @param {string} viewName
  */
 function switchCalendarView(viewName) {
-  let targetView = "timeGridWeek";
-  if (viewName === "dayGridMonth") {
-    targetView = "dayGridMonth";
-  } else if (viewName === "shiftGridWeek") {
-    targetView = "shiftGridWeek";
-  }
+  const targetView = viewName === "dayGridMonth" ? "dayGridMonth" : "timeGridWeek";
   currentCalendarView = targetView;
 
-  if (
-    targetView !== "shiftGridWeek" &&
-    adminCalendarInstance &&
-    typeof adminCalendarInstance.changeView === "function"
-  ) {
+  if (adminCalendarInstance && typeof adminCalendarInstance.changeView === "function") {
     adminCalendarInstance.changeView(targetView);
   }
   updateCalendarViewButtons(targetView);
@@ -849,7 +692,9 @@ function handleAcademicPeriodChange(changedField = "week") {
     if (semesterVal === "HK2") {
       if (weekSelect) weekSelect.value = "2027-01-18";
       if (monthSelect) monthSelect.value = "2027-01-01";
-    } else if (semesterVal === "HK1") {
+    } else if (semesterVal === "HK3") {
+      if (monthSelect) monthSelect.value = "2027-05-01";
+    } else {
       if (weekSelect) weekSelect.value = "2026-12-15";
       if (monthSelect) monthSelect.value = "2026-12-15";
     }
@@ -900,24 +745,6 @@ function handleAcademicPeriodChange(changedField = "week") {
 }
 
 /**
- * Điều hướng thời gian trên FullCalendar ('prev' | 'next' | 'today' hoặc ngày ISO).
- * @param {string} action
- */
-function navigateCalendar(action) {
-  if (!adminCalendarInstance) return;
-  if (action === "prev" && typeof adminCalendarInstance.prev === "function") {
-    adminCalendarInstance.prev();
-  } else if (action === "next" && typeof adminCalendarInstance.next === "function") {
-    adminCalendarInstance.next();
-  } else if (action === "today" && typeof adminCalendarInstance.gotoDate === "function") {
-    adminCalendarInstance.gotoDate("2026-12-15");
-  } else if (action && typeof adminCalendarInstance.gotoDate === "function") {
-    adminCalendarInstance.gotoDate(action);
-  }
-  updateCalendarViewButtons(currentCalendarView);
-}
-
-/**
  * Điền nhanh từ khóa gợi ý vào ô tìm kiếm và lọc sự kiện trên FullCalendar.
  * @param {string} keyword
  */
@@ -930,34 +757,16 @@ function applyCalendarSearchKeyword(keyword) {
 }
 
 /**
- * Tìm kiếm và lọc danh sách sự kiện trên FullCalendar & bảng Ma trận Chia Ca
- * theo từ khóa (mã môn, tên môn, phòng thi, ca thi) hoặc bộ lọc.
+ * Tìm kiếm và lọc danh sách sự kiện trên FullCalendar
+ * theo từ khóa (mã môn, tên môn, phòng thi, ca thi).
  */
 function filterCalendarEvents() {
   const searchInput = document.getElementById("calendar-search-input");
-  const courseSelect = document.getElementById("calendar-filter-course");
-  const roomSelect = document.getElementById("calendar-filter-room");
-  const shiftSelect = document.getElementById("calendar-filter-shift");
-  const summaryEl = document.getElementById("calendar-active-filter-summary");
-
   const queryRaw = searchInput ? String(searchInput.value || "").trim() : "";
   const query = queryRaw.toLowerCase();
-  const courseVal = courseSelect ? courseSelect.value : "ALL";
-  const roomVal = roomSelect ? roomSelect.value : "ALL";
-  const shiftVal = shiftSelect ? shiftSelect.value : "ALL";
 
   const filtered = SAMPLE_EXAM_EVENTS.filter((item) => {
-    const matchCourse = !courseVal || courseVal === "ALL" || item.ma_mon === courseVal;
-    const matchRoom =
-      !roomVal ||
-      roomVal === "ALL" ||
-      (Array.isArray(item.rooms) && item.rooms.includes(roomVal));
-    const matchShift =
-      !shiftVal || shiftVal === "ALL" || String(item.stt_ca) === String(shiftVal);
-
-    if (!matchCourse || !matchRoom || !matchShift) return false;
     if (!query) return true;
-
     const palette = SHIFT_COLOR_PALETTE[item.stt_ca] || SHIFT_COLOR_PALETTE[1];
     const roomStr = Array.isArray(item.rooms) ? item.rooms.join(" ") : String(item.rooms || "");
     const shiftStr = `ca ${item.stt_ca} ${palette.label}`;
@@ -971,33 +780,20 @@ function filterCalendarEvents() {
 
   if (adminCalendarInstance && typeof adminCalendarInstance.removeAllEvents === "function") {
     adminCalendarInstance.removeAllEvents();
-    const fcEvents = buildFullCalendarEvents(filtered, currentSlotMode);
+    const fcEvents = buildFullCalendarEvents(filtered, "shift");
     fcEvents.forEach((ev) => adminCalendarInstance.addEvent(ev));
   }
 
-  renderShiftMatrixTable(filtered);
   scheduleCalendarLayoutSync(filtered);
-
-  if (summaryEl) {
-    summaryEl.textContent = queryRaw
-      ? `Kết quả tìm kiếm "${queryRaw}": ${filtered.length}/${SAMPLE_EXAM_EVENTS.length} môn thi`
-      : `Đang hiển thị: ${filtered.length}/${SAMPLE_EXAM_EVENTS.length} môn thi phù hợp bộ lọc`;
-  }
   return filtered;
 }
 
 /**
- * Đặt lại ô tìm kiếm và toàn bộ bộ lọc về trạng thái mặc định.
+ * Đặt lại ô tìm kiếm về trạng thái mặc định.
  */
 function resetCalendarFilters() {
   const searchInput = document.getElementById("calendar-search-input");
-  const courseSelect = document.getElementById("calendar-filter-course");
-  const roomSelect = document.getElementById("calendar-filter-room");
-  const shiftSelect = document.getElementById("calendar-filter-shift");
   if (searchInput) searchInput.value = "";
-  if (courseSelect) courseSelect.value = "ALL";
-  if (roomSelect) roomSelect.value = "ALL";
-  if (shiftSelect) shiftSelect.value = "ALL";
   return filterCalendarEvents();
 }
 
@@ -1009,16 +805,12 @@ function initExamFullCalendar() {
   if (!calendarEl) return null;
 
   updateCalendarViewButtons(currentCalendarView);
-  renderShiftMatrixTable(SAMPLE_EXAM_EVENTS);
 
   if (!window.FullCalendar || typeof window.FullCalendar.Calendar !== "function") {
     return null;
   }
 
-  const config = getCalendarViewConfig(
-    currentCalendarView === "shiftGridWeek" ? "timeGridWeek" : currentCalendarView,
-    currentSlotMode
-  );
+  const config = getCalendarViewConfig(currentCalendarView);
   adminCalendarInstance = new window.FullCalendar.Calendar(calendarEl, config);
   adminCalendarInstance.render();
   updateCalendarViewButtons(currentCalendarView);
