@@ -26,6 +26,7 @@ test: test-host test-backend
 
 test-host:
 	$(PYTHON) tests/docker_setup_test.py
+	$(PYTHON) tests/caddy_config_test.py
 	$(PYTHON) tests/auth_test.py
 	$(PYTHON) tests/master_data_api_test.py
 	$(PYTHON) tests/layout_test.py
