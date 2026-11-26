@@ -1045,13 +1045,24 @@
             class="p-6 space-y-4"
           >
             <div class="space-y-1">
-              <label
-                for="import-entity-select"
-                class="block text-xs font-semibold text-slate-700"
-                >Danh mục dữ liệu</label
-              >
+              <div class="flex items-center justify-between gap-2">
+                <label
+                  for="import-entity-select"
+                  class="block text-xs font-semibold text-slate-700"
+                  >Danh mục dữ liệu</label
+                >
+                <button
+                  id="btn-download-import-template"
+                  type="button"
+                  onclick="downloadImportTemplate()"
+                  class="text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline transition"
+                >
+                  📄 Tải file mẫu (.csv)
+                </button>
+              </div>
               <select
                 id="import-entity-select"
+                onchange="handleImportEntityChange()"
                 class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-blue-500"
               >
                 <option value="ky_thi">Kỳ thi</option>
@@ -1060,6 +1071,16 @@
                 <option value="phong_thi">Phòng thi</option>
                 <option value="dang_ky_thi">Đăng ký thi</option>
               </select>
+            </div>
+
+            <div
+              id="import-template-guide"
+              class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[11px] text-slate-600 space-y-1"
+            >
+              <div class="font-semibold text-slate-700">
+                Cấu trúc cột chuẩn:
+              </div>
+              <p id="import-required-cols" class="font-mono text-slate-700 break-words"></p>
             </div>
 
             <div
@@ -1086,6 +1107,20 @@
                 id="import-selected-file"
                 class="hidden text-xs font-semibold text-blue-700 pt-1"
               ></p>
+            </div>
+
+            <div
+              id="import-preview-box"
+              class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1.5"
+            >
+              <p
+                id="import-preview-summary"
+                class="text-xs font-semibold text-slate-800"
+              ></p>
+              <ul
+                id="import-preview-list"
+                class="text-[11px] text-slate-600 space-y-1 max-h-28 overflow-y-auto"
+              ></ul>
             </div>
 
             <p

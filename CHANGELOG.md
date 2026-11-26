@@ -17,6 +17,10 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 - **Hoàn thiện Reverse Proxy Caddy (TV3 — Ngày 5):**
   - Bật nén `encode zstd gzip`, bổ sung header `Permissions-Policy`, tách định tuyến rõ `handle /api/v1/*` (kèm `Cache-Control: no-store`), `handle /docs*`, `handle /redoc*`, `handle /openapi.json` và `handle /` (`Cache-Control: no-cache`) trong `Caddyfile`.
   - Thêm bộ kiểm thử `tests/caddy_config_test.py` (`caddy validate`, giải nén `gzip`, kiểm tra định tuyến & OWASP headers) và đăng ký vào `Makefile`.
+- **Modal nạp dữ liệu CSV/Excel (`UC07`, TV5 — Ngày 5):**
+  - Nâng cấp modal `#import-data-modal` trong `web/index.html` và `web/js/admin/crud.js`: gợi ý cấu trúc cột chuẩn theo danh mục, tải tệp mẫu `.csv`, bộ phân tích CSV chuẩn RFC 4180, xem trước kết quả kiểm tra kèm cơ chế rollback toàn lô khi có dòng lỗi, và vô hiệu hóa Formula Injection (`=`, `+`, `-`, `@`).
+  - Gia cố biên bảo mật: dùng `Object.create(null)` chống prototype pollution qua tiêu đề cột `__proto__`, kiểm tra ngày lịch thực tế (`isValidIsoDate`), chuẩn hóa mã nghiệp vụ in hoa đồng bộ với form CRUD và reset trạng thái tệp khi bấm `Escape`.
+  - Thêm bộ kiểm thử `tests/import_ui_test.py` và đăng ký vào `Makefile` (đạt **20/20 bộ test**).
 - **Sự kiện mẫu FullCalendar có giờ ca, phòng thi & 4 màu phân biệt (TV4 — Ngày 5):**
   - Cập nhật `renderCustomEventContent` & tăng chiều cao thẻ lên `5.25rem` trong `web/js/admin/calendar.js`, mở rộng kiểm thử 4 bộ màu & DOM trong `tests/calendar_ui_test.py`.
 - **Chuẩn hóa kho mã nguồn mở & tự động hóa kiểm thử (TV3):**
