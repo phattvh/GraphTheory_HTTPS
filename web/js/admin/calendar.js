@@ -674,7 +674,50 @@ function switchCalendarView(viewName) {
 }
 
 /**
- * Điều hướng thời gian trên FullCalendar ('prev' | 'next' | 'today').
+ * Xử lý khi người dùng chọn Năm học, Học kỳ hoặc Tuần từ 3 ô dropdown điều hướng.
+ * @param {string} changedField ('year' | 'semester' | 'week')
+ */
+function handleAcademicPeriodChange(changedField = "week") {
+  const yearSelect = document.getElementById("calendar-select-year");
+  const semesterSelect = document.getElementById("calendar-select-semester");
+  const weekSelect = document.getElementById("calendar-select-week");
+  const rangeHeading = document.getElementById("calendar-current-range");
+
+  const yearVal = yearSelect ? yearSelect.value : "2026-2027";
+  const semesterVal = semesterSelect ? semesterSelect.value : "HK1";
+
+  if (changedField === "semester" && weekSelect) {
+    if (semesterVal === "HK2") {
+      weekSelect.value = "2027-01-18";
+    } else if (semesterVal === "HK1") {
+      weekSelect.value = "2026-12-15";
+    }
+  }
+
+  const targetDate = weekSelect && weekSelect.value ? weekSelect.value : "2026-12-15";
+  if (adminCalendarInstance && typeof adminCalendarInstance.gotoDate === "function") {
+    adminCalendarInstance.gotoDate(targetDate);
+  }
+
+  updateCalendarViewButtons(currentCalendarView);
+
+  if (rangeHeading && weekSelect && weekSelect.options && weekSelect.selectedIndex >= 0) {
+    const selectedOption = weekSelect.options[weekSelect.selectedIndex];
+    const weekLabel = selectedOption ? selectedOption.text : targetDate;
+    const semesterLabel =
+      semesterVal === "HK2" ? "Học Kỳ 2" : semesterVal === "HK3" ? "Học Kỳ Hè" : "Học Kỳ 1";
+    rangeHeading.textContent = `${semesterLabel} (${yearVal}) • Tuần: ${weekLabel}`;
+  }
+
+  return {
+    year: yearVal,
+    semester: semesterVal,
+    weekDate: targetDate,
+  };
+}
+
+/**
+ * Điều hướng thời gian trên FullCalendar ('prev' | 'next' | 'today' hoặc ngày ISO).
  * @param {string} action
  */
 function navigateCalendar(action) {
@@ -685,6 +728,8 @@ function navigateCalendar(action) {
     adminCalendarInstance.next();
   } else if (action === "today" && typeof adminCalendarInstance.gotoDate === "function") {
     adminCalendarInstance.gotoDate("2026-12-15");
+  } else if (action && typeof adminCalendarInstance.gotoDate === "function") {
+    adminCalendarInstance.gotoDate(action);
   }
   updateCalendarViewButtons(currentCalendarView);
 }

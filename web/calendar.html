@@ -94,6 +94,56 @@
       color: #1e293b;
       border-top: 1px solid #e2e8f0;
     }
+    /* Khung chọn Năm học / Học kỳ / Tuần có nhãn nổi trên viền giống ảnh mẫu */
+    .https-outlined-select-group {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .https-outlined-select-label {
+      position: absolute;
+      top: -7px;
+      left: 10px;
+      padding: 0 4px;
+      background-color: #ffffff;
+      font-size: 10.5px;
+      font-weight: 500;
+      line-height: 1;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .https-outlined-select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding: 7px 30px 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      background-color: #ffffff;
+      color: #1e293b;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.25;
+      cursor: pointer;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+    .https-outlined-select:hover {
+      border-color: #94a3b8;
+    }
+    .https-outlined-select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .https-outlined-select-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      color: #64748b;
+      pointer-events: none;
+    }
     @media (prefers-reduced-motion: reduce) {
       #admin-fullcalendar .fc-event {
         transition: none;
@@ -202,28 +252,59 @@
             </button>
           </div>
 
-          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần (2 tùy chọn: Chia Ca / Theo Giờ) + Tháng bên phải -->
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="btn-calendar-prev" onclick="navigateCalendar('prev')"
-              aria-label="Kỳ trước"
-              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-              ‹ Trước
-            </button>
-            <button type="button" id="btn-calendar-today" onclick="navigateCalendar('today')"
-              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-800 hover:bg-blue-100 transition cursor-pointer">
-              Tuần thi chính (15/12)
-            </button>
-            <button type="button" id="btn-calendar-next" onclick="navigateCalendar('next')"
-              aria-label="Kỳ tiếp"
-              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-              Tiếp ›
-            </button>
+          <!-- Cụm chọn Năm học / Học kỳ / Tuần & Chế độ xem Tuần / Tháng bên phải -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Ô chọn Năm học -->
+            <div class="https-outlined-select-group">
+              <label for="calendar-select-year" class="https-outlined-select-label">Năm học</label>
+              <select id="calendar-select-year" onchange="handleAcademicPeriodChange('year')"
+                aria-label="Chọn năm học"
+                class="https-outlined-select min-w-[118px] tabular-nums">
+                <option value="2025-2026">2025-2026</option>
+                <option value="2026-2027" selected>2026-2027</option>
+                <option value="2027-2028">2027-2028</option>
+              </select>
+              <svg class="https-outlined-select-arrow" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true">
+                <path d="M0 0.5L5 5.5L10 0.5H0Z" />
+              </svg>
+            </div>
+
+            <!-- Ô chọn Học kỳ -->
+            <div class="https-outlined-select-group">
+              <label for="calendar-select-semester" class="https-outlined-select-label">Học kỳ</label>
+              <select id="calendar-select-semester" onchange="handleAcademicPeriodChange('semester')"
+                aria-label="Chọn học kỳ"
+                class="https-outlined-select min-w-[116px]">
+                <option value="HK1" selected>Học Kỳ 1</option>
+                <option value="HK2">Học Kỳ 2</option>
+                <option value="HK3">Học Kỳ Hè</option>
+              </select>
+              <svg class="https-outlined-select-arrow" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true">
+                <path d="M0 0.5L5 5.5L10 0.5H0Z" />
+              </svg>
+            </div>
+
+            <!-- Ô chọn Tuần -->
+            <div class="https-outlined-select-group">
+              <label for="calendar-select-week" class="https-outlined-select-label">Tuần</label>
+              <select id="calendar-select-week" onchange="handleAcademicPeriodChange('week')"
+                aria-label="Chọn tuần thi"
+                class="https-outlined-select min-w-[188px] tabular-nums">
+                <option value="2026-12-07">07/12/2026-13/12/2026</option>
+                <option value="2026-12-15" selected>14/12/2026-20/12/2026</option>
+                <option value="2026-12-21">21/12/2026-27/12/2026</option>
+                <option value="2027-01-18">18/01/2027-24/01/2027</option>
+              </select>
+              <svg class="https-outlined-select-arrow" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true">
+                <path d="M0 0.5L5 5.5L10 0.5H0Z" />
+              </svg>
+            </div>
 
             <span class="h-4 w-[1px] bg-slate-200 mx-0.5" aria-hidden="true"></span>
 
-            <!-- Ô gộp chế độ xem Tuần với mũi tên xuống gồm 2 tùy chọn: Chia Ca (Ca 1-4) & Theo Giờ (Week) -->
+            <!-- Ô gộp chế độ xem Tuần với mũi tên xuống gồm 2 tùy chọn: Chia theo ca & Chia theo giờ -->
             <select id="btn-view-week" data-calendar-view="timeGridWeek"
-              aria-label="Chế độ xem Tuần (Chia Ca hoặc Theo Giờ)"
+              aria-label="Chế độ xem Tuần"
               aria-pressed="true"
               onclick="if (typeof currentCalendarView !== 'undefined' && currentCalendarView !== 'timeGridWeek') switchCalendarView('timeGridWeek')"
               onchange="switchCalendarSlotMode(this.value)"
