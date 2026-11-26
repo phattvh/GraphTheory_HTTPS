@@ -11,7 +11,7 @@ Dự án áp dụng kiến trúc phòng thủ nhiều lớp (chi tiết xem tạ
 
 ## Báo cáo lỗ hổng bảo mật
 
-Không đăng chi tiết lỗ hổng bảo mật lên issue công khai. Vui lòng liên hệ trực tiếp trưởng nhóm / phụ trách bảo mật (**TV3 — Trần Vũ Hòa Phát**) hoặc tạo báo cáo bảo mật riêng tư (Private Vulnerability Reporting) trên GitHub repository kèm:
+Không đăng chi tiết lỗ hổng bảo mật lên issue công khai. Vui lòng liên hệ trực tiếp **Trần Vũ Hòa Phát** hoặc tạo báo cáo bảo mật riêng tư (Private Vulnerability Reporting) trên GitHub repository kèm:
 
 - Mô tả lỗ hổng và mức độ ảnh hưởng.
 - Các bước tái hiện tối thiểu.
