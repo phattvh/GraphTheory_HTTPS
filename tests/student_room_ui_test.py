@@ -77,6 +77,33 @@ def test_room_management_ui_elements():
         assert marker in html, f"Thiếu phần tử UI Phòng thi: {marker}"
 
 
+def test_registration_management_ui_elements():
+    """Kiểm tra đầy đủ phần tử HTML cho màn hình Quản lý Đăng ký thi (UC05)."""
+    html = INDEX_HTML.read_text(encoding="utf-8")
+
+    for marker in [
+        'id="crud-panel-dang_ky_thi"',
+        'id="registration-count-label"',
+        'id="registration-course-filter"',
+        'onchange="renderRegistrationTable()"',
+        'id="registration-search-input"',
+        'oninput="renderRegistrationTable()"',
+        'id="registration-course-summary"',
+        "openImportModal('dang_ky_thi')",
+        'id="btn-open-registration-modal"',
+        'onclick="openRegistrationModal()"',
+        'id="registration-table-body"',
+        'id="registration-crud-modal"',
+        'id="registration-crud-form"',
+        'id="reg-form-ky-thi"',
+        'id="reg-form-ma-mon"',
+        'id="reg-form-mssv"',
+        'id="registration-form-error"',
+        "handleCrudModalBackdropClick(event, 'registration-crud-modal')",
+    ]:
+        assert marker in html, f"Thiếu phần tử UI Đăng ký thi (UC05): {marker}"
+
+
 def test_crud_js_logic_structure():
     """Kiểm tra cấu trúc logic CRUD Sinh viên & Phòng thi và an toàn XSS trong crud.js."""
     js = CRUD_JS.read_text(encoding="utf-8")
@@ -104,6 +131,14 @@ def test_crud_js_logic_structure():
         "function saveRoomForm",
         "function startEditRoom",
         "function deleteRoom",
+        "registrationRecords",
+        "function filterRegistrationByCourse",
+        "function renderRegistrationTable",
+        "function openRegistrationModal",
+        "function closeRegistrationModal",
+        "function saveRegistrationForm",
+        "function startEditRegistration",
+        "function deleteRegistration",
         "function openCrudModal",
         "function closeCrudModal",
         "function openDeleteAlert",
@@ -117,7 +152,7 @@ def test_no_removed_ui_artifacts():
     html = INDEX_HTML.read_text(encoding="utf-8")
     no_comments = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
 
-    for banned in ["UC03", "UC06", "UC08", "UC09"]:
+    for banned in ["UC03", "UC05", "UC06", "UC08", "UC09"]:
         assert banned not in no_comments, (
             f"Nhãn {banned} vẫn còn hiện trong UI (ngoài comment)"
         )
@@ -206,6 +241,19 @@ const elements = {
   "course-crud-modal":     makeEl("div", ["hidden"]),
   "exam-crud-modal":       makeEl("div", ["hidden"]),
   "import-data-modal":     makeEl("div", ["hidden"]),
+  "registration-crud-modal": makeEl("div", ["hidden"]),
+  "registration-crud-form":  makeEl("form"),
+  "registration-modal-title": makeEl("h3"),
+  "registration-modal-submit": makeEl("button"),
+  "registration-table-body": makeEl("tbody"),
+  "registration-count-label": makeEl("h3"),
+  "registration-course-filter": makeEl("select"),
+  "registration-search-input": makeEl("input"),
+  "registration-course-summary": makeEl("div"),
+  "reg-form-ky-thi":       makeEl("select"),
+  "reg-form-ma-mon":       makeEl("select"),
+  "reg-form-mssv":         makeEl("select"),
+  "registration-form-error": makeEl("p"),
 };
 
 const sandbox = {
@@ -302,6 +350,60 @@ assert.strictEqual(vm.runInContext("roomRecords.length", sandbox), roomBefore + 
 sandbox.deleteRoom("D401");
 sandbox.confirmPendingDelete();
 assert.strictEqual(vm.runInContext("roomRecords.length", sandbox), roomBefore);
+
+// --- 3. ĐĂNG KÝ THI (UC05): Lọc theo môn học, Thêm, Chống trùng lặp, Sửa, Xóa ---
+const regBefore = vm.runInContext("registrationRecords.length", sandbox);
+assert.ok(regBefore >= 5, "Phải có dữ liệu đăng ký thi mẫu");
+sandbox.renderRegistrationTable();
+assert.strictEqual(elements["registration-table-body"].children.length, regBefore);
+assert.ok(elements["registration-course-summary"].children.length > 1);
+
+// Lọc danh sách sinh viên đăng ký theo từng môn học (VD: IT001)
+sandbox.filterRegistrationByCourse("IT001");
+const it001Count = vm.runInContext('registrationRecords.filter((r) => r.ma_mon === "IT001").length', sandbox);
+assert.strictEqual(elements["registration-table-body"].children.length, it001Count);
+assert.ok(elements["registration-count-label"].textContent.includes("IT001"));
+
+// Chuyển lại tất cả môn học
+sandbox.filterRegistrationByCourse("ALL");
+assert.strictEqual(elements["registration-table-body"].children.length, regBefore);
+
+// Kiểm tra chặn đăng ký trùng (ma_ky_thi, ma_mon, mssv)
+sandbox.openRegistrationModal();
+assert.strictEqual(elements["registration-crud-modal"].classList.contains("hidden"), false);
+elements["reg-form-ky-thi"].value = "KTHK1_2026";
+elements["reg-form-ma-mon"].value = "IT001";
+elements["reg-form-mssv"].value = "22110399";
+sandbox.saveRegistrationForm({ preventDefault: () => {} });
+assert.strictEqual(elements["registration-crud-modal"].classList.contains("hidden"), false);
+assert.ok(elements["registration-form-error"].textContent.includes("đã đăng ký"));
+assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBefore);
+
+// Thêm đăng ký mới hợp lệ
+elements["reg-form-ma-mon"].value = "IT006";
+elements["reg-form-mssv"].value = "22110399";
+sandbox.saveRegistrationForm({ preventDefault: () => {} });
+assert.strictEqual(elements["registration-crud-modal"].classList.contains("hidden"), true);
+assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBefore + 1);
+
+// Sửa bản ghi đăng ký mới thêm
+const newRegId = vm.runInContext('registrationRecords.find((r) => r.ma_mon === "IT006" && r.mssv === "22110399").id', sandbox);
+sandbox.startEditRegistration(newRegId);
+assert.strictEqual(elements["registration-crud-modal"].classList.contains("hidden"), false);
+elements["reg-form-ma-mon"].value = "IT007";
+sandbox.saveRegistrationForm({ preventDefault: () => {} });
+assert.strictEqual(elements["registration-crud-modal"].classList.contains("hidden"), true);
+const editedReg = vm.runInContext(`registrationRecords.find((r) => r.id === ${newRegId})`, sandbox);
+assert.strictEqual(editedReg.ma_mon, "IT007");
+
+// Xóa đăng ký -> bật alert xác nhận
+sandbox.deleteRegistration(newRegId);
+assert.strictEqual(elements["delete-confirm-modal"].classList.contains("hidden"), false);
+sandbox.closeDeleteAlert();
+assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBefore + 1);
+sandbox.deleteRegistration(newRegId);
+sandbox.confirmPendingDelete();
+assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBefore);
 """
 
     res = subprocess.run(
@@ -320,7 +422,8 @@ if __name__ == "__main__":
     test_tv5_files_exist()
     test_student_management_ui_elements()
     test_room_management_ui_elements()
+    test_registration_management_ui_elements()
     test_crud_js_logic_structure()
     test_no_removed_ui_artifacts()
     test_crud_js_node_student_and_room_runtime()
-    print("ALL STUDENT & ROOM UI TESTS PASSED!")
+    print("ALL STUDENT, ROOM & REGISTRATION UI TESTS PASSED!")
