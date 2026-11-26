@@ -21,7 +21,7 @@ def test_calendar_files_exist():
 
 
 def test_calendar_html_fullcalendar_cdn_and_views():
-    """Kiểm tra nhúng thư viện FullCalendar qua CDN và các nút cấu hình xem Tháng/Tuần."""
+    """Kiểm tra nhúng thư viện FullCalendar qua CDN, các nút xem Tháng/Tuần/Chia Ca và tùy chọn chia ca theo giờ."""
     html = (WEB_DIR / "calendar.html").read_text(encoding="utf-8")
     js = (WEB_DIR / "js" / "admin" / "calendar.js").read_text(encoding="utf-8")
 
@@ -35,10 +35,17 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         'id="calendar-filter-course"',
         'id="calendar-filter-room"',
         'id="calendar-filter-shift"',
+        'id="calendar-slot-mode"',
         'id="btn-view-week"',
         'data-calendar-view="timeGridWeek"',
+        'id="btn-view-shift"',
+        'data-calendar-view="shiftGridWeek"',
         'id="btn-view-month"',
         'data-calendar-view="dayGridMonth"',
+        "Ca 1: 7h30 - 9h00",
+        "Ca 2: 9h30 - 11h00",
+        "Ca 3: 13h30 - 15h00",
+        "Ca 4: 15h30 - 17h00",
         'src="/js/admin/calendar.js"',
     ]:
         assert required_marker in html, f"web/calendar.html thiếu thành phần bắt buộc: {required_marker}"
@@ -46,10 +53,14 @@ def test_calendar_html_fullcalendar_cdn_and_views():
     for js_marker in [
         "function initExamFullCalendar",
         "function getCalendarViewConfig",
+        "function formatSlotLabelByMode",
+        "function switchCalendarSlotMode",
         "function switchCalendarView",
         "function filterCalendarEvents",
         "function resetCalendarFilters",
+        "function renderShiftMatrixTable",
         "timeGridWeek",
+        "shiftGridWeek",
         "dayGridMonth",
         "window.FullCalendar",
     ]:
@@ -59,7 +70,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
 
 
 def test_calendar_js_runtime_view_switch_and_filters():
-    """Chạy kiểm thử runtime bằng Node.js cho logic cấu hình Tháng/Tuần và lọc sự kiện của calendar.js."""
+    """Chạy kiểm thử runtime bằng Node.js cho logic cấu hình Tháng/Tuần/Chia Ca, chia ca theo giờ và lọc sự kiện."""
     if not shutil.which("node"):
         return
 
@@ -68,23 +79,37 @@ const fs = require("fs");
 const vm = require("vm");
 const assert = require("assert");
 
+const makeClassList = (initial = []) => {
+  const set = new Set(initial);
+  return {
+    add: (...cls) => cls.forEach((c) => set.add(c)),
+    remove: (...cls) => cls.forEach((c) => set.delete(c)),
+    toggle: (c, force) => (force === undefined ? (set.has(c) ? set.delete(c) : set.add(c)) : (force ? set.add(c) : set.delete(c))),
+    contains: (c) => set.has(c),
+  };
+};
+
 const elements = {
   "btn-view-week": { className: "", setAttribute: function(k, v) { this[k] = v; } },
+  "btn-view-shift": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "btn-view-month": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "calendar-view-badge": { textContent: "" },
   "calendar-current-range": { textContent: "" },
   "calendar-filter-course": { value: "ALL" },
   "calendar-filter-room": { value: "ALL" },
   "calendar-filter-shift": { value: "ALL" },
+  "calendar-slot-mode": { value: "shift" },
   "calendar-active-filter-summary": { textContent: "" },
   "calendar-inspector-title": { textContent: "" },
   "calendar-inspector-meta": { textContent: "" },
   "calendar-inspector-badge": { className: "", textContent: "" },
-  "admin-fullcalendar": {},
+  "admin-fullcalendar": { classList: makeClassList(["is-shift-axis"]) },
+  "calendar-shift-matrix-body": { replaceChildren: function(...rows) { this.rows = rows; } },
 };
 
 let renderedView = null;
 let currentEvents = [];
+let optionsLog = {};
 
 class FakeFullCalendar {
   constructor(el, config) {
@@ -99,6 +124,9 @@ class FakeFullCalendar {
     renderedView = viewName;
     this.view.title = viewName === "dayGridMonth" ? "Tháng 12 Năm 2026" : "15 – 20 Thg 12, 2026";
   }
+  setOption(key, val) {
+    optionsLog[key] = val;
+  }
   removeAllEvents() {
     currentEvents = [];
   }
@@ -110,6 +138,14 @@ class FakeFullCalendar {
 const sandbox = {
   document: {
     getElementById: (id) => elements[id] || null,
+    createElement: (tag) => ({
+      tagName: tag,
+      className: "",
+      textContent: "",
+      children: [],
+      appendChild: function(c) { this.children.push(c); },
+      addEventListener: () => {},
+    }),
     addEventListener: () => {},
   },
   window: {
@@ -120,30 +156,65 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync("web/js/admin/calendar.js", "utf8"), sandbox);
 
-// 1. Khởi tạo mặc định ở chế độ xem Tuần (timeGridWeek)
+// 1. Khởi tạo mặc định ở chế độ xem Tuần (timeGridWeek) với trục giờ chia theo Ca (shift)
 const cal = sandbox.initExamFullCalendar();
 assert.ok(cal);
 assert.strictEqual(renderedView, "timeGridWeek");
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
+assert.strictEqual(elements["btn-view-shift"]["aria-pressed"], "false");
 assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "false");
 assert.strictEqual(currentEvents.length, 15);
 
-// 2. Chuyển sang chế độ xem Tháng (dayGridMonth) và ngược lại
+// 2. Kiểm tra hàm định dạng nhãn chia ca theo giờ (Ca 1: 7h30 - 9h00, Ca 2: 9h30 - 11h00...)
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T07:30:00"), "shift"),
+  "Ca 1: 7h30 - 9h00"
+);
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T09:30:00"), "shift"),
+  "Ca 2: 9h30 - 11h00"
+);
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T13:30:00"), "shift"),
+  "Ca 3: 13h30 - 15h00"
+);
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T15:30:00"), "shift"),
+  "Ca 4: 15h30 - 17h00"
+);
+assert.strictEqual(
+  sandbox.formatSlotLabelByMode(new Date("2026-12-15T08:00:00"), "hour"),
+  "08:00"
+);
+
+// 3. Chuyển đổi qua lại giữa Chia theo Giờ chuẩn ("hour") và Chia theo Ca ("shift")
+assert.strictEqual(sandbox.switchCalendarSlotMode("hour"), "hour");
+assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
+assert.strictEqual(elements["admin-fullcalendar"].classList.contains("is-shift-axis"), false);
+
+assert.strictEqual(sandbox.switchCalendarSlotMode("shift"), "shift");
+assert.strictEqual(optionsLog.slotMinTime, "07:30:00");
+assert.strictEqual(elements["admin-fullcalendar"].classList.contains("is-shift-axis"), true);
+
+// 4. Chuyển sang chế độ Chia Ca (shiftGridWeek), Tháng (dayGridMonth) và Tuần (timeGridWeek)
+assert.strictEqual(sandbox.switchCalendarView("shiftGridWeek"), "shiftGridWeek");
+assert.strictEqual(elements["btn-view-shift"]["aria-pressed"], "true");
+assert.strictEqual(elements["admin-fullcalendar"].classList.contains("hidden"), true);
+
 assert.strictEqual(sandbox.switchCalendarView("dayGridMonth"), "dayGridMonth");
 assert.strictEqual(renderedView, "dayGridMonth");
 assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "true");
-assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "false");
+assert.strictEqual(elements["admin-fullcalendar"].classList.contains("hidden"), false);
 
 assert.strictEqual(sandbox.switchCalendarView("timeGridWeek"), "timeGridWeek");
 assert.strictEqual(renderedView, "timeGridWeek");
 
-// 3. Kiểm tra bộ lọc Ca thi & Phòng thi
+// 5. Kiểm tra bộ lọc Ca thi & Đặt lại
 elements["calendar-filter-shift"].value = "1";
 const shift1Events = sandbox.filterCalendarEvents();
 assert.ok(shift1Events.length > 0 && shift1Events.length < 15);
 assert.strictEqual(currentEvents.length, shift1Events.length);
 
-// 4. Đặt lại bộ lọc trả về đủ 15 môn
 const allEvents = sandbox.resetCalendarFilters();
 assert.strictEqual(allEvents.length, 15);
 assert.strictEqual(currentEvents.length, 15);
@@ -163,7 +234,7 @@ def test_caddy_serves_calendar_assets():
     try:
         for path, marker in [
             ("/calendar.html", "fullcalendar@6.1.15"),
-            ("/js/admin/calendar.js", "initExamFullCalendar"),
+            ("/js/admin/calendar.js", "switchCalendarSlotMode"),
         ]:
             with urllib.request.urlopen(BASE_URL + path, context=SSL_CTX, timeout=3) as resp:
                 body = resp.read().decode("utf-8")
