@@ -1,27 +1,57 @@
-# GraphTheory_HTTPS
+<p align="center">
+  <img src="web/assets/logo.svg" alt="HTTPS — GraphTheory Exam Scheduler" width="220">
+</p>
 
-Hệ thống xếp lịch thi tập trung cho sinh viên bằng thuật toán tô màu đồ thị (**DSatur** & **Welsh–Powell**) kết hợp phân phòng **First-Fit Decreasing (FFD)**.
+<h1 align="center">GraphTheory_HTTPS</h1>
+
+<p align="center">
+  Hệ thống xếp lịch thi tập trung cho sinh viên bằng thuật toán tô màu đồ thị (<strong>DSatur</strong> &amp; <strong>Welsh–Powell</strong>) kết hợp phân phòng <strong>First-Fit Decreasing (FFD)</strong>, đóng gói 100% Docker-First với Auto HTTPS.
+</p>
+
+Tài liệu thiết kế chi tiết nằm trong thư mục [docs](docs/README.md). Nhật ký thay đổi theo từng giai đoạn được ghi trong [CHANGELOG.md](CHANGELOG.md).
+
+## Thành phần hệ thống
+
+| Thành phần | Công nghệ / Image | Vai trò chính |
+|---|---|---|
+| **Reverse Proxy & Web** | `caddy:2-alpine` | Auto HTTPS (`local_certs`), Security Headers (HSTS, `X-Frame-Options`, `nosniff`), phục vụ giao diện tĩnh `web/` và proxy `/api/*`, `/docs*` |
+| **Backend & Thuật toán** | `python:3.12-slim` (FastAPI, NetworkX, SQLAlchemy, PyJWT, bcrypt) | Xác thực Native JWT + RBAC, CRUD dữ liệu danh mục, dựng đồ thị xung đột $G=(V,E,W)$, tô màu DSatur/Welsh–Powell & phân phòng FFD |
+| **Cơ sở dữ liệu** | `postgres:16-alpine` | Lưu trữ chuẩn 3NF gồm 8 bảng, ràng buộc toàn vẹn `CHECK`/`UNIQUE`/`FK`, chỉ mục B-tree và giao dịch ACID |
+| **Giao diện người dùng** | HTML5, Tailwind CSS CDN, Vanilla JS (`Cytoscape.js`, `FullCalendar`, `Chart.js`) | Cổng Quản trị (CRUD modal nổi, đồ thị tương tác, lịch toàn trường, thống kê) và Cổng Sinh viên tra cứu lịch cá nhân |
 
 ## Khởi chạy nhanh (100% Docker Images)
 
+Chỉ cần cài **Docker (có Docker Compose)**, **Git** và **make** (không cần cài PostgreSQL hay Python venv trực tiếp trên máy):
+
 ```bash
+git clone https://github.com/phattvh/GraphTheory_HTTPS.git
+cd GraphTheory_HTTPS
 cp .env.example .env
-docker compose up -d --build
+make up
 ```
 
-- **Web HTTPS (Caddy):** `https://localhost` *(hoặc HTTP: `http://localhost:8080`)*
+Sau khi khởi chạy thành công:
+- **Trang Quản trị (HTTPS):** `https://localhost` *(hoặc HTTP: `http://localhost:8080`)*
+- **Đăng nhập:** `https://localhost/login.html` *(tài khoản mặc định dev: `admin` / `admin123`)*
 - **Cổng Sinh viên:** `https://localhost/student.html`
 - **Swagger UI (FastAPI):** `https://localhost/docs`
 
-## Chạy kiểm thử
+## Kiểm thử tự động
+
+Chạy toàn bộ bộ kiểm thử (từ host và bên trong container `fastapi`) bằng một lệnh duy nhất:
 
 ```bash
-python3 tests/docker_setup_test.py
-python3 tests/layout_test.py
-docker compose exec fastapi python tests/graph_builder_test.py
+make test
 ```
 
-## Tài liệu thiết kế (`docs/`)
-- [01. Product features.md](./docs/01.%20Product%20features.md) · [02. Use case diagram.md](./docs/02.%20Use%20case%20diagram.md) · [03. Architecture and algorithms.md](./docs/03.%20Architecture%20and%20algorithms.md)
-- [04. Database design.md](./docs/04.%20Database%20design.md) · [05. Flow diagrams.md](./docs/05.%20Flow%20diagrams.md) · [06. Security and authorization.md](./docs/06.%20Security%20and%20authorization.md)
-- [07. Technology stack.md](./docs/07.%20Technology%20stack.md) · [08. Implementation plan.md](./docs/08.%20Implementation%20plan.md) · [09. Project structure.md](./docs/09.%20Project%20structure.md)
+Xem danh sách lệnh hỗ trợ bằng `make help` hoặc hướng dẫn chi tiết trong [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Tham gia phát triển
+
+- Quy trình nhánh Git, Conventional Commits & kiểm thử: xem [CONTRIBUTING.md](CONTRIBUTING.md).
+- Kiến trúc bảo mật & báo cáo lỗ hổng: xem [SECURITY.md](SECURITY.md).
+- Mục lục toàn bộ tài liệu thiết kế: xem [docs/README.md](docs/README.md).
+
+## Giấy phép
+
+Dự án được phát hành theo giấy phép [Apache-2.0](LICENSE).
