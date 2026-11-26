@@ -107,6 +107,7 @@ def test_admin_pages_and_student_structure():
     ]:
         assert panel_id in index_html, f"index.html thiếu thành phần {panel_id}"
     assert 'id="crud-active-heading"' not in index_html, "Đã bỏ banner tiêu đề thừa phía trên bảng CRUD"
+    assert "Cấu hình Kỳ thi hiện tại" not in index_html, "Đã bỏ khung mockup tĩnh Cấu hình Kỳ thi hiện tại"
     assert 'src="/js/admin/crud.js"' in index_html
     for fn in [
         "switchCrudEntity",
