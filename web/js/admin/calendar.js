@@ -429,6 +429,7 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     slotDuration: "01:00:00",
     slotLabelInterval: "01:00:00",
     slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, slotMode),
+    eventDisplay: "block",
     eventContent: (arg) => renderCustomEventContent(arg),
     expandRows: true,
     height: "auto",

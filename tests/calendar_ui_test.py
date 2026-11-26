@@ -78,11 +78,19 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "function renderShiftMatrixTable",
         "SHIFT_AXIS_ROWS",
         "SHIFT_COMPACT_TIME_RANGES",
+        'eventDisplay: "block"',
         "timeGridWeek",
         "dayGridMonth",
         "window.FullCalendar",
     ]:
         assert js_marker in js, f"web/js/admin/calendar.js thiếu hàm/cấu hình: {js_marker}"
+
+    for removed_text in [
+        "0% Trùng ca SV",
+        "Khung thời gian đợt thi:",
+        "Đang hiển thị: Tất cả 15 môn",
+    ]:
+        assert removed_text not in html, f"web/calendar.html vẫn còn chuỗi cần xóa: {removed_text}"
 
     assert "Nghỉ chuyển ca" not in js and "Nghỉ trưa" not in js, "Không được còn các hàng nghỉ giữa ca"
     assert "innerHTML" not in js, "web/js/admin/calendar.js không được dùng innerHTML để tránh XSS"
