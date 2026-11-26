@@ -874,52 +874,12 @@ function populateRegistrationFilterOptions() {
     const count = registrationRecords.filter((r) => r.ma_mon === course.ma_mon).length;
     const opt = document.createElement("option");
     opt.value = course.ma_mon;
-    opt.textContent = `${course.ma_mon} - ${course.ten_mon} (${count} SV)`;
+    opt.textContent = `${course.ma_mon} (${count} SV)`;
     filterEl.appendChild(opt);
   });
 
   const exists = currentVal === "ALL" || courseRecords.some((c) => c.ma_mon === currentVal);
   filterEl.value = exists ? currentVal : "ALL";
-}
-
-function filterRegistrationByCourse(maMon) {
-  const filterEl = document.getElementById("registration-course-filter");
-  if (filterEl) {
-    filterEl.value = maMon || "ALL";
-  }
-  renderRegistrationTable();
-}
-
-function renderRegistrationCourseSummary(selectedCourse) {
-  const summaryEl = document.getElementById("registration-course-summary");
-  if (!summaryEl) return;
-
-  summaryEl.replaceChildren();
-
-  const allBtn = document.createElement("button");
-  allBtn.type = "button";
-  const isAllActive = !selectedCourse || selectedCourse === "ALL";
-  allBtn.className = isAllActive
-    ? "px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-sm transition"
-    : "px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition";
-  allBtn.textContent = `Tất cả (${registrationRecords.length})`;
-  allBtn.onclick = () => filterRegistrationByCourse("ALL");
-  summaryEl.appendChild(allBtn);
-
-  courseRecords.forEach((course) => {
-    const count = registrationRecords.filter((r) => r.ma_mon === course.ma_mon).length;
-    if (count === 0 && selectedCourse !== course.ma_mon) return;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    const isActive = selectedCourse === course.ma_mon;
-    btn.className = isActive
-      ? "px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-sm transition font-mono"
-      : "px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition font-mono";
-    btn.textContent = `${course.ma_mon}: ${count} SV`;
-    btn.title = `${course.ma_mon} - ${course.ten_mon} (${count} sinh viên đăng ký)`;
-    btn.onclick = () => filterRegistrationByCourse(course.ma_mon);
-    summaryEl.appendChild(btn);
-  });
 }
 
 function renderRegistrationTable() {
@@ -931,7 +891,6 @@ function renderRegistrationTable() {
 
   populateRegistrationFilterOptions();
   const selectedCourse = filterEl ? filterEl.value : "ALL";
-  renderRegistrationCourseSummary(selectedCourse);
 
   const q = (searchEl ? searchEl.value : "").trim().toLowerCase();
   const enriched = registrationRecords.map(enrichRegistrationRecord);
@@ -953,9 +912,7 @@ function renderRegistrationTable() {
 
   if (countEl) {
     if (selectedCourse && selectedCourse !== "ALL") {
-      const course = courseRecords.find((c) => c.ma_mon === selectedCourse);
-      const courseTitle = course ? `${course.ma_mon} - ${course.ten_mon}` : selectedCourse;
-      countEl.textContent = `Danh sách Sinh viên đăng ký môn ${courseTitle} (${filtered.length} sinh viên)`;
+      countEl.textContent = `Danh sách Sinh viên đăng ký môn ${selectedCourse} (${filtered.length} sinh viên)`;
     } else {
       countEl.textContent = `Danh sách Đăng ký dự thi theo Môn học (${filtered.length} lượt đăng ký)`;
     }
@@ -1019,7 +976,7 @@ function populateRegistrationFormSelects() {
     courseRecords.forEach((mh) => {
       const opt = document.createElement("option");
       opt.value = mh.ma_mon;
-      opt.textContent = `${mh.ma_mon} - ${mh.ten_mon}`;
+      opt.textContent = mh.ma_mon;
       courseSelect.appendChild(opt);
     });
   }
