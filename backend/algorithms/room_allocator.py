@@ -24,14 +24,27 @@ def _safe_str(value: Any, default: str = "") -> str:
 
 
 def _safe_non_negative_int(value: Any, default: int = 0) -> int:
-    """Ép kiểu số nguyên không âm an toàn, chống crash với None/bool/chuỗi bẩn."""
+    """Ép kiểu số nguyên không âm an toàn, chống crash với None/bool/inf/chuỗi bẩn."""
     if value is None or isinstance(value, bool):
         return default
     try:
         parsed = int(value)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return default
     return parsed if parsed >= 0 else 0
+
+
+def _is_room_active(value: Any) -> bool:
+    """Chuẩn hóa cờ dang_su_dung, từ chối False, 0, và chuỗi 'false'/'0'/'no'/'off'."""
+    if value is None:
+        return True
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        return value.strip().lower() not in {"false", "0", "no", "off", ""}
+    return bool(value)
 
 
 def _normalize_course_item(course: Any, fallback_size: int = 0) -> Dict[str, Any]:
@@ -73,7 +86,7 @@ def _normalize_room_item(room: Any) -> Optional[Dict[str, Any]]:
     """Chuẩn hóa dữ liệu phòng thi đầu vào; trả về None nếu phòng không hợp lệ/đang khóa."""
     if not isinstance(room, dict):
         return None
-    if room.get("dang_su_dung", True) is False:
+    if not _is_room_active(room.get("dang_su_dung", True)):
         return None
 
     ma_phong = _safe_str(room.get("ma_phong"))
@@ -147,12 +160,15 @@ def allocate_shift_rooms_ffd(
             "total_students_unallocated": 0,
         }
 
-    # 2. Chuẩn hóa & sắp xếp môn giảm dần theo nguyên lý FFD
-    norm_courses = [_normalize_course_item(c) for c in courses]
-    norm_courses = [c for c in norm_courses if c["ma_mon"]]
+    # 2. Chuẩn hóa, khử trùng ma_mon trong cùng ca & sắp xếp giảm dần theo nguyên lý FFD
+    dedup_courses: Dict[str, Dict[str, Any]] = {}
+    for raw_course in courses:
+        norm = _normalize_course_item(raw_course)
+        if norm["ma_mon"] and norm["ma_mon"] not in dedup_courses:
+            dedup_courses[norm["ma_mon"]] = norm
 
     sorted_courses = sorted(
-        norm_courses,
+        dedup_courses.values(),
         key=lambda c: (c["size"], c["ma_mon"]),
         reverse=True,
     )
@@ -279,15 +295,27 @@ def allocate_exam_rooms_ffd(
     max_rooms_count = 0
     all_courses_set = set()
 
-    for shift_id, course_list in sorted(shifts.items()):
+    def _shift_sort_key(item: Any) -> tuple:
+        key = item[0]
+        if isinstance(key, int) and not isinstance(key, bool):
+            return (0, key, "")
+        return (1, 0, str(key))
+
+    for shift_id, course_list in sorted(shifts.items(), key=_shift_sort_key):
         shift_course_items = []
-        for ma_mon in course_list:
+        for ma_mon in course_list or []:
             clean_ma = _safe_str(ma_mon)
             if not clean_ma:
                 continue
             all_courses_set.add(clean_ma)
-            size = _safe_non_negative_int(course_sizes.get(ma_mon, 0))
-            ten_mon = _safe_str(course_names.get(ma_mon, ""))
+            raw_size = course_sizes.get(ma_mon)
+            if raw_size is None:
+                raw_size = course_sizes.get(clean_ma, 0)
+            size = _safe_non_negative_int(raw_size)
+            raw_name = course_names.get(ma_mon)
+            if raw_name is None:
+                raw_name = course_names.get(clean_ma, "")
+            ten_mon = _safe_str(raw_name)
             shift_course_items.append({
                 "ma_mon": clean_ma,
                 "size": size,
