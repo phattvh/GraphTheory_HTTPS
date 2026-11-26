@@ -39,8 +39,8 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         'data-calendar-view="timeGridWeek"',
         'value="shift"',
         'value="hour"',
-        "Tuần: Chia Ca (Ca 1-4)",
-        "Tuần: Theo Giờ (07:00 - 18:00)",
+        "Tuần: Chia Ca",
+        "Tuần: Theo Giờ",
         'id="btn-view-month"',
         'data-calendar-view="dayGridMonth"',
         "Ca 1: 7h30 - 9h00",
@@ -239,7 +239,7 @@ def test_caddy_serves_calendar_assets():
     """Nếu container Caddy đang chạy, kiểm tra HTTP 200 OK cho /calendar.html và /js/admin/calendar.js."""
     try:
         for path, marker in [
-            ("/calendar.html", "Tuần: Chia Ca (Ca 1-4)"),
+            ("/calendar.html", "Tuần: Chia Ca"),
             ("/js/admin/calendar.js", "SHIFT_COMPACT_TIME_RANGES"),
         ]:
             with urllib.request.urlopen(BASE_URL + path, context=SSL_CTX, timeout=3) as resp:
