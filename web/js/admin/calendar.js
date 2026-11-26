@@ -326,9 +326,9 @@ function updateCalendarViewButtons(viewName) {
 
   const isMonth = viewName === "dayGridMonth";
   const activeClass =
-    "px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-900 text-white shadow-sm transition cursor-pointer";
+    "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white shadow-sm transition cursor-pointer";
   const inactiveClass =
-    "px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 hover:text-slate-900 transition cursor-pointer";
+    "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer";
 
   if (weekBtn) {
     weekBtn.className = isMonth ? inactiveClass : activeClass;
