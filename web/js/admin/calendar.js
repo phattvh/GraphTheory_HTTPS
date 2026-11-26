@@ -448,7 +448,7 @@ function getMaxCoursesPerShiftSlot(rawEvents = SAMPLE_EXAM_EVENTS) {
 function syncUniformShiftRowHeight(rawEvents = activeFilteredEvents) {
   const calendarEl = document.getElementById("admin-fullcalendar");
   const uniformCapacity = getMaxCoursesPerShiftSlot(rawEvents);
-  const rowHeightRem = (uniformCapacity * 4.5).toFixed(2);
+  const rowHeightRem = (uniformCapacity * 5.25).toFixed(2);
   if (calendarEl && calendarEl.style && typeof calendarEl.style.setProperty === "function") {
     calendarEl.style.setProperty("--https-shift-row-height", `${rowHeightRem}rem`);
   }
@@ -531,33 +531,33 @@ function renderCustomEventContent(arg) {
   wrapper.className =
     "flex flex-col justify-center h-full px-1 py-0.5 leading-snug whitespace-normal break-words";
 
-    const tdCourseName = document.createElement("div");
-    tdCourseName.className = "font-bold text-xs whitespace-normal break-words";
-    tdCourseName.textContent = props.ma_mon
-      ? `${props.ma_mon} - ${props.ten_mon}`
-      : (arg.event && arg.event.title) || "";
+  const tdCourseName = document.createElement("div");
+  tdCourseName.className = "font-bold text-xs whitespace-normal break-words";
+  tdCourseName.textContent = props.ma_mon
+    ? `${props.ma_mon} - ${props.ten_mon}`
+    : (arg.event && arg.event.title) || "";
 
-    const shiftText = props.khung_gio_ca
-      ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
-      : props.stt_ca
-        ? `Ca ${props.stt_ca}`
-        : "";
+  const shiftText = props.khung_gio_ca
+    ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
+    : props.stt_ca
+      ? `Ca ${props.stt_ca}`
+      : "";
 
-    const metaEl = document.createElement("div");
-    metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
-    if (roomText && shiftText) {
-      metaEl.textContent = `${shiftText} • Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
-    } else if (roomText) {
-      metaEl.textContent = `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
-    } else {
-      metaEl.textContent = shiftText;
-    }
+  const metaEl = document.createElement("div");
+  metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
+  if (roomText && shiftText) {
+    metaEl.textContent = `${shiftText} • Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
+  } else if (roomText) {
+    metaEl.textContent = `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
+  } else {
+    metaEl.textContent = shiftText;
+  }
 
-    wrapper.appendChild(tdCourseName);
-    if (metaEl.textContent) {
-      wrapper.appendChild(metaEl);
-    }
-    return { domNodes: [wrapper] };
+  wrapper.appendChild(tdCourseName);
+  if (metaEl.textContent) {
+    wrapper.appendChild(metaEl);
+  }
+  return { domNodes: [wrapper] };
 }
 
 /**
