@@ -1,4 +1,4 @@
-.PHONY: help up down logs test test-host test-backend clean
+.PHONY: help up down logs seed test test-host test-backend clean
 
 PYTHON ?= python3
 COMPOSE ?= docker compose
@@ -8,6 +8,7 @@ help:
 	@echo "  make up            Khởi chạy 3 container Docker (postgres, fastapi, caddy)"
 	@echo "  make down          Dừng các container Docker"
 	@echo "  make logs          Xem log realtime của các container"
+	@echo "  make seed          Nạp dữ liệu mẫu chuẩn vào PostgreSQL (1 kỳ thi, 15 môn, 100 SV, 10 phòng, 300 đăng ký)"
 	@echo "  make test          Chạy toàn bộ bộ kiểm thử (host + container fastapi)"
 	@echo "  make test-host     Chạy các bộ kiểm thử HTTP / Frontend / Docs từ máy host"
 	@echo "  make test-backend  Chạy các bộ kiểm thử CSDL / Thuật toán / RBAC trong container"
@@ -21,6 +22,9 @@ down:
 
 logs:
 	$(COMPOSE) logs -f --tail=100
+
+seed:
+	$(COMPOSE) exec -T fastapi python scripts/seed.py
 
 test: test-host test-backend
 
@@ -41,6 +45,7 @@ test-backend:
 	$(COMPOSE) exec -T fastapi python tests/db_schema_test.py
 	$(COMPOSE) exec -T fastapi python tests/backend_db_test.py
 	$(COMPOSE) exec -T fastapi python tests/models_schemas_test.py
+	$(COMPOSE) exec -T fastapi python tests/seed_test.py
 	$(COMPOSE) exec -T fastapi python tests/graph_builder_test.py
 	$(COMPOSE) exec -T fastapi python tests/dsatur_test.py
 	$(COMPOSE) exec -T fastapi python tests/welsh_powell_test.py
