@@ -37,6 +37,7 @@ test-host:
 	$(PYTHON) tests/login_test.py
 	$(PYTHON) tests/student_room_ui_test.py
 	$(PYTHON) tests/import_ui_test.py
+	$(PYTHON) tests/graph_ui_test.py
 	$(PYTHON) tests/calendar_ui_test.py
 	$(PYTHON) tests/docs_test.py
 
