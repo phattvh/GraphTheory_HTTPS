@@ -249,10 +249,10 @@ currentEvents.forEach((ev) => {
 const renderedDom = sandbox.renderCustomEventContent({ event: currentEvents[0] });
 assert.ok(renderedDom && Array.isArray(renderedDom.domNodes) && renderedDom.domNodes.length === 1);
 const cardNode = renderedDom.domNodes[0];
-assert.strictEqual(cardNode.children.length, 2);
+assert.strictEqual(cardNode.children.length, 3);
 assert.ok(cardNode.children[0].textContent.includes("IT002 - Cấu trúc Dữ liệu & Giải thuật"));
-assert.ok(cardNode.children[1].textContent.includes("Ca 1: 7h30 - 9h00"));
-assert.ok(cardNode.children[1].textContent.includes("A101, A102"));
+assert.strictEqual(cardNode.children[1].textContent, "Ca 1: 7h30 - 9h00");
+assert.ok(cardNode.children[2].textContent.includes("Phòng: A101, A102"));
 """
     res = subprocess.run(
         ["node", "-e", script],

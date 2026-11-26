@@ -543,20 +543,22 @@ function renderCustomEventContent(arg) {
       ? `Ca ${props.stt_ca}`
       : "";
 
-  const metaEl = document.createElement("div");
-  metaEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
-  if (roomText && shiftText) {
-    metaEl.textContent = `${shiftText} • Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
-  } else if (roomText) {
-    metaEl.textContent = `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
-  } else {
-    metaEl.textContent = shiftText;
+  wrapper.appendChild(tdCourseName);
+
+  if (shiftText) {
+    const shiftEl = document.createElement("div");
+    shiftEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
+    shiftEl.textContent = shiftText;
+    wrapper.appendChild(shiftEl);
   }
 
-  wrapper.appendChild(tdCourseName);
-  if (metaEl.textContent) {
-    wrapper.appendChild(metaEl);
+  if (roomText) {
+    const roomEl = document.createElement("div");
+    roomEl.className = "text-[11px] opacity-90 whitespace-normal break-words mt-0.5";
+    roomEl.textContent = `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)`;
+    wrapper.appendChild(roomEl);
   }
+
   return { domNodes: [wrapper] };
 }
 
