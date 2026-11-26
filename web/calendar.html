@@ -3,11 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTTPS — Lịch thi Toàn trường FullCalendar</title>
+  <title>HTTPS - Lịch thi Toàn trường FullCalendar</title>
   <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
-  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <!-- Tailwind CSS & FullCalendar v6 CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/vi.global.min.js" defer></script>
   <link rel="stylesheet" href="/css/layout.css" />
+  <style>
+    /* Phân cấp Typography chuẩn tỷ lệ >= 1.25:1 & tinh chỉnh FullCalendar (Data-Dense Academic Schedule) */
+    #tab-calendar h2 {
+      font-size: 1.375rem;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+    #tab-calendar h3 {
+      font-size: 1.05rem;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+    #tab-calendar h4 {
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      letter-spacing: 0.04em;
+    }
+    #admin-fullcalendar {
+      --fc-border-color: #e2e8f0;
+      --fc-page-bg-color: #ffffff;
+      --fc-neutral-bg-color: #f8fafc;
+      --fc-today-bg-color: rgba(37, 99, 235, 0.05);
+      --fc-now-indicator-color: #2563eb;
+      --fc-event-border-color: transparent;
+      font-family: inherit;
+    }
+    #admin-fullcalendar .fc-col-header-cell {
+      background-color: #f8fafc;
+      padding: 10px 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    #admin-fullcalendar .fc-timegrid-slot-label,
+    #admin-fullcalendar .fc-daygrid-day-number {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+    }
+    #admin-fullcalendar .fc-event {
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1.35;
+      cursor: pointer;
+      transition: transform 150ms ease, opacity 150ms ease;
+    }
+    #admin-fullcalendar .fc-event:hover {
+      transform: translateY(-1px);
+    }
+    #admin-fullcalendar .fc-daygrid-event {
+      white-space: normal;
+    }
+    .shift-matrix-table th,
+    .shift-matrix-table td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    .shift-matrix-table thead th {
+      background-color: #f8fafc;
+      font-weight: 700;
+      color: #1e293b;
+      border-top: 1px solid #e2e8f0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #admin-fullcalendar .fc-event {
+        transition: none;
+      }
+    }
+  </style>
 </head>
 <body data-admin-page="calendar" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
@@ -15,85 +91,300 @@
     <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
     <div id="admin-shell-mount"></div>
 
-    <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-6">
+    <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-5">
       <!-- MÀN HÌNH FIGMA 04: LỊCH THI TOÀN TRƯỜNG FULLCALENDAR (UC10, UC10.1) -->
       <section id="tab-calendar" class="admin-tab-section flex-1 space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-              Lọc Môn học: Tất cả 15 môn ▾
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-              Lọc Phòng thi: Tất cả 10 phòng ▾
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-              Lọc Ca thi: Tất cả các ca ▾
+
+        <!-- Thanh tiêu đề kỳ thi & Chú giải 4 màu ca thi (Sắc số DSatur χ(G) = 4) -->
+        <header class="flex flex-wrap items-end justify-between gap-4 pb-2 border-b border-slate-200">
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="font-bold text-slate-900">Lịch thi Toàn trường: Học kỳ 1 (2026 - 2027)</h2>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600" aria-hidden="true"></span>
+                0% Trùng ca SV • χ(G) = 4 Ca thi
+              </span>
+            </div>
+            <p class="text-xs text-slate-600">
+              Khung thời gian đợt thi: <strong class="font-semibold text-slate-800 tabular-nums">15/12/2026 - 22/12/2026</strong> • Phân bổ <strong id="calendar-summary-count" class="font-semibold text-slate-800 tabular-nums">15 học phần</strong> vào 10 phòng thi tiêu chuẩn (FFD Bin Packing).
+            </p>
+          </div>
+
+          <!-- Bảng chú giải màu sắc số Ca 1 -> Ca 4 (Không dùng nested card border) -->
+          <div class="flex flex-wrap items-center gap-3 text-xs" aria-label="Chú giải màu ca thi">
+            <span class="inline-flex items-center gap-1.5 font-semibold text-blue-900">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600" aria-hidden="true"></span>
+              Ca 1 (07:30 - 09:00)
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-900">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600" aria-hidden="true"></span>
+              Ca 2 (09:30 - 11:00)
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-semibold text-amber-900">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-600" aria-hidden="true"></span>
+              Ca 3 (13:30 - 15:00)
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-semibold text-violet-900">
+              <span class="w-2.5 h-2.5 rounded-full bg-violet-600" aria-hidden="true"></span>
+              Ca 4 (15:30 - 17:00)
+            </span>
+          </div>
+        </header>
+
+        <!-- Thanh công cụ Bộ lọc (Môn học / Phòng thi / Ca thi) & Chuyển đổi chế độ xem Tháng/Tuần -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 no-print">
+          <!-- Cụm bộ lọc trái -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex items-center gap-1.5">
+              <label for="calendar-filter-course" class="text-xs font-semibold text-slate-700">Môn học:</label>
+              <select id="calendar-filter-course" onchange="filterCalendarEvents()"
+                aria-label="Lọc theo môn học"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+                <option value="ALL">Lọc Môn học: Tất cả 15 môn</option>
+                <option value="IT001">IT001: Lý thuyết Đồ thị</option>
+                <option value="IT002">IT002: Cấu trúc Dữ liệu &amp; GT</option>
+                <option value="IT003">IT003: Hệ Quản trị CSDL</option>
+                <option value="IT004">IT004: Lập trình Web</option>
+                <option value="IT005">IT005: An toàn Thông tin</option>
+                <option value="IT006">IT006: Trí tuệ Nhân tạo</option>
+                <option value="IT007">IT007: Mạng Máy tính</option>
+                <option value="IT008">IT008: Toán Rời rạc &amp; Tổ hợp</option>
+                <option value="IT009">IT009: Giải tích 1</option>
+                <option value="IT010">IT010: Đại số Tuyến tính</option>
+                <option value="IT011">IT011: Kiến trúc Máy tính</option>
+                <option value="IT012">IT012: Lập trình OOP</option>
+                <option value="IT013">IT013: Công nghệ Phần mềm</option>
+                <option value="IT014">IT014: Hệ điều hành</option>
+                <option value="IT015">IT015: Xác suất Thống kê</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <label for="calendar-filter-room" class="text-xs font-semibold text-slate-700">Phòng thi:</label>
+              <select id="calendar-filter-room" onchange="filterCalendarEvents()"
+                aria-label="Lọc theo phòng thi"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+                <option value="ALL">Lọc Phòng thi: Tất cả 10 phòng</option>
+                <option value="A101">Phòng A101 (100 chỗ)</option>
+                <option value="A102">Phòng A102 (80 chỗ)</option>
+                <option value="A103">Phòng A103 (90 chỗ)</option>
+                <option value="B201">Phòng B201 (100 chỗ)</option>
+                <option value="B202">Phòng B202 (80 chỗ)</option>
+                <option value="B203">Phòng B203 (80 chỗ)</option>
+                <option value="C301">Phòng C301 (60 chỗ)</option>
+                <option value="C302">Phòng C302 (60 chỗ)</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <label for="calendar-filter-shift" class="text-xs font-semibold text-slate-700">Ca thi:</label>
+              <select id="calendar-filter-shift" onchange="filterCalendarEvents()"
+                aria-label="Lọc theo ca thi"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/70 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+                <option value="ALL">Lọc Ca thi: Tất cả các ca</option>
+                <option value="1">Ca 1 (07:30 - 09:00)</option>
+                <option value="2">Ca 2 (09:30 - 11:00)</option>
+                <option value="3">Ca 3 (13:30 - 15:00)</option>
+                <option value="4">Ca 4 (15:30 - 17:00)</option>
+              </select>
+            </div>
+
+            <button type="button" id="btn-calendar-reset-filter" onclick="resetCalendarFilters()"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              Đặt lại
             </button>
           </div>
-          <div class="flex items-center gap-2">
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
+
+          <!-- Cụm điều hướng tuần/tháng & Chế độ xem Tuần / Tháng bên phải -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btn-calendar-prev" onclick="navigateCalendar('prev')"
+              aria-label="Kỳ trước"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+              ‹ Trước
+            </button>
+            <button type="button" id="btn-calendar-today" onclick="navigateCalendar('today')"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-800 hover:bg-blue-100 transition cursor-pointer">
+              Tuần thi chính (15/12)
+            </button>
+            <button type="button" id="btn-calendar-next" onclick="navigateCalendar('next')"
+              aria-label="Kỳ tiếp"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+              Tiếp ›
+            </button>
+
+            <span class="h-4 w-[1px] bg-slate-200 mx-0.5" aria-hidden="true"></span>
+
+            <!-- Chuyển chế độ xem Tuần (timeGridWeek) / Tháng (dayGridMonth) -->
+            <button type="button" id="btn-view-week" data-calendar-view="timeGridWeek"
+              aria-pressed="true" onclick="switchCalendarView('timeGridWeek')"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer">
               Tuần (Week)
             </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+            <button type="button" id="btn-view-month" data-calendar-view="dayGridMonth"
+              aria-pressed="false" onclick="switchCalendarView('dayGridMonth')"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:text-slate-900 transition cursor-pointer">
               Tháng (Month)
             </button>
-            <button type="button" onclick="window.print()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
-              🖨️ In Lịch Toàn Trường (PDF)
+
+            <button type="button" id="btn-print-calendar" onclick="window.print()"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+              In Lịch Toàn Trường (PDF)
             </button>
           </div>
         </div>
 
-        <div id="admin-fullcalendar-shell" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <div class="grid grid-cols-6 gap-2 text-xs font-bold text-slate-800 text-center">
-            <div class="p-3 rounded-lg bg-slate-100">Khung giờ / Ca thi</div>
-            <div class="p-3 rounded-lg bg-slate-100">Thứ Hai (15/12)</div>
-            <div class="p-3 rounded-lg bg-slate-100">Thứ Ba (16/12)</div>
-            <div class="p-3 rounded-lg bg-slate-100">Thứ Tư (17/12)</div>
-            <div class="p-3 rounded-lg bg-slate-100">Thứ Năm (18/12)</div>
-            <div class="p-3 rounded-lg bg-slate-100">Thứ Sáu (19/12)</div>
+        <!-- Khung chính hiển thị FullCalendar (Tuần / Tháng) & Bảng Ma trận Ca thi -->
+        <div id="admin-fullcalendar-shell" class="bg-white p-6 rounded-xl border border-slate-200 space-y-6">
+          <!-- Tiêu đề động đồng bộ với chế độ xem FullCalendar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
+            <div class="flex flex-wrap items-center gap-3">
+              <span id="calendar-view-badge" class="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-800">
+                Chế độ xem: Tuần (timeGridWeek)
+              </span>
+              <h3 id="calendar-current-range" class="font-bold text-slate-900 tabular-nums">
+                Tuần thi: Thứ Hai 15/12/2026 - Thứ Bảy 20/12/2026
+              </h3>
+            </div>
+            <div id="calendar-active-filter-summary" class="text-xs font-medium text-slate-600">
+              Đang hiển thị: Tất cả 15 môn • 10 phòng • 4 ca thi
+            </div>
           </div>
 
-          <div class="grid grid-cols-6 gap-2 text-xs">
-            <div class="p-3 rounded-lg bg-slate-100 font-bold text-slate-800">Ca 1 (07:30 - 09:00)<br/><span class="font-normal text-slate-500">[Màu 1]</span></div>
-            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
-              <div class="font-bold text-blue-900">🔵 IT002 - CTDL &amp; GT</div>
-              <div class="text-slate-600">Phòng: A101, A102 (180 SV)</div>
-              <div class="font-bold text-blue-900 pt-1">🔵 IT005 - An toàn TT</div>
-              <div class="text-slate-600">Phòng: B201 (95 SV)</div>
+          <!-- Container mount trực tiếp của thư viện FullCalendar.js -->
+          <div id="admin-fullcalendar" class="min-h-[520px] w-full" aria-label="Lịch thi toàn trường FullCalendar"></div>
+
+          <!-- Thanh chi tiết Ca thi / Môn thi khi người dùng chọn sự kiện trên FullCalendar -->
+          <div id="calendar-event-inspector" class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="space-y-0.5">
+              <div class="font-bold text-slate-900" id="calendar-inspector-title">
+                Chi tiết ca thi đang chọn: IT002 - Cấu trúc Dữ liệu &amp; Giải thuật (Bậc xung đột deg(v) = 11)
+              </div>
+              <div class="text-slate-600" id="calendar-inspector-meta">
+                Ca 1 (07:30 - 09:00, Thứ Hai 15/12/2026) • Phòng thi FFD: A101, A102 • Sĩ số: 180 SV (Nhấp vào môn thi trên lịch để xem chi tiết)
+              </div>
             </div>
-            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
-              <div class="font-bold text-blue-900">🔵 IT009 - Giải tích 1</div>
-              <div class="text-slate-600">Phòng: A101, A103 (190 SV)</div>
-            </div>
-            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
-              <div class="font-bold text-blue-900">🔵 IT012 - Lập trình OOP</div>
-              <div class="text-slate-600">Phòng: B202, B203 (150 SV)</div>
-            </div>
-            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
-              <div class="font-bold text-blue-900">🔵 IT014 - Hệ điều hành</div>
-              <div class="text-slate-600">Phòng: A101 (110 SV)</div>
-            </div>
-            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống (Dự phòng)</div>
+            <span id="calendar-inspector-badge" class="px-3 py-1 rounded-full font-semibold bg-blue-100 text-blue-900">
+              Ca 1 • Màu sắc số #1
+            </span>
           </div>
 
-          <div class="grid grid-cols-6 gap-2 text-xs">
-            <div class="p-3 rounded-lg bg-slate-100 font-bold text-slate-800">Ca 2 (09:30 - 11:00)<br/><span class="font-normal text-slate-500">[Màu 2]</span></div>
-            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
-              <div class="font-bold text-emerald-900">🟢 IT001 - Lý thuyết Đồ thị</div>
-              <div class="text-slate-600">Phòng: A101, A102 (145 SV)</div>
-              <div class="font-bold text-emerald-900 pt-1">🟢 IT006 - Trí tuệ Nhân tạo</div>
-              <div class="text-slate-600">Phòng: B201, B202 (160 SV)</div>
+          <!-- Bảng tổng hợp Ma trận 4 Ca thi × Ngày thi (Dùng bảng ngữ nghĩa chuẩn, không lồng card) -->
+          <div id="calendar-shift-matrix" class="pt-4 border-t border-slate-200 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 class="font-bold uppercase text-slate-600">
+                Bảng tổng hợp Ma trận Ca thi × Ngày thi (Tuần cao điểm 15/12 - 19/12/2026)
+              </h4>
+              <span class="text-xs text-slate-500">Đảm bảo 0 cạnh xung đột cùng ca thi</span>
             </div>
-            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
-              <div class="font-bold text-emerald-900">🟢 IT010 - Đại số Tuyến tính</div>
-              <div class="text-slate-600">Phòng: A101 (120 SV)</div>
+
+            <div class="overflow-x-auto">
+              <table class="shift-matrix-table w-full text-xs border-collapse">
+                <thead>
+                  <tr>
+                    <th class="w-40">Khung giờ / Ca thi</th>
+                    <th>Thứ Hai (15/12)</th>
+                    <th>Thứ Ba (16/12)</th>
+                    <th>Thứ Tư (17/12)</th>
+                    <th>Thứ Năm (18/12)</th>
+                    <th>Thứ Sáu (19/12)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Ca 1 -->
+                  <tr>
+                    <td class="font-bold text-slate-800 bg-slate-50/70">
+                      Ca 1 (07:30 - 09:00)<br/>
+                      <span class="font-normal text-slate-500">[Màu 1]</span>
+                    </td>
+                    <td class="bg-blue-50/50 space-y-1">
+                      <div class="font-bold text-blue-900">IT002 - CTDL &amp; GT</div>
+                      <div class="text-slate-600">Phòng: A101, A102 (180 SV)</div>
+                      <div class="font-bold text-blue-900 pt-1">IT005 - An toàn TT</div>
+                      <div class="text-slate-600">Phòng: B201 (95 SV)</div>
+                    </td>
+                    <td class="bg-blue-50/50 space-y-1">
+                      <div class="font-bold text-blue-900">IT009 - Giải tích 1</div>
+                      <div class="text-slate-600">Phòng: A101, A103 (190 SV)</div>
+                    </td>
+                    <td class="bg-blue-50/50 space-y-1">
+                      <div class="font-bold text-blue-900">IT012 - Lập trình OOP</div>
+                      <div class="text-slate-600">Phòng: B202, B203 (150 SV)</div>
+                    </td>
+                    <td class="bg-blue-50/50 space-y-1">
+                      <div class="font-bold text-blue-900">IT014 - Hệ điều hành</div>
+                      <div class="text-slate-600">Phòng: A101 (110 SV)</div>
+                    </td>
+                    <td class="text-slate-500">Trống (Dự phòng)</td>
+                  </tr>
+
+                  <!-- Ca 2 -->
+                  <tr>
+                    <td class="font-bold text-slate-800 bg-slate-50/70">
+                      Ca 2 (09:30 - 11:00)<br/>
+                      <span class="font-normal text-slate-500">[Màu 2]</span>
+                    </td>
+                    <td class="bg-emerald-50/50 space-y-1">
+                      <div class="font-bold text-emerald-900">IT001 - Lý thuyết Đồ thị</div>
+                      <div class="text-slate-600">Phòng: A101, A102 (145 SV)</div>
+                      <div class="font-bold text-emerald-900 pt-1">IT006 - Trí tuệ Nhân tạo</div>
+                      <div class="text-slate-600">Phòng: B201, B202 (160 SV)</div>
+                    </td>
+                    <td class="bg-emerald-50/50 space-y-1">
+                      <div class="font-bold text-emerald-900">IT010 - Đại số Tuyến tính</div>
+                      <div class="text-slate-600">Phòng: A101 (120 SV)</div>
+                    </td>
+                    <td class="bg-emerald-50/50 space-y-1">
+                      <div class="font-bold text-emerald-900">IT013 - Công nghệ PM</div>
+                      <div class="text-slate-600">Phòng: B201 (135 SV)</div>
+                    </td>
+                    <td class="text-slate-500">Trống</td>
+                    <td class="text-slate-500">Trống</td>
+                  </tr>
+
+                  <!-- Ca 3 -->
+                  <tr>
+                    <td class="font-bold text-slate-800 bg-slate-50/70">
+                      Ca 3 (13:30 - 15:00)<br/>
+                      <span class="font-normal text-slate-500">[Màu 3]</span>
+                    </td>
+                    <td class="bg-amber-50/50 space-y-1">
+                      <div class="font-bold text-amber-900">IT008 - Toán Rời rạc</div>
+                      <div class="text-slate-600">Phòng: A101, A102 (175 SV)</div>
+                      <div class="font-bold text-amber-900 pt-1">IT004 - Lập trình Web</div>
+                      <div class="text-slate-600">Phòng: B201 (110 SV)</div>
+                    </td>
+                    <td class="bg-amber-50/50 space-y-1">
+                      <div class="font-bold text-amber-900">IT011 - Kiến trúc MT</div>
+                      <div class="text-slate-600">Phòng: A103 (90 SV)</div>
+                    </td>
+                    <td class="text-slate-500">Trống</td>
+                    <td class="bg-amber-50/50 space-y-1">
+                      <div class="font-bold text-amber-900">IT015 - Xác suất TK</div>
+                      <div class="text-slate-600">Phòng: B202, B203 (140 SV)</div>
+                    </td>
+                    <td class="text-slate-500">Trống</td>
+                  </tr>
+
+                  <!-- Ca 4 -->
+                  <tr>
+                    <td class="font-bold text-slate-800 bg-slate-50/70">
+                      Ca 4 (15:30 - 17:00)<br/>
+                      <span class="font-normal text-slate-500">[Màu 4]</span>
+                    </td>
+                    <td class="bg-violet-50/50 space-y-1">
+                      <div class="font-bold text-violet-900">IT003 - Hệ QT CSDL</div>
+                      <div class="text-slate-600">Phòng: B201, B202 (132 SV)</div>
+                      <div class="font-bold text-violet-900 pt-1">IT007 - Mạng Máy tính</div>
+                      <div class="text-slate-600">Phòng: A101, C301 (125 SV)</div>
+                    </td>
+                    <td class="text-slate-500">Trống</td>
+                    <td class="text-slate-500">Trống</td>
+                    <td class="text-slate-500">Trống</td>
+                    <td class="text-slate-500">Trống</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
-              <div class="font-bold text-emerald-900">🟢 IT013 - Công nghệ PM</div>
-              <div class="text-slate-600">Phòng: B201 (135 SV)</div>
-            </div>
-            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống</div>
-            <div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400">Trống</div>
           </div>
         </div>
       </section>
@@ -102,5 +393,6 @@
 
   <script src="/js/core/auth.js"></script>
   <script src="/js/admin/layout.js"></script>
+  <script src="/js/admin/calendar.js" defer></script>
 </body>
 </html>
