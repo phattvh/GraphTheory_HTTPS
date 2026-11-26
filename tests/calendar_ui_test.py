@@ -193,15 +193,22 @@ assert.strictEqual(
 );
 
 // 3. Chuyển đổi qua lại giữa Chia theo Giờ chuẩn ("hour") và Chia theo Ca ("shift")
+// Các môn cùng ca + cùng ngày (IT002, IT005 ở Ca 1 ngày 15/12) được xếp thành các dải hàng ngang nối tiếp nhau (không đè cột dọc 50%)
 assert.strictEqual(sandbox.switchCalendarSlotMode("hour"), "hour");
 assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "18:00:00");
 assert.strictEqual(currentEvents[0].start, "2026-12-15T07:30:00");
+assert.strictEqual(currentEvents[0].end, "2026-12-15T08:15:00");
+assert.strictEqual(currentEvents[1].start, "2026-12-15T08:15:00");
+assert.strictEqual(currentEvents[1].end, "2026-12-15T09:00:00");
 
 assert.strictEqual(sandbox.switchCalendarSlotMode("shift"), "shift");
 assert.strictEqual(optionsLog.slotMinTime, "01:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "05:00:00");
 assert.strictEqual(currentEvents[0].start, "2026-12-15T01:00:00");
+assert.strictEqual(currentEvents[0].end, "2026-12-15T01:30:00");
+assert.strictEqual(currentEvents[1].start, "2026-12-15T01:30:00");
+assert.strictEqual(currentEvents[1].end, "2026-12-15T02:00:00");
 
 // 4. Chuyển sang chế độ Chia Ca (shiftGridWeek), Tháng (dayGridMonth) và Tuần (timeGridWeek)
 assert.strictEqual(sandbox.switchCalendarView("shiftGridWeek"), "shiftGridWeek");
