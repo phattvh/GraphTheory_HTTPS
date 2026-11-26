@@ -7,6 +7,9 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 ## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
 
 ### Đã thêm (Added)
+- **Hoàn thiện Reverse Proxy Caddy (TV3 — Ngày 5):**
+  - Bật nén `encode zstd gzip`, bổ sung header `Permissions-Policy`, tách định tuyến rõ `handle /api/v1/*` (kèm `Cache-Control: no-store`), `handle /docs*`, `handle /redoc*`, `handle /openapi.json` và `handle /` (`Cache-Control: no-cache`) trong `Caddyfile`.
+  - Thêm bộ kiểm thử `tests/caddy_config_test.py` (`caddy validate`, giải nén `gzip`, kiểm tra định tuyến & OWASP headers) và đăng ký vào `Makefile`.
 - **Chuẩn hóa kho mã nguồn mở & tự động hóa kiểm thử (TV3):**
   - Thêm `Makefile` chuẩn hóa toàn bộ lệnh vận hành (`make up`, `make down`, `make logs`, `make test`, `make test-host`, `make test-backend`, `make clean`).
   - Nâng cấp `README.md` (logo vector, bảng kiến trúc thành phần, hướng dẫn Quick Start 1 lệnh) và bổ sung `docs/README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
