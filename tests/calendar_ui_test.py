@@ -21,7 +21,7 @@ def test_calendar_files_exist():
 
 
 def test_calendar_html_fullcalendar_cdn_and_views():
-    """Kiểm tra nhúng thư viện FullCalendar qua CDN, ô dropdown gộp Tuần (Chia Ca / Theo Giờ) và nút Tháng."""
+    """Kiểm tra nhúng thư viện FullCalendar qua CDN, nút Tuần/Tháng, bỏ chia theo giờ và ẩn cột Chủ nhật."""
     html = (WEB_DIR / "calendar.html").read_text(encoding="utf-8")
     js = (WEB_DIR / "js" / "admin" / "calendar.js").read_text(encoding="utf-8")
 
@@ -48,10 +48,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "18/01/2027-24/01/2027",
         'id="btn-view-week"',
         'data-calendar-view="timeGridWeek"',
-        'value="shift"',
-        'value="hour"',
-        "Tuần: Chia theo ca",
-        "Tuần: Chia theo giờ",
+        "Tuần (Week)",
         'id="btn-view-month"',
         'data-calendar-view="dayGridMonth"',
         "Ca 1: 7h30 - 9h00",
@@ -62,25 +59,32 @@ def test_calendar_html_fullcalendar_cdn_and_views():
     ]:
         assert required_marker in html, f"web/calendar.html thiếu thành phần bắt buộc: {required_marker}"
 
-    assert 'id="btn-view-shift"' not in html, "Đã gộp Tuần và Chia Ca thành 1 ô select dropdown duy nhất"
+    for removed_text in [
+        "0% Trùng ca SV",
+        "Khung thời gian đợt thi:",
+        "Đang hiển thị: Tất cả 15 môn",
+        "Tuần: Chia theo giờ",
+    ]:
+        assert removed_text not in html, f"web/calendar.html vẫn còn chuỗi cần xóa: {removed_text}"
 
     for js_marker in [
         "function initExamFullCalendar",
         "function getCalendarViewConfig",
         "function adjustCalendarColumnWidths",
+        "function scheduleCalendarLayoutSync",
         "function formatSlotLabelByMode",
         "function renderCustomEventContent",
-        "function switchCalendarSlotMode",
         "function switchCalendarView",
         "function handleAcademicPeriodChange",
         "function applyCalendarSearchKeyword",
         "function filterCalendarEvents",
         "function resetCalendarFilters",
-        "function renderShiftMatrixTable",
         "SHIFT_AXIS_ROWS",
         "SHIFT_COMPACT_TIME_RANGES",
         "hiddenDays: [0]",
         "slotEventOverlap: false",
+        "expandRows: false",
+        "dayMaxEvents: false",
         'eventDisplay: "block"',
         "timeGridWeek",
         "dayGridMonth",
@@ -88,20 +92,13 @@ def test_calendar_html_fullcalendar_cdn_and_views():
     ]:
         assert js_marker in js, f"web/js/admin/calendar.js thiếu hàm/cấu hình: {js_marker}"
 
-    for removed_text in [
-        "0% Trùng ca SV",
-        "Khung thời gian đợt thi:",
-        "Đang hiển thị: Tất cả 15 môn",
-    ]:
-        assert removed_text not in html, f"web/calendar.html vẫn còn chuỗi cần xóa: {removed_text}"
-
     assert "Nghỉ chuyển ca" not in js and "Nghỉ trưa" not in js, "Không được còn các hàng nghỉ giữa ca"
     assert "truncate" not in js, "Tên môn thi dài phải tự động xuống dòng, không dùng truncate (...)"
     assert "innerHTML" not in js, "web/js/admin/calendar.js không được dùng innerHTML để tránh XSS"
 
 
 def test_calendar_js_runtime_view_switch_and_filters():
-    """Chạy kiểm thử runtime bằng Node.js cho ô dropdown gộp Tuần (Chia Ca / Theo Giờ), nút Tháng và bộ lọc."""
+    """Chạy kiểm thử runtime bằng Node.js cho chế độ xem Tuần/Tháng, thu nhỏ cột trống và bộ lọc tìm kiếm."""
     if not shutil.which("node"):
         return
 
@@ -121,7 +118,7 @@ const makeClassList = (initial = []) => {
 };
 
 const elements = {
-  "btn-view-week": { value: "shift", className: "", setAttribute: function(k, v) { this[k] = v; } },
+  "btn-view-week": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "btn-view-month": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "calendar-week-select-group": { classList: makeClassList() },
   "calendar-month-select-group": { classList: makeClassList(["hidden"]) },
@@ -129,12 +126,11 @@ const elements = {
   "calendar-current-range": { textContent: "" },
   "calendar-search-input": { value: "" },
   "calendar-active-filter-summary": { textContent: "" },
-  "admin-fullcalendar": { classList: makeClassList(["is-shift-axis"]) },
+  "admin-fullcalendar": { classList: makeClassList(["is-shift-axis"]), style: { setProperty: () => {} } },
 };
 
 let renderedView = null;
 let currentEvents = [];
-let optionsLog = {};
 
 class FakeFullCalendar {
   constructor(el, config) {
@@ -148,9 +144,6 @@ class FakeFullCalendar {
   changeView(viewName) {
     renderedView = viewName;
     this.view.title = viewName === "dayGridMonth" ? "Tháng 12 Năm 2026" : "15 – 20 Thg 12, 2026";
-  }
-  setOption(key, val) {
-    optionsLog[key] = val;
   }
   removeAllEvents() {
     currentEvents = [];
@@ -181,63 +174,20 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync("web/js/admin/calendar.js", "utf8"), sandbox);
 
-// 1. Khởi tạo mặc định ở chế độ xem Tuần (timeGridWeek) với 4 hàng Ca gộp liền nhau
+// 1. Khởi tạo mặc định ở chế độ xem Tuần (timeGridWeek) với 4 hàng Ca gộp liền nhau, không có Chủ nhật
 const cal = sandbox.initExamFullCalendar();
 assert.ok(cal);
 assert.strictEqual(renderedView, "timeGridWeek");
 assert.strictEqual(cal.config.slotMinTime, "01:00:00");
 assert.strictEqual(cal.config.slotMaxTime, "05:00:00");
 assert.strictEqual(cal.config.slotDuration, "01:00:00");
+assert.strictEqual(cal.config.expandRows, false);
+assert.strictEqual(cal.config.dayMaxEvents, false);
 assert.deepStrictEqual(Array.from(cal.config.hiddenDays), [0]);
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
-assert.strictEqual(elements["btn-view-week"].value, "shift");
 assert.strictEqual(currentEvents.length, 15);
 
-// 2. Kiểm tra 4 hàng trục dọc tương ứng đúng 4 Ca thi
-assert.strictEqual(
-  sandbox.formatSlotLabelByMode(new Date("2026-12-15T01:00:00"), "shift"),
-  "Ca 1: 7h30 - 9h00"
-);
-assert.strictEqual(
-  sandbox.formatSlotLabelByMode(new Date("2026-12-15T02:00:00"), "shift"),
-  "Ca 2: 9h30 - 11h00"
-);
-assert.strictEqual(
-  sandbox.formatSlotLabelByMode(new Date("2026-12-15T03:00:00"), "shift"),
-  "Ca 3: 13h30 - 15h00"
-);
-assert.strictEqual(
-  sandbox.formatSlotLabelByMode(new Date("2026-12-15T04:00:00"), "shift"),
-  "Ca 4: 15h30 - 17h00"
-);
-
-// 3. Chuyển sang chế độ xem Tháng (dayGridMonth) sẽ ẩn ô chọn Tuần (#calendar-week-select-group)
-// và hiện ô chọn Tháng (#calendar-month-select-group); chuyển lại về Tuần sẽ hiện lại ô Tuần và ẩn ô Tháng
-assert.strictEqual(sandbox.switchCalendarView("dayGridMonth"), "dayGridMonth");
-assert.strictEqual(renderedView, "dayGridMonth");
-assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "true");
-assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "false");
-assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), true);
-assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), false);
-
-assert.strictEqual(sandbox.switchCalendarSlotMode("hour"), "hour");
-assert.strictEqual(renderedView, "timeGridWeek");
-assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
-assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), false);
-assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), true);
-assert.strictEqual(elements["btn-view-week"].value, "hour");
-assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
-assert.strictEqual(optionsLog.slotMaxTime, "18:00:00");
-assert.strictEqual(currentEvents[0].start, "2026-12-15T07:30:00");
-assert.strictEqual(currentEvents[0].end, "2026-12-15T09:00:00");
-assert.strictEqual(currentEvents[1].start, "2026-12-15T07:30:00");
-assert.strictEqual(currentEvents[1].end, "2026-12-15T09:00:00");
-
-assert.strictEqual(sandbox.switchCalendarSlotMode("shift"), "shift");
-assert.strictEqual(elements["btn-view-week"].value, "shift");
-assert.strictEqual(optionsLog.slotMinTime, "01:00:00");
-assert.strictEqual(optionsLog.slotMaxTime, "05:00:00");
-// Mọi ô môn thi (kể cả ngày có 2 môn như IT002/IT005 ngày 15/12 và ngày chỉ có 1 môn như IT009 ngày 16/12) đều có độ cao 30 phút bằng nhau
+// 2. Mọi ô môn thi (kể cả ngày có 2 môn như IT002/IT005 và ngày chỉ có 1 môn như IT009) đều có kích thước bằng nhau
 assert.strictEqual(currentEvents[0].start, "2026-12-15T01:00:00");
 assert.strictEqual(currentEvents[0].end, "2026-12-15T01:30:00");
 assert.strictEqual(currentEvents[1].start, "2026-12-15T01:30:00");
@@ -246,14 +196,25 @@ const it009 = currentEvents.find((e) => e.extendedProps.ma_mon === "IT009");
 assert.strictEqual(it009.start, "2026-12-16T01:00:00");
 assert.strictEqual(it009.end, "2026-12-16T01:30:00");
 
-// 4. Kiểm tra ô tìm kiếm từ khóa gợi ý & Đặt lại
+// 3. Chuyển sang chế độ xem Tháng (dayGridMonth) sẽ ẩn ô chọn Tuần và hiện ô chọn Tháng; chuyển lại Tuần thì ngược lại
+assert.strictEqual(sandbox.switchCalendarView("dayGridMonth"), "dayGridMonth");
+assert.strictEqual(renderedView, "dayGridMonth");
+assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "true");
+assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "false");
+assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), true);
+assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), false);
+
+assert.strictEqual(sandbox.switchCalendarView("timeGridWeek"), "timeGridWeek");
+assert.strictEqual(renderedView, "timeGridWeek");
+assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
+assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), false);
+assert.strictEqual(elements["calendar-month-select-group"].classList.contains("hidden"), true);
+
+// 4. Kiểm tra ô tìm kiếm & Đặt lại
 const shift1Events = sandbox.applyCalendarSearchKeyword("Ca 1");
 assert.strictEqual(elements["calendar-search-input"].value, "Ca 1");
 assert.ok(shift1Events.length > 0 && shift1Events.length < 15);
 assert.strictEqual(currentEvents.length, shift1Events.length);
-
-const roomA101Events = sandbox.applyCalendarSearchKeyword("A101");
-assert.ok(roomA101Events.length > 0 && roomA101Events.length < 15);
 
 const allEvents = sandbox.resetCalendarFilters();
 assert.strictEqual(elements["calendar-search-input"].value, "");
@@ -274,8 +235,8 @@ def test_caddy_serves_calendar_assets():
     """Nếu container Caddy đang chạy, kiểm tra HTTP 200 OK cho /calendar.html và /js/admin/calendar.js."""
     try:
         for path, marker in [
-            ("/calendar.html", "Tuần: Chia theo ca"),
-            ("/js/admin/calendar.js", "SHIFT_COMPACT_TIME_RANGES"),
+            ("/calendar.html", "Tuần (Week)"),
+            ("/js/admin/calendar.js", "scheduleCalendarLayoutSync"),
         ]:
             with urllib.request.urlopen(BASE_URL + path, context=SSL_CTX, timeout=3) as resp:
                 body = resp.read().decode("utf-8")

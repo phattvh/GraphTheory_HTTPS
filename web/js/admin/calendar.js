@@ -262,118 +262,119 @@ let currentSlotMode = "shift"; // "shift" (Gộp 4 hàng Ca 1..Ca 4, không có 
 let activeFilteredEvents = [...SAMPLE_EXAM_EVENTS];
 
 /**
- * Tự động thu nhỏ các cột ngày không có môn thi để nhường chỗ rộng rãi cho các cột ngày có môn thi.
+ * Tự động thu nhỏ các cột ngày không có môn thi (76px) để nhường không gian cho các cột ngày có môn thi.
+ * Hoạt động đồng nhất trên cả bảng Tuần (timeGridWeek) và bảng Tháng (dayGridMonth).
  * @param {Array<Record<string, any>>} eventsList
  */
 function adjustCalendarColumnWidths(eventsList = activeFilteredEvents) {
   const calendarEl = document.getElementById("admin-fullcalendar");
   if (!calendarEl || typeof calendarEl.querySelectorAll !== "function") return null;
 
-  const headerCells = Array.from(
-    calendarEl.querySelectorAll(".fc-col-header-cell[data-date]")
-  );
+  const headerCells = Array.from(calendarEl.querySelectorAll(".fc-col-header-cell"));
   if (headerCells.length === 0) return null;
 
-  const visibleDates = headerCells
-    .map((cell) => cell.getAttribute("data-date"))
-    .filter(Boolean);
-
+  const numCols = headerCells.length;
   const datesWithExams = new Set(
     (eventsList || []).map((ev) => String(ev.ngay_thi || String(ev.start || "").slice(0, 10)))
   );
 
-  const isWeekView = currentCalendarView !== "dayGridMonth";
-  const activeCount = visibleDates.filter((d) => datesWithExams.has(d)).length;
-  const emptyCount = visibleDates.length - activeCount;
+  const isMonthView = currentCalendarView === "dayGridMonth";
+  const colHasExam = new Array(numCols).fill(false);
 
-  // Tính số môn tối đa trong cùng 1 ca của từng ngày (phục vụ chế độ Chia theo giờ để các môn trùng ca không bị ép hẹp)
-  const dayMaxConcurrency = {};
-  visibleDates.forEach((d) => {
-    dayMaxConcurrency[d] = 0;
-  });
-  const dayShiftCounter = {};
-  (eventsList || []).forEach((ev) => {
-    const d = String(ev.ngay_thi || String(ev.start || "").slice(0, 10));
-    const key = `${d}_ca_${ev.stt_ca}`;
-    dayShiftCounter[key] = (dayShiftCounter[key] || 0) + 1;
-    if (dayMaxConcurrency[d] !== undefined && dayShiftCounter[key] > dayMaxConcurrency[d]) {
-      dayMaxConcurrency[d] = dayShiftCounter[key];
-    }
-  });
-
-  const getDayWeight = (dateStr) => {
-    if (!datesWithExams.has(dateStr)) return 0;
-    if (currentSlotMode === "hour") {
-      return Math.max(1, dayMaxConcurrency[dateStr] || 1);
-    }
-    return 1;
-  };
-
-  const totalActiveWeight = visibleDates.reduce((sum, d) => sum + getDayWeight(d), 0);
-
-  // Nếu đang ở chế độ xem Tuần và có ngày có môn thi thì thu nhỏ cột ngày trống (76px) và chia cột có môn theo trọng số
-  const shouldAdjust = isWeekView && activeCount > 0 && totalActiveWeight > 0;
-  const emptyWidthCss = "76px";
-
-  visibleDates.forEach((dateStr) => {
-    const hasExam = datesWithExams.has(dateStr);
-    const weight = getDayWeight(dateStr);
-    const activeWidthCss =
-      emptyCount > 0
-        ? `calc(((100% - ${emptyCount * 76}px) * ${weight}) / ${totalActiveWeight})`
-        : `${((weight / totalActiveWeight) * 100).toFixed(4)}%`;
-    const widthVal = shouldAdjust ? (hasExam ? activeWidthCss : emptyWidthCss) : "";
-
-    const matchingCells = Array.from(
-      calendarEl.querySelectorAll(`[data-date="${dateStr}"]`)
-    );
-    matchingCells.forEach((cell) => {
-      if (cell.style) {
-        cell.style.width = widthVal;
+  if (isMonthView) {
+    // Ở bảng Tháng, quét toàn bộ các hàng tuần trong .fc-daygrid-body theo chỉ số cột (0..numCols-1)
+    const weekRows = Array.from(calendarEl.querySelectorAll(".fc-daygrid-body tbody tr"));
+    weekRows.forEach((row) => {
+      const cells = Array.from(row.querySelectorAll("td[data-date]"));
+      let rowHasExam = false;
+      cells.forEach((cell, idx) => {
+        if (idx >= numCols) return;
+        const dateStr = cell.getAttribute("data-date");
+        if (dateStr && datesWithExams.has(dateStr)) {
+          colHasExam[idx] = true;
+          rowHasExam = true;
+        }
+      });
+      if (row.classList) {
+        row.classList.toggle("is-empty-week-row", !rowHasExam);
       }
-      if (cell.classList) {
-        cell.classList.toggle("is-empty-day-col", shouldAdjust && !hasExam);
-        cell.classList.toggle("is-active-day-col", shouldAdjust && hasExam);
+    });
+  } else {
+    headerCells.forEach((cell, idx) => {
+      const dateStr = cell.getAttribute("data-date");
+      if (dateStr && datesWithExams.has(dateStr)) {
+        colHasExam[idx] = true;
+      }
+    });
+  }
+
+  const activeCount = colHasExam.filter(Boolean).length;
+  const emptyCount = numCols - activeCount;
+  const shouldAdjust = activeCount > 0 && emptyCount > 0;
+  const emptyWidthCss = "76px";
+  const activeWidthCss = shouldAdjust
+    ? `calc((100% - ${emptyCount * 76}px) / ${activeCount})`
+    : "";
+
+  const widthForCol = (idx) => (shouldAdjust ? (colHasExam[idx] ? activeWidthCss : emptyWidthCss) : "");
+
+  // 1. Áp dụng độ rộng cho hàng tiêu đề Thứ (.fc-col-header-cell)
+  headerCells.forEach((cell, idx) => {
+    if (cell.style) cell.style.width = widthForCol(idx);
+    if (cell.classList) {
+      cell.classList.toggle("is-empty-day-col", shouldAdjust && !colHasExam[idx]);
+      cell.classList.toggle("is-active-day-col", shouldAdjust && colHasExam[idx]);
+    }
+  });
+
+  // 2. Áp dụng độ rộng cho các bảng thân lịch (cả Tuần lẫn Tháng) và đồng bộ <colgroup>
+  const bodyTables = Array.from(
+    calendarEl.querySelectorAll(
+      ".fc-col-header, .fc-timegrid-cols table, .fc-daygrid-body table"
+    )
+  );
+  bodyTables.forEach((tbl) => {
+    if (!tbl || typeof tbl.querySelectorAll !== "function") return;
+    const cols = Array.from(tbl.querySelectorAll("colgroup col"));
+    if (cols.length >= numCols) {
+      const offset = cols.length - numCols;
+      for (let idx = 0; idx < numCols; idx += 1) {
+        const colEl = cols[offset + idx];
+        if (colEl && colEl.style) colEl.style.width = widthForCol(idx);
+      }
+    }
+
+    const rows = Array.from(tbl.querySelectorAll("tbody tr"));
+    rows.forEach((row) => {
+      const cells = Array.from(row.querySelectorAll("td[data-date]"));
+      if (cells.length === numCols) {
+        cells.forEach((cell, idx) => {
+          if (cell.style) cell.style.width = widthForCol(idx);
+          if (cell.classList) {
+            cell.classList.toggle("is-empty-day-col", shouldAdjust && !colHasExam[idx]);
+            cell.classList.toggle("is-active-day-col", shouldAdjust && colHasExam[idx]);
+          }
+        });
       }
     });
   });
 
-  // Đồng bộ thẻ <col> trong <colgroup> của các bảng FullCalendar nếu có
-  const tables = Array.from(
-    calendarEl.querySelectorAll(".fc-col-header, .fc-timegrid-cols table")
-  );
-  tables.forEach((tbl) => {
-    if (!tbl || typeof tbl.querySelectorAll !== "function") return;
-    const cols = Array.from(tbl.querySelectorAll("colgroup col"));
-    const dateCells = Array.from(tbl.querySelectorAll("tr:first-child > [data-date]"));
-    if (cols.length >= dateCells.length && dateCells.length === visibleDates.length) {
-      const offset = cols.length - visibleDates.length;
-      visibleDates.forEach((dateStr, idx) => {
-        const hasExam = datesWithExams.has(dateStr);
-        const weight = getDayWeight(dateStr);
-        const activeWidthCss =
-          emptyCount > 0
-            ? `calc(((100% - ${emptyCount * 76}px) * ${weight}) / ${totalActiveWeight})`
-            : `${((weight / totalActiveWeight) * 100).toFixed(4)}%`;
-        const colEl = cols[offset + idx];
-        if (colEl && colEl.style) {
-          colEl.style.width = shouldAdjust
-            ? hasExam
-              ? activeWidthCss
-              : emptyWidthCss
-            : "";
-        }
-      });
-    }
-  });
-
   return {
-    visibleDates,
+    numCols,
     activeCount,
     emptyCount,
-    totalActiveWeight,
-    collapsed: shouldAdjust && emptyCount > 0,
+    collapsed: shouldAdjust,
   };
+}
+
+/**
+ * Gọi đồng bộ độ rộng cột ngay lập tức và sau nhịp render tiếp theo của trình duyệt.
+ */
+function scheduleCalendarLayoutSync(eventsList = activeFilteredEvents) {
+  adjustCalendarColumnWidths(eventsList);
+  if (typeof setTimeout === "function") {
+    setTimeout(() => adjustCalendarColumnWidths(eventsList), 0);
+  }
 }
 
 /**
@@ -437,13 +438,13 @@ function getMaxCoursesPerShiftSlot(rawEvents = SAMPLE_EXAM_EVENTS) {
 
 /**
  * Cập nhật chiều cao hàng Ca (--https-shift-row-height) tỉ lệ thuận với số môn tối đa trong 1 ca
- * để mỗi thẻ môn thi luôn giữ kích thước chuẩn 4.75rem (~76px) bằng nhau.
+ * để mỗi thẻ môn thi luôn giữ kích thước cố định nhỏ gọn (~4.5rem / thẻ) bằng nhau.
  * @param {Array<Record<string, any>>} rawEvents
  */
 function syncUniformShiftRowHeight(rawEvents = activeFilteredEvents) {
   const calendarEl = document.getElementById("admin-fullcalendar");
   const uniformCapacity = getMaxCoursesPerShiftSlot(rawEvents);
-  const rowHeightRem = (uniformCapacity * 4.75).toFixed(2);
+  const rowHeightRem = (uniformCapacity * 4.5).toFixed(2);
   if (calendarEl && calendarEl.style && typeof calendarEl.style.setProperty === "function") {
     calendarEl.style.setProperty("--https-shift-row-height", `${rowHeightRem}rem`);
   }
@@ -564,21 +565,21 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     firstDay: 1,
     hiddenDays: [0],
     allDaySlot: false,
-    slotMinTime: isShiftAxis ? "01:00:00" : "07:00:00",
-    slotMaxTime: isShiftAxis ? "05:00:00" : "18:00:00",
+    slotMinTime: "01:00:00",
+    slotMaxTime: "05:00:00",
     slotDuration: "01:00:00",
     slotLabelInterval: "01:00:00",
     slotEventOverlap: false,
-    slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, slotMode),
+    slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, "shift"),
     eventDisplay: "block",
     eventContent: (arg) => renderCustomEventContent(arg),
     datesSet: () => {
-      adjustCalendarColumnWidths(activeFilteredEvents);
+      scheduleCalendarLayoutSync(activeFilteredEvents);
     },
-    expandRows: true,
+    expandRows: false,
     height: "auto",
     nowIndicator: false,
-    dayMaxEvents: true,
+    dayMaxEvents: false,
     headerToolbar: false,
     views: {
       timeGridWeek: {
@@ -825,7 +826,7 @@ function switchCalendarView(viewName) {
     adminCalendarInstance.changeView(targetView);
   }
   updateCalendarViewButtons(targetView);
-  adjustCalendarColumnWidths(activeFilteredEvents);
+  scheduleCalendarLayoutSync(activeFilteredEvents);
   return targetView;
 }
 
@@ -975,7 +976,7 @@ function filterCalendarEvents() {
   }
 
   renderShiftMatrixTable(filtered);
-  adjustCalendarColumnWidths(filtered);
+  scheduleCalendarLayoutSync(filtered);
 
   if (summaryEl) {
     summaryEl.textContent = queryRaw
@@ -1021,7 +1022,7 @@ function initExamFullCalendar() {
   adminCalendarInstance = new window.FullCalendar.Calendar(calendarEl, config);
   adminCalendarInstance.render();
   updateCalendarViewButtons(currentCalendarView);
-  adjustCalendarColumnWidths(activeFilteredEvents);
+  scheduleCalendarLayoutSync(activeFilteredEvents);
   return adminCalendarInstance;
 }
 

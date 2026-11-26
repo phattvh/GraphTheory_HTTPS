@@ -29,6 +29,13 @@
       --fc-now-indicator-color: #2563eb;
       font-family: inherit;
     }
+    #admin-fullcalendar .fc-col-header,
+    #admin-fullcalendar .fc-daygrid-body,
+    #admin-fullcalendar .fc-scrollgrid-sync-table,
+    #admin-fullcalendar .fc-timegrid-body,
+    #admin-fullcalendar .fc-timegrid-cols table {
+      width: 100% !important;
+    }
     #admin-fullcalendar .fc-col-header-cell {
       background-color: #f8fafc;
       padding: 10px 4px;
@@ -41,8 +48,12 @@
       background-color: #f1f5f9;
       color: #64748b;
     }
-    #admin-fullcalendar .fc-timegrid-col.is-empty-day-col {
+    #admin-fullcalendar .fc-timegrid-col.is-empty-day-col,
+    #admin-fullcalendar .fc-daygrid-day.is-empty-day-col {
       background-color: #fafafa;
+    }
+    #admin-fullcalendar tr.is-empty-week-row .fc-daygrid-day-frame {
+      min-height: 44px !important;
     }
     #admin-fullcalendar .fc-timegrid-slot-label,
     #admin-fullcalendar .fc-daygrid-day-number {
@@ -59,7 +70,7 @@
       color: #1e293b;
     }
     #admin-fullcalendar.is-shift-axis .fc-timegrid-slot {
-      height: var(--https-shift-row-height, 9.5rem);
+      height: var(--https-shift-row-height, 9rem);
     }
     #admin-fullcalendar.is-shift-axis .fc-timegrid-slot-minor {
       border-top-style: solid;
@@ -69,7 +80,7 @@
       right: 3px !important;
     }
     #admin-fullcalendar .fc-timegrid-event {
-      margin: 2px 2.5px !important;
+      margin: 3px 3px !important;
     }
     #calendar-search-input::-webkit-calendar-picker-indicator {
       display: none !important;
@@ -79,7 +90,7 @@
       border-width: 1.5px;
       border-style: solid;
       border-radius: 6px;
-      padding: 3px 6px;
+      padding: 4px 8px;
       font-size: 0.75rem;
       font-weight: 600;
       line-height: 1.35;
@@ -91,8 +102,11 @@
     }
     #admin-fullcalendar .fc-daygrid-event {
       white-space: normal;
-      margin-top: 3px;
-      margin-bottom: 3px;
+      min-height: 62px;
+      padding: 6px 8px;
+      margin: 4px 3px !important;
+      display: flex;
+      align-items: center;
     }
     /* Khung chọn Năm học / Học kỳ / Tuần có nhãn nổi trên viền */
     .https-outlined-select-group {
@@ -302,16 +316,12 @@
 
             <span class="h-4 w-[1px] bg-slate-200 mx-0.5" aria-hidden="true"></span>
 
-            <!-- Ô gộp chế độ xem Tuần với mũi tên xuống gồm 2 tùy chọn: Chia theo ca & Chia theo giờ -->
-            <select id="btn-view-week" data-calendar-view="timeGridWeek"
-              aria-label="Chế độ xem Tuần"
-              aria-pressed="true"
-              onclick="if (typeof currentCalendarView !== 'undefined' && currentCalendarView !== 'timeGridWeek') switchCalendarView('timeGridWeek')"
-              onchange="switchCalendarSlotMode(this.value)"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer">
-              <option value="shift" class="bg-white text-slate-800 font-medium" selected>Tuần: Chia theo ca</option>
-              <option value="hour" class="bg-white text-slate-800 font-medium">Tuần: Chia theo giờ</option>
-            </select>
+            <!-- Chuyển chế độ xem Tuần (timeGridWeek) & Tháng (dayGridMonth) -->
+            <button type="button" id="btn-view-week" data-calendar-view="timeGridWeek"
+              aria-pressed="true" onclick="switchCalendarView('timeGridWeek')"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer">
+              Tuần (Week)
+            </button>
 
             <button type="button" id="btn-view-month" data-calendar-view="dayGridMonth"
               aria-pressed="false" onclick="switchCalendarView('dayGridMonth')"
@@ -336,7 +346,7 @@
           </div>
 
           <!-- Container mount trực tiếp của thư viện FullCalendar.js -->
-          <div id="admin-fullcalendar" class="is-shift-axis min-h-[520px] w-full" aria-label="Lịch thi toàn trường FullCalendar"></div>
+          <div id="admin-fullcalendar" class="is-shift-axis w-full" aria-label="Lịch thi toàn trường FullCalendar"></div>
         </div>
       </section>
     </main>
