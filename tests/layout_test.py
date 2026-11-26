@@ -57,6 +57,7 @@ def test_admin_pages_and_student_structure():
     assert ">Menu<" not in layout_js, "Nút mở sidebar chỉ dùng biểu tượng, bỏ chữ Menu"
     assert 'aria-label="Mở menu điều hướng"' in layout_js and "w-10 h-10" in layout_js
     assert 'id="global-search-input"' not in layout_js, "Đã bỏ thanh tìm kiếm nhanh trên header Admin"
+    assert "Trạng thái Engine" not in layout_js, "Đã bỏ khung Trạng thái Engine khỏi sidebar Admin"
     assert "(UC" not in layout_js, "Không còn nhãn (UC...) trên giao diện"
     assert "max-w-[1440px]" not in layout_js, "Header Admin phải dùng full-width"
     assert layout_js.index('id="btn-open-right-drawer"') < layout_js.index(">HTTPS<"), "Nút Menu phải nằm cùng chỗ bên trái với logo HTTPS"
@@ -107,6 +108,7 @@ def test_admin_pages_and_student_structure():
     ]:
         assert panel_id in index_html, f"index.html thiếu thành phần {panel_id}"
     assert 'id="crud-active-heading"' not in index_html, "Đã bỏ banner tiêu đề thừa phía trên bảng CRUD"
+    assert "Cấu hình Kỳ thi hiện tại" not in index_html, "Đã bỏ khung mockup tĩnh Cấu hình Kỳ thi hiện tại"
     assert 'src="/js/admin/crud.js"' in index_html
     for fn in [
         "switchCrudEntity",

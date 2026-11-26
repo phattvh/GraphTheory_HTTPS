@@ -142,10 +142,10 @@ function switchCrudEntity(entity) {
 
 function createTableActionCell(onEdit, onDelete) {
   const tdAct = document.createElement("td");
-  tdAct.className = "py-2.5 px-3 text-right whitespace-nowrap";
+  tdAct.className = "py-2.5 px-3 text-center whitespace-nowrap";
 
   const btnGroup = document.createElement("div");
-  btnGroup.className = "inline-flex items-center justify-end gap-1.5";
+  btnGroup.className = "inline-flex items-center justify-center gap-1.5";
 
   const btnEdit = document.createElement("button");
   btnEdit.type = "button";
@@ -193,7 +193,7 @@ function renderStudentTable() {
     tr.className = "hover:bg-slate-50";
 
     const tdMssv = document.createElement("td");
-    tdMssv.className = "py-2.5 px-3 font-semibold text-slate-900";
+    tdMssv.className = "py-2.5 px-3 text-center font-semibold text-slate-900 font-mono";
     tdMssv.textContent = sv.mssv;
 
     const tdName = document.createElement("td");
@@ -205,7 +205,7 @@ function renderStudentTable() {
     tdEmail.textContent = sv.email;
 
     const tdClass = document.createElement("td");
-    tdClass.className = "py-2.5 px-3 font-mono text-blue-700 font-semibold";
+    tdClass.className = "py-2.5 px-3 text-center font-mono text-blue-700 font-semibold";
     tdClass.textContent = sv.lop_sinh_hoat;
 
     const tdAct = createTableActionCell(
@@ -362,7 +362,7 @@ function renderExamTable() {
     tr.className = "hover:bg-slate-50";
 
     const tdCode = document.createElement("td");
-    tdCode.className = "py-2.5 px-3 font-semibold text-slate-900 font-mono";
+    tdCode.className = "py-2.5 px-3 text-center font-semibold text-slate-900 font-mono";
     tdCode.textContent = kt.ma_ky_thi;
 
     const tdName = document.createElement("td");
@@ -370,15 +370,15 @@ function renderExamTable() {
     tdName.textContent = kt.ten_ky_thi;
 
     const tdRange = document.createElement("td");
-    tdRange.className = "py-2.5 px-3 text-slate-600";
+    tdRange.className = "py-2.5 px-3 text-center text-slate-600";
     tdRange.textContent = `${formatDateVi(kt.ngay_bat_dau)} - ${formatDateVi(kt.ngay_ket_thuc)}`;
 
     const tdShifts = document.createElement("td");
-    tdShifts.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
+    tdShifts.className = "py-2.5 px-3 text-center font-mono font-semibold text-blue-700";
     tdShifts.textContent = `${kt.so_ca_moi_ngay} ca/ngày`;
 
     const tdStatus = document.createElement("td");
-    tdStatus.className = "py-2.5 px-3";
+    tdStatus.className = "py-2.5 px-3 text-center";
     const badge = document.createElement("span");
     const statusInfo = EXAM_STATUS_META[kt.trang_thai] || EXAM_STATUS_META.khoi_tao;
     badge.className = `px-2 py-0.5 rounded-full font-semibold ${statusInfo.cls}`;
@@ -541,7 +541,7 @@ function renderCourseTable() {
     tr.className = "hover:bg-slate-50";
 
     const tdCode = document.createElement("td");
-    tdCode.className = "py-2.5 px-3 font-semibold text-slate-900 font-mono";
+    tdCode.className = "py-2.5 px-3 text-center font-semibold text-slate-900 font-mono";
     tdCode.textContent = mh.ma_mon;
 
     const tdName = document.createElement("td");
@@ -549,11 +549,11 @@ function renderCourseTable() {
     tdName.textContent = mh.ten_mon;
 
     const tdDuration = document.createElement("td");
-    tdDuration.className = "py-2.5 px-3 text-slate-600";
+    tdDuration.className = "py-2.5 px-3 text-center text-slate-600";
     tdDuration.textContent = `${mh.thoi_luong_phut} phút`;
 
     const tdCredits = document.createElement("td");
-    tdCredits.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
+    tdCredits.className = "py-2.5 px-3 text-center font-mono font-semibold text-blue-700";
     tdCredits.textContent = `${mh.so_tin_chi} TC`;
 
     const tdAct = createTableActionCell(
@@ -695,7 +695,7 @@ function renderRoomTable() {
     tr.className = "hover:bg-slate-50";
 
     const tdCode = document.createElement("td");
-    tdCode.className = "py-2.5 px-3 font-semibold text-slate-900 font-mono";
+    tdCode.className = "py-2.5 px-3 text-center font-semibold text-slate-900 font-mono";
     tdCode.textContent = p.ma_phong;
 
     const tdName = document.createElement("td");
@@ -703,15 +703,15 @@ function renderRoomTable() {
     tdName.textContent = p.ten_phong;
 
     const tdCap = document.createElement("td");
-    tdCap.className = "py-2.5 px-3 font-mono font-semibold text-blue-700";
+    tdCap.className = "py-2.5 px-3 text-center font-mono font-semibold text-blue-700";
     tdCap.textContent = `${p.suc_chua} chỗ`;
 
     const tdBuilding = document.createElement("td");
-    tdBuilding.className = "py-2.5 px-3 text-slate-600";
+    tdBuilding.className = "py-2.5 px-3 text-center text-slate-600";
     tdBuilding.textContent = p.toa_nha || "—";
 
     const tdStatus = document.createElement("td");
-    tdStatus.className = "py-2.5 px-3";
+    tdStatus.className = "py-2.5 px-3 text-center";
     const badge = document.createElement("span");
     badge.className = p.dang_su_dung
       ? "px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700"
