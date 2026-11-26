@@ -200,8 +200,8 @@ function buildAlgoComparisonChartConfig(dataset) {
         {
           label: "Số ca thi χ(G)",
           data: [data.dsatur_shifts, data.welsh_powell_shifts],
-          backgroundColor: ["rgba(37, 99, 235, 0.85)", "rgba(245, 158, 11, 0.85)"],
-          borderColor: ["#1d4ed8", "#d97706"],
+          backgroundColor: "rgba(37, 99, 235, 0.85)",
+          borderColor: "#1d4ed8",
           borderWidth: 1.5,
           borderRadius: 6,
           yAxisID: "yShifts",
@@ -209,8 +209,8 @@ function buildAlgoComparisonChartConfig(dataset) {
         {
           label: "Thời gian chạy (ms)",
           data: [data.dsatur_time_ms, data.welsh_powell_time_ms],
-          backgroundColor: ["rgba(148, 163, 184, 0.45)", "rgba(148, 163, 184, 0.45)"],
-          borderColor: ["#64748b", "#64748b"],
+          backgroundColor: "rgba(148, 163, 184, 0.45)",
+          borderColor: "#64748b",
           borderWidth: 1.5,
           borderRadius: 6,
           yAxisID: "yTime",
