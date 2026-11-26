@@ -133,7 +133,7 @@ function renderStatsTopDegreeTable(dataset) {
   tbody.replaceChildren();
   list.forEach((item, idx) => {
     const tr = document.createElement("tr");
-    tr.className = "hover:bg-slate-50";
+    tr.className = "hover:bg-slate-50 divide-x divide-slate-200";
 
     const tdRank = document.createElement("td");
     tdRank.className = "py-2.5 px-3 text-center font-bold text-slate-700 tabular-nums";
@@ -144,7 +144,7 @@ function renderStatsTopDegreeTable(dataset) {
     tdCode.textContent = item.ma_mon;
 
     const tdName = document.createElement("td");
-    tdName.className = "py-2.5 px-3 font-medium text-slate-900";
+    tdName.className = "py-2.5 px-3 text-center font-medium text-slate-900";
     tdName.textContent = item.ten_mon;
 
     const tdDeg = document.createElement("td");
