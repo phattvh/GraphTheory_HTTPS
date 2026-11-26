@@ -21,6 +21,9 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
   - Triển khai 3 hàm phân phòng `allocate_shift_rooms_ffd`, `allocate_exam_rooms_ffd`, `allocate_graph_schedule_rooms_ffd` (`UC08.3`) trong `backend/algorithms/room_allocator.py`, hỗ trợ tái sử dụng phòng qua nhiều ca, phân loại nguyên nhân `unallocated_courses` (hết phòng vs vượt sức chứa) và tích hợp trực tiếp với DSatur / Welsh–Powell.
   - Gia cố biên dữ liệu: chuẩn hóa cờ `dang_su_dung` (`0`/`"false"`), bắt `OverflowError` cho `float("inf")`, khử trùng `ma_mon` trong cùng ca, fallback tra cứu khi có khoảng trắng thừa và sắp xếp an toàn khóa `shift_id`.
   - Thêm bộ kiểm thử `tests/room_allocator_test.py` (11 test case) và đăng ký vào `Makefile`.
+- **Giao diện Lịch thi Toàn trường FullCalendar (TV4 — Ngày 4):**
+  - Nhúng `FullCalendar v6.1.15` (kèm gói ngôn ngữ tiếng Việt `vi.global.min.js`) trên `web/calendar.html` và triển khai `web/js/admin/calendar.js` (`UC10` UI): chế độ xem Tuần (`timeGridWeek`) / Tháng (`dayGridMonth`), điều hướng thời gian, 3 bộ lọc Môn học / Phòng thi / Ca thi, inspector chi tiết sự kiện (chỉ dùng `textContent`, không `innerHTML`) và bảng ma trận ca thi.
+  - Thêm bộ kiểm thử `tests/calendar_ui_test.py` (kèm runtime Node.js & kiểm tra Caddy HTTPS) và đăng ký vào `Makefile`.
 - **API CRUD Danh mục Kỳ thi & Môn học (TV2 — Ngày 4):**
   - Triển khai 10 endpoint CRUD đầy đủ cho `/api/v1/ky-thi` (`UC02`) và `/api/v1/mon-hoc` (`UC04`) trong `backend/routers/master_data.py`, hỗ trợ tìm kiếm escape SQL `LIKE`, phân trang `skip`/`limit`, và kiểm tra chéo ngày bắt đầu/kết thúc.
   - Thêm bộ kiểm thử tích hợp `tests/master_data_api_test.py`.
