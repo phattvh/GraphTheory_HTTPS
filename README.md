@@ -54,7 +54,6 @@ Dự án chuẩn hóa toàn bộ thao tác Docker và **17 bộ kiểm thử t�
 ## Tham gia phát triển
 
 - Quy trình nhánh Git, Conventional Commits & kiểm thử: xem [CONTRIBUTING.md](CONTRIBUTING.md).
-- Quy tắc làm việc Git & kiểm thử nội bộ nhóm: xem [AGENTS.md](AGENTS.md).
 - Kiến trúc bảo mật & báo cáo lỗ hổng: xem [SECURITY.md](SECURITY.md).
 - Mục lục toàn bộ tài liệu thiết kế: xem [docs/README.md](docs/README.md).
 
