@@ -34,6 +34,7 @@ test-host:
 	$(PYTHON) tests/student_room_ui_test.py
 	$(PYTHON) tests/import_ui_test.py
 	$(PYTHON) tests/calendar_ui_test.py
+	$(PYTHON) tests/stats_ui_test.py
 	$(PYTHON) tests/docs_test.py
 
 test-backend:
