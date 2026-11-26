@@ -34,12 +34,11 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         'id="admin-fullcalendar"',
         'id="calendar-search-input"',
         'id="calendar-search-suggestions"',
-        'data-search-keyword="IT001"',
-        'data-search-keyword="A101"',
-        'data-search-keyword="Ca 1"',
         'id="calendar-select-year"',
         'id="calendar-select-semester"',
+        'id="calendar-week-select-group"',
         'id="calendar-select-week"',
+        'id="btn-print-calendar"',
         "Năm học",
         "Học kỳ",
         "Tuần",
@@ -110,15 +109,12 @@ const makeClassList = (initial = []) => {
 const elements = {
   "btn-view-week": { value: "shift", className: "", setAttribute: function(k, v) { this[k] = v; } },
   "btn-view-month": { className: "", setAttribute: function(k, v) { this[k] = v; } },
+  "calendar-week-select-group": { classList: makeClassList() },
   "calendar-view-badge": { textContent: "" },
   "calendar-current-range": { textContent: "" },
   "calendar-search-input": { value: "" },
   "calendar-active-filter-summary": { textContent: "" },
-  "calendar-inspector-title": { textContent: "" },
-  "calendar-inspector-meta": { textContent: "" },
-  "calendar-inspector-badge": { className: "", textContent: "" },
   "admin-fullcalendar": { classList: makeClassList(["is-shift-axis"]) },
-  "calendar-shift-matrix-body": { replaceChildren: function(...rows) { this.rows = rows; } },
 };
 
 let renderedView = null;
@@ -199,15 +195,18 @@ assert.strictEqual(
   "Ca 4: 15h30 - 17h00"
 );
 
-// 3. Chuyển sang chế độ xem Tháng (dayGridMonth), sau đó chọn tùy chọn trong ô dropdown Tuần sẽ tự quay về Tuần
+// 3. Chuyển sang chế độ xem Tháng (dayGridMonth) sẽ ẩn ô chọn Tuần (#calendar-week-select-group),
+// sau đó chọn tùy chọn trong ô dropdown Tuần sẽ tự quay về Tuần và hiện lại ô chọn Tuần
 assert.strictEqual(sandbox.switchCalendarView("dayGridMonth"), "dayGridMonth");
 assert.strictEqual(renderedView, "dayGridMonth");
 assert.strictEqual(elements["btn-view-month"]["aria-pressed"], "true");
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "false");
+assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), true);
 
 assert.strictEqual(sandbox.switchCalendarSlotMode("hour"), "hour");
 assert.strictEqual(renderedView, "timeGridWeek");
 assert.strictEqual(elements["btn-view-week"]["aria-pressed"], "true");
+assert.strictEqual(elements["calendar-week-select-group"].classList.contains("hidden"), false);
 assert.strictEqual(elements["btn-view-week"].value, "hour");
 assert.strictEqual(optionsLog.slotMinTime, "07:00:00");
 assert.strictEqual(optionsLog.slotMaxTime, "18:00:00");

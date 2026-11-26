@@ -563,6 +563,7 @@ function renderShiftMatrixTable(eventsList = SAMPLE_EXAM_EVENTS) {
 function updateCalendarViewButtons(viewName) {
   const weekBtn = document.getElementById("btn-view-week");
   const monthBtn = document.getElementById("btn-view-month");
+  const weekSelectGroup = document.getElementById("calendar-week-select-group");
   const viewBadge = document.getElementById("calendar-view-badge");
   const rangeHeading = document.getElementById("calendar-current-range");
   const fcContainer = document.getElementById("admin-fullcalendar");
@@ -570,6 +571,10 @@ function updateCalendarViewButtons(viewName) {
   const isMonth = viewName === "dayGridMonth";
   const isShiftOnly = viewName === "shiftGridWeek";
   const isWeek = !isMonth && !isShiftOnly;
+
+  if (weekSelectGroup && weekSelectGroup.classList) {
+    weekSelectGroup.classList.toggle("hidden", isMonth);
+  }
 
   const activeWeekClass =
     "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer";
