@@ -688,19 +688,32 @@ def allocate_exam_rooms_with_spilling(
         return any(G.has_edge(ma_mon, other) for other in target_courses)
 
     # Khởi tạo bản sao danh sách các ca thi (khử trùng & làm sạch mã môn)
+    def _shift_key_safe(item: Any) -> tuple:
+        k = item[0]
+        if isinstance(k, int) and not isinstance(k, bool):
+            return (0, k, "")
+        return (1, 0, str(k))
+
     working_shifts: Dict[int, List[str]] = {}
-    for shift_id, course_list in sorted(shifts.items(), key=lambda x: x[0]):
-        cleaned_list: List[str] = []
-        seen_in_shift = set()
+    for shift_id, course_list in sorted(shifts.items(), key=_shift_key_safe):
+        try:
+            norm_shift_id = int(shift_id)
+        except (ValueError, TypeError):
+            norm_shift_id = (max(working_shifts.keys()) + 1) if working_shifts else 1
+        existing = working_shifts.setdefault(norm_shift_id, [])
+        seen_in_shift = set(existing)
         for raw_code in course_list or []:
             code = _safe_str(raw_code)
             if code and code not in seen_in_shift:
-                cleaned_list.append(code)
+                existing.append(code)
                 seen_in_shift.add(code)
-        working_shifts[int(shift_id)] = cleaned_list
 
     original_shifts_count = len(working_shifts)
     spilled_events: List[Dict[str, Any]] = []
+    max_single_room_cap = max((r["suc_chua"] for r in valid_rooms), default=0)
+    max_course_capacity = (
+        total_school_capacity if allow_room_splitting else max_single_room_cap
+    )
 
     # Vòng lặp xử lý Shift Spilling cho từng ca bị quá tải
     if allow_shift_spilling and valid_rooms:
@@ -728,10 +741,19 @@ def allocate_exam_rooms_with_spilling(
                 idx += 1
                 continue
 
-            # Lọc các ứng viên có thể tách (bỏ qua môn tự thân đã vượt tổng sức chứa toàn trường)
+            # Nếu mọi môn chưa xếp được đều tự thân vượt ngưỡng tối đa thì tách môn khác cũng không giải quyết được
+            has_feasible_unallocated = any(
+                u["so_sinh_vien"] <= max_course_capacity
+                for u in check_res["unallocated_courses"]
+            )
+            if not has_feasible_unallocated:
+                idx += 1
+                continue
+
+            # Lọc các ứng viên có thể tách (bỏ qua môn tự thân vượt ngưỡng tối đa)
             candidates = [
                 m for m in current_courses
-                if _get_course_size(m) <= total_school_capacity
+                if _get_course_size(m) <= max_course_capacity
             ]
             if not candidates:
                 idx += 1
