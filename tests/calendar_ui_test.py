@@ -32,9 +32,11 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         'id="tab-calendar"',
         'id="admin-fullcalendar-shell"',
         'id="admin-fullcalendar"',
-        'id="calendar-filter-course"',
-        'id="calendar-filter-room"',
-        'id="calendar-filter-shift"',
+        'id="calendar-search-input"',
+        'id="calendar-search-suggestions"',
+        'data-search-keyword="IT001"',
+        'data-search-keyword="A101"',
+        'data-search-keyword="Ca 1"',
         'id="calendar-select-year"',
         'id="calendar-select-semester"',
         'id="calendar-select-week"',
@@ -69,6 +71,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "function switchCalendarSlotMode",
         "function switchCalendarView",
         "function handleAcademicPeriodChange",
+        "function applyCalendarSearchKeyword",
         "function filterCalendarEvents",
         "function resetCalendarFilters",
         "function renderShiftMatrixTable",
@@ -109,9 +112,7 @@ const elements = {
   "btn-view-month": { className: "", setAttribute: function(k, v) { this[k] = v; } },
   "calendar-view-badge": { textContent: "" },
   "calendar-current-range": { textContent: "" },
-  "calendar-filter-course": { value: "ALL" },
-  "calendar-filter-room": { value: "ALL" },
-  "calendar-filter-shift": { value: "ALL" },
+  "calendar-search-input": { value: "" },
   "calendar-active-filter-summary": { textContent: "" },
   "calendar-inspector-title": { textContent: "" },
   "calendar-inspector-meta": { textContent: "" },
@@ -224,13 +225,17 @@ assert.strictEqual(currentEvents[0].end, "2026-12-15T01:30:00");
 assert.strictEqual(currentEvents[1].start, "2026-12-15T01:30:00");
 assert.strictEqual(currentEvents[1].end, "2026-12-15T02:00:00");
 
-// 4. Kiểm tra bộ lọc Ca thi & Đặt lại
-elements["calendar-filter-shift"].value = "1";
-const shift1Events = sandbox.filterCalendarEvents();
+// 4. Kiểm tra ô tìm kiếm từ khóa gợi ý & Đặt lại
+const shift1Events = sandbox.applyCalendarSearchKeyword("Ca 1");
+assert.strictEqual(elements["calendar-search-input"].value, "Ca 1");
 assert.ok(shift1Events.length > 0 && shift1Events.length < 15);
 assert.strictEqual(currentEvents.length, shift1Events.length);
 
+const roomA101Events = sandbox.applyCalendarSearchKeyword("A101");
+assert.ok(roomA101Events.length > 0 && roomA101Events.length < 15);
+
 const allEvents = sandbox.resetCalendarFilters();
+assert.strictEqual(elements["calendar-search-input"].value, "");
 assert.strictEqual(allEvents.length, 15);
 assert.strictEqual(currentEvents.length, 15);
 """

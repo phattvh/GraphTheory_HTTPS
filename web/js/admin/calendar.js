@@ -735,24 +735,53 @@ function navigateCalendar(action) {
 }
 
 /**
- * Lọc danh sách sự kiện trên FullCalendar & bảng Ma trận Chia Ca theo Môn học, Phòng thi và Ca thi.
+ * Điền nhanh từ khóa gợi ý vào ô tìm kiếm và lọc sự kiện trên FullCalendar.
+ * @param {string} keyword
+ */
+function applyCalendarSearchKeyword(keyword) {
+  const searchInput = document.getElementById("calendar-search-input");
+  if (searchInput) {
+    searchInput.value = String(keyword || "").trim();
+  }
+  return filterCalendarEvents();
+}
+
+/**
+ * Tìm kiếm và lọc danh sách sự kiện trên FullCalendar & bảng Ma trận Chia Ca
+ * theo từ khóa (mã môn, tên môn, phòng thi, ca thi) hoặc bộ lọc.
  */
 function filterCalendarEvents() {
+  const searchInput = document.getElementById("calendar-search-input");
   const courseSelect = document.getElementById("calendar-filter-course");
   const roomSelect = document.getElementById("calendar-filter-room");
   const shiftSelect = document.getElementById("calendar-filter-shift");
   const summaryEl = document.getElementById("calendar-active-filter-summary");
 
+  const queryRaw = searchInput ? String(searchInput.value || "").trim() : "";
+  const query = queryRaw.toLowerCase();
   const courseVal = courseSelect ? courseSelect.value : "ALL";
   const roomVal = roomSelect ? roomSelect.value : "ALL";
   const shiftVal = shiftSelect ? shiftSelect.value : "ALL";
 
   const filtered = SAMPLE_EXAM_EVENTS.filter((item) => {
-    const matchCourse = courseVal === "ALL" || item.ma_mon === courseVal;
+    const matchCourse = !courseVal || courseVal === "ALL" || item.ma_mon === courseVal;
     const matchRoom =
-      roomVal === "ALL" || (Array.isArray(item.rooms) && item.rooms.includes(roomVal));
-    const matchShift = shiftVal === "ALL" || String(item.stt_ca) === String(shiftVal);
-    return matchCourse && matchRoom && matchShift;
+      !roomVal ||
+      roomVal === "ALL" ||
+      (Array.isArray(item.rooms) && item.rooms.includes(roomVal));
+    const matchShift =
+      !shiftVal || shiftVal === "ALL" || String(item.stt_ca) === String(shiftVal);
+
+    if (!matchCourse || !matchRoom || !matchShift) return false;
+    if (!query) return true;
+
+    const palette = SHIFT_COLOR_PALETTE[item.stt_ca] || SHIFT_COLOR_PALETTE[1];
+    const roomStr = Array.isArray(item.rooms) ? item.rooms.join(" ") : String(item.rooms || "");
+    const shiftStr = `ca ${item.stt_ca} ${palette.label}`;
+    const searchableText =
+      `${item.ma_mon} ${item.ten_mon} ${roomStr} ${shiftStr}`.toLowerCase();
+
+    return searchableText.includes(query);
   });
 
   if (adminCalendarInstance && typeof adminCalendarInstance.removeAllEvents === "function") {
@@ -764,18 +793,22 @@ function filterCalendarEvents() {
   renderShiftMatrixTable(filtered);
 
   if (summaryEl) {
-    summaryEl.textContent = `Đang hiển thị: ${filtered.length}/${SAMPLE_EXAM_EVENTS.length} môn thi phù hợp bộ lọc`;
+    summaryEl.textContent = queryRaw
+      ? `Kết quả tìm kiếm "${queryRaw}": ${filtered.length}/${SAMPLE_EXAM_EVENTS.length} môn thi`
+      : `Đang hiển thị: ${filtered.length}/${SAMPLE_EXAM_EVENTS.length} môn thi phù hợp bộ lọc`;
   }
   return filtered;
 }
 
 /**
- * Đặt lại toàn bộ bộ lọc Môn học / Phòng thi / Ca thi về trạng thái mặc định.
+ * Đặt lại ô tìm kiếm và toàn bộ bộ lọc về trạng thái mặc định.
  */
 function resetCalendarFilters() {
+  const searchInput = document.getElementById("calendar-search-input");
   const courseSelect = document.getElementById("calendar-filter-course");
   const roomSelect = document.getElementById("calendar-filter-room");
   const shiftSelect = document.getElementById("calendar-filter-shift");
+  if (searchInput) searchInput.value = "";
   if (courseSelect) courseSelect.value = "ALL";
   if (roomSelect) roomSelect.value = "ALL";
   if (shiftSelect) shiftSelect.value = "ALL";
