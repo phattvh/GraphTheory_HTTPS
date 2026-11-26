@@ -96,7 +96,6 @@ const elements = {
   "kpi-total-students": makeEl("div"),
   "kpi-total-registrations": makeEl("div"),
   "kpi-min-shifts": makeEl("div"),
-  "kpi-shift-comparison": makeEl("div"),
   "kpi-conflict-rate": makeEl("div"),
   "stats-algo-badge": makeEl("span"),
   "stats-max-degree-badge": makeEl("span"),
@@ -144,7 +143,7 @@ assert.strictEqual(res.degreeChart.config.type, "bar");
 assert.strictEqual(res.degreeChart.config.options.indexAxis, "y");
 assert.strictEqual(res.degreeChart.config.data.labels.length, 5);
 assert.strictEqual(elements["kpi-total-courses"].textContent, "15 Môn");
-assert.strictEqual(elements["kpi-min-shifts"].textContent, "4 Ca thi");
+assert.strictEqual(elements["kpi-min-shifts"].textContent, "DSatur: 4 ca | Welsh-Powell: 5 ca");
 assert.strictEqual(elements["kpi-conflict-rate"].textContent, "0.0%");
 assert.strictEqual(elements["stats-top-degree-tbody"].children.length, 5);
 

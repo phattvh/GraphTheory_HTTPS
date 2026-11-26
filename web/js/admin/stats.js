@@ -105,16 +105,7 @@ function renderStatsKpiCards(dataset) {
 
   const shiftsEl = document.getElementById("kpi-min-shifts");
   if (shiftsEl) {
-    shiftsEl.textContent = `${data.dsatur_shifts} Ca thi`;
-  }
-
-  const shiftCompEl = document.getElementById("kpi-shift-comparison");
-  if (shiftCompEl) {
-    const diff = data.welsh_powell_shifts - data.dsatur_shifts;
-    shiftCompEl.textContent =
-      diff > 0
-        ? `DSatur tiết kiệm ${diff} ca so với Welsh-Powell (${data.welsh_powell_shifts} ca)`
-        : `DSatur và Welsh-Powell cùng hội tụ ở ${data.dsatur_shifts} ca thi`;
+    shiftsEl.textContent = `DSatur: ${data.dsatur_shifts} ca | Welsh-Powell: ${data.welsh_powell_shifts} ca`;
   }
 
   const conflictEl = document.getElementById("kpi-conflict-rate");
