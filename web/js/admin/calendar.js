@@ -3,20 +3,25 @@
  * File: web/js/admin/calendar.js
  * Hỗ trợ:
  * - Chuyển đổi chế độ xem: Tuần (timeGridWeek), Chia Ca (shiftGridWeek), Tháng (dayGridMonth)
- * - Tùy chọn chia khung giờ trục dọc: Chia theo Ca (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00,
- *   Ca 3: 13h30-15h00, Ca 4: 15h30-17h00) hoặc Chia theo Giờ chuẩn (07:00, 08:00...)
+ * - Tùy chọn chia khung giờ trục dọc:
+ *   + "shift": Gộp mỗi ca thành đúng 1 hàng duy nhất (Ca 1: 7h30 - 9h00, Ca 2: 9h30 - 11h00,
+ *     Ca 3: 13h30 - 15h00, Ca 4: 15h30 - 17h00), loại bỏ hoàn toàn các hàng lẻ 30p và hàng nghỉ giữa ca.
+ *   + "hour": Chia theo từng giờ chuẩn (07:00, 08:00, 09:00...)
  * - Lọc theo Môn học, Phòng thi, Ca thi.
  */
 
-const SHIFT_TIME_SLOTS = {
-  "07:30": "Ca 1: 7h30 - 9h00",
-  "09:00": "Nghỉ chuyển ca (9h00 - 9h30)",
-  "09:30": "Ca 2: 9h30 - 11h00",
-  "11:00": "Nghỉ trưa (11h00 - 13h30)",
-  "13:30": "Ca 3: 13h30 - 15h00",
-  "15:00": "Nghỉ chuyển ca (15h00 - 15h30)",
-  "15:30": "Ca 4: 15h30 - 17h00",
-  "17:00": "Kết thúc ngày thi (17h00)",
+const SHIFT_AXIS_ROWS = {
+  "01:00": "Ca 1: 7h30 - 9h00",
+  "02:00": "Ca 2: 9h30 - 11h00",
+  "03:00": "Ca 3: 13h30 - 15h00",
+  "04:00": "Ca 4: 15h30 - 17h00",
+};
+
+const SHIFT_COMPACT_TIME_RANGES = {
+  1: { startSlot: "01:00:00", endSlot: "02:00:00", realTime: "7h30 - 9h00" },
+  2: { startSlot: "02:00:00", endSlot: "03:00:00", realTime: "9h30 - 11h00" },
+  3: { startSlot: "03:00:00", endSlot: "04:00:00", realTime: "13h30 - 15h00" },
+  4: { startSlot: "04:00:00", endSlot: "05:00:00", realTime: "15h30 - 17h00" },
 };
 
 const SHIFT_COLOR_PALETTE = {
@@ -253,10 +258,12 @@ const EXAM_WEEK_DAYS = ["2026-12-15", "2026-12-16", "2026-12-17", "2026-12-18", 
 
 let adminCalendarInstance = null;
 let currentCalendarView = "timeGridWeek";
-let currentSlotMode = "shift"; // "shift" (Ca 1: 7h30-9h, Ca 2: 9h30-11h...) | "hour" (07:00, 08:00...)
+let currentSlotMode = "shift"; // "shift" (Gộp 4 hàng Ca 1..Ca 4, không có hàng nghỉ) | "hour" (07:00, 08:00...)
 
 /**
- * Định dạng nhãn trục giờ của FullCalendar theo Ca thi hoặc theo Giờ tiêu chuẩn.
+ * Định dạng nhãn trục giờ của FullCalendar:
+ * - Khi mode === "shift": Gộp đúng 4 hàng Ca 1..Ca 4 (không có hàng 08h00, 08h30 hay hàng nghỉ giữa ca).
+ * - Khi mode === "hour": Hiển thị theo từng giờ chuẩn (07:00, 08:00...).
  * @param {Date} dateObj
  * @param {string} mode
  */
@@ -267,27 +274,42 @@ function formatSlotLabelByMode(dateObj, mode = currentSlotMode) {
   const key = `${hh}:${mm}`;
 
   if (mode === "shift") {
-    if (SHIFT_TIME_SLOTS[key]) {
-      return SHIFT_TIME_SLOTS[key];
+    if (SHIFT_AXIS_ROWS[key]) {
+      return SHIFT_AXIS_ROWS[key];
     }
-    return `${hh}h${mm}`;
+    const realHourToShiftMap = {
+      "07:30": "Ca 1: 7h30 - 9h00",
+      "09:30": "Ca 2: 9h30 - 11h00",
+      "13:30": "Ca 3: 13h30 - 15h00",
+      "15:30": "Ca 4: 15h30 - 17h00",
+    };
+    return realHourToShiftMap[key] || "";
   }
   return mm === "00" ? `${hh}:00` : "";
 }
 
 /**
  * Chuyển đổi danh sách ca thi thành định dạng Event Object chuẩn của FullCalendar.
+ * Khi mode === "shift", mỗi Ca thi (1..4) được ánh xạ gọn vào đúng 1 hàng Ca duy nhất (không có khoảng trống nghỉ trưa).
  * @param {Array<Record<string, any>>} rawEvents
+ * @param {string} mode
  */
-function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS) {
+function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS, mode = currentSlotMode) {
   return rawEvents.map((item) => {
     const palette = SHIFT_COLOR_PALETTE[item.stt_ca] || SHIFT_COLOR_PALETTE[1];
+    const compactSlot = SHIFT_COMPACT_TIME_RANGES[item.stt_ca] || SHIFT_COMPACT_TIME_RANGES[1];
     const roomText = Array.isArray(item.rooms) ? item.rooms.join(", ") : String(item.rooms || "");
+
+    const eventStart =
+      mode === "shift" ? `${item.ngay_thi}T${compactSlot.startSlot}` : item.start;
+    const eventEnd =
+      mode === "shift" ? `${item.ngay_thi}T${compactSlot.endSlot}` : item.end;
+
     return {
       id: item.id,
-      title: `[Ca ${item.stt_ca}] ${item.ma_mon} - ${item.ten_mon} (${roomText})`,
-      start: item.start,
-      end: item.end,
+      title: `${item.ma_mon} - ${item.ten_mon} (${roomText})`,
+      start: eventStart,
+      end: eventEnd,
       backgroundColor: palette.backgroundColor,
       borderColor: palette.borderColor,
       textColor: palette.textColor,
@@ -295,6 +317,7 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS) {
         ma_mon: item.ma_mon,
         ten_mon: item.ten_mon,
         stt_ca: item.stt_ca,
+        khung_gio_ca: compactSlot.realTime,
         ngay_thi: item.ngay_thi,
         rooms: item.rooms,
         so_luong_sv: item.so_luong_sv,
@@ -305,8 +328,48 @@ function buildFullCalendarEvents(rawEvents = SAMPLE_EXAM_EVENTS) {
 }
 
 /**
+ * Tạo nội dung hiển thị bên trong mỗi thẻ sự kiện của FullCalendar bằng DOM API an toàn.
+ * Hiển thị rõ khung giờ thật của ca (VD: Ca 1 • 7h30 - 9h00), mã môn - tên môn và phòng thi.
+ * @param {Record<string, any>} arg
+ */
+function renderCustomEventContent(arg) {
+  if (typeof document === "undefined" || typeof document.createElement !== "function") {
+    return null;
+  }
+  const props = (arg && arg.event && arg.event.extendedProps) || {};
+  const roomText = Array.isArray(props.rooms) ? props.rooms.join(", ") : String(props.rooms || "");
+  const shiftTimeText = props.khung_gio_ca
+    ? `Ca ${props.stt_ca}: ${props.khung_gio_ca}`
+    : arg.timeText || "";
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "space-y-0.5 leading-snug overflow-hidden";
+
+  const timeEl = document.createElement("div");
+  timeEl.className = "text-[11px] font-bold opacity-85";
+  timeEl.textContent = shiftTimeText;
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "font-bold text-xs";
+  titleEl.textContent = props.ma_mon
+    ? `${props.ma_mon} - ${props.ten_mon}`
+    : (arg.event && arg.event.title) || "";
+
+  const roomEl = document.createElement("div");
+  roomEl.className = "text-[11px] opacity-90";
+  roomEl.textContent = roomText ? `Phòng: ${roomText} (${props.so_luong_sv || 0} SV)` : "";
+
+  wrapper.appendChild(timeEl);
+  wrapper.appendChild(titleEl);
+  if (roomText) {
+    wrapper.appendChild(roomEl);
+  }
+  return { domNodes: [wrapper] };
+}
+
+/**
  * Trả về cấu hình khởi tạo FullCalendar với chế độ xem Tuần (timeGridWeek) & Tháng (dayGridMonth)
- * cùng tùy chọn chia ca theo giờ (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00).
+ * cùng tùy chọn gộp 4 hàng Ca thi (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00).
  * @param {string} initialView
  * @param {string} slotMode
  */
@@ -320,14 +383,15 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     locale: "vi",
     firstDay: 1,
     allDaySlot: false,
-    slotMinTime: isShiftAxis ? "07:30:00" : "07:00:00",
-    slotMaxTime: isShiftAxis ? "17:30:00" : "18:00:00",
-    slotDuration: "00:30:00",
-    slotLabelInterval: isShiftAxis ? "00:30:00" : "01:00:00",
+    slotMinTime: isShiftAxis ? "01:00:00" : "07:00:00",
+    slotMaxTime: isShiftAxis ? "05:00:00" : "18:00:00",
+    slotDuration: "01:00:00",
+    slotLabelInterval: "01:00:00",
     slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, slotMode),
+    eventContent: (arg) => renderCustomEventContent(arg),
     expandRows: true,
     height: "auto",
-    nowIndicator: true,
+    nowIndicator: false,
     dayMaxEvents: true,
     headerToolbar: false,
     views: {
@@ -342,7 +406,7 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
         buttonText: "Tháng (Month)",
       },
     },
-    events: buildFullCalendarEvents(SAMPLE_EXAM_EVENTS),
+    events: buildFullCalendarEvents(SAMPLE_EXAM_EVENTS, slotMode),
     eventClick: (info) => {
       if (info && info.event) {
         updateCalendarInspector(info.event.extendedProps, info.event.start);
@@ -517,7 +581,7 @@ function updateCalendarViewButtons(viewName) {
 
 /**
  * Chuyển đổi tùy chọn chia khung giờ trục dọc:
- * - "shift": Chia theo Ca (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00)
+ * - "shift": Gộp mỗi ca thành đúng 1 hàng duy nhất (Ca 1: 7h30-9h00, Ca 2: 9h30-11h00, Ca 3: 13h30-15h00, Ca 4: 15h30-17h00), bỏ hàng nghỉ giữa ca.
  * - "hour": Chia theo Giờ chuẩn (07:00, 08:00, 09:00...)
  * @param {string} mode
  */
@@ -530,14 +594,16 @@ function switchCalendarSlotMode(mode) {
 
   if (adminCalendarInstance && typeof adminCalendarInstance.setOption === "function") {
     const isShiftAxis = currentSlotMode === "shift";
-    adminCalendarInstance.setOption("slotMinTime", isShiftAxis ? "07:30:00" : "07:00:00");
-    adminCalendarInstance.setOption("slotMaxTime", isShiftAxis ? "17:30:00" : "18:00:00");
-    adminCalendarInstance.setOption("slotLabelInterval", isShiftAxis ? "00:30:00" : "01:00:00");
+    adminCalendarInstance.setOption("slotMinTime", isShiftAxis ? "01:00:00" : "07:00:00");
+    adminCalendarInstance.setOption("slotMaxTime", isShiftAxis ? "05:00:00" : "18:00:00");
+    adminCalendarInstance.setOption("slotDuration", "01:00:00");
+    adminCalendarInstance.setOption("slotLabelInterval", "01:00:00");
     adminCalendarInstance.setOption("slotLabelContent", (arg) =>
       formatSlotLabelByMode(arg.date, currentSlotMode)
     );
   }
 
+  filterCalendarEvents();
   updateCalendarViewButtons(currentCalendarView);
   return currentSlotMode;
 }
@@ -605,7 +671,7 @@ function filterCalendarEvents() {
 
   if (adminCalendarInstance && typeof adminCalendarInstance.removeAllEvents === "function") {
     adminCalendarInstance.removeAllEvents();
-    const fcEvents = buildFullCalendarEvents(filtered);
+    const fcEvents = buildFullCalendarEvents(filtered, currentSlotMode);
     fcEvents.forEach((ev) => adminCalendarInstance.addEvent(ev));
   }
 
