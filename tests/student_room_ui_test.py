@@ -405,6 +405,30 @@ assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBe
 sandbox.deleteRegistration(newRegId);
 sandbox.confirmPendingDelete();
 assert.strictEqual(vm.runInContext("registrationRecords.length", sandbox), regBefore);
+
+// Kiểm tra trạng thái rỗng khi tìm kiếm ra 0 kết quả
+elements["registration-search-input"].value = "KHONG_TON_TAI_99999";
+sandbox.renderRegistrationTable();
+assert.strictEqual(elements["registration-table-body"].children.length, 1);
+const emptyTd = elements["registration-table-body"].children[0].children[0];
+assert.strictEqual(emptyTd.colSpan, 7);
+assert.ok(emptyTd.textContent.includes("Không có lượt đăng ký"));
+elements["registration-search-input"].value = "";
+sandbox.renderRegistrationTable();
+
+// Kiểm tra closeAllCrudModals (phím Escape) reset editingRegistrationId
+sandbox.startEditRegistration(1);
+assert.strictEqual(vm.runInContext("editingRegistrationId", sandbox), 1);
+sandbox.closeAllCrudModals();
+assert.strictEqual(vm.runInContext("editingRegistrationId", sandbox), null);
+
+// Kiểm tra startEditRegistration giữ option dự phòng nếu môn học đã bị xóa khỏi danh mục
+vm.runInContext('courseRecords = courseRecords.filter((c) => c.ma_mon !== "IT005")', sandbox);
+const orphanRegId = vm.runInContext('registrationRecords.find((r) => r.ma_mon === "IT005").id', sandbox);
+sandbox.startEditRegistration(orphanRegId);
+assert.strictEqual(elements["reg-form-ma-mon"].value, "IT005");
+assert.ok(elements["reg-form-ma-mon"].children.some((o) => o.value === "IT005" && o.textContent.includes("đã xóa")));
+sandbox.closeRegistrationModal();
 """
 
     res = subprocess.run(
