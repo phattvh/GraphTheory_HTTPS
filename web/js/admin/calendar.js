@@ -427,6 +427,7 @@ function getCalendarViewConfig(initialView = "timeGridWeek", slotMode = currentS
     slotMaxTime: isShiftAxis ? "05:00:00" : "18:00:00",
     slotDuration: "01:00:00",
     slotLabelInterval: "01:00:00",
+    slotEventOverlap: false,
     slotLabelContent: (arg) => formatSlotLabelByMode(arg.date, slotMode),
     eventDisplay: "block",
     eventContent: (arg) => renderCustomEventContent(arg),
@@ -648,6 +649,7 @@ function switchCalendarSlotMode(mode) {
     adminCalendarInstance.setOption("slotMaxTime", isShiftAxis ? "05:00:00" : "18:00:00");
     adminCalendarInstance.setOption("slotDuration", "01:00:00");
     adminCalendarInstance.setOption("slotLabelInterval", "01:00:00");
+    adminCalendarInstance.setOption("slotEventOverlap", false);
     adminCalendarInstance.setOption("slotLabelContent", (arg) =>
       formatSlotLabelByMode(arg.date, currentSlotMode)
     );

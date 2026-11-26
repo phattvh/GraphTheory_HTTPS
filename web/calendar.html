@@ -57,8 +57,15 @@
       border-top-style: solid;
     }
     #admin-fullcalendar.is-shift-axis .fc-timegrid-event-harness {
-      left: 2px !important;
-      right: 2px !important;
+      left: 3px !important;
+      right: 3px !important;
+    }
+    #admin-fullcalendar .fc-timegrid-event {
+      margin: 2px 2.5px !important;
+    }
+    #calendar-search-input::-webkit-calendar-picker-indicator {
+      display: none !important;
+      -webkit-appearance: none;
     }
     #admin-fullcalendar .fc-event {
       border-width: 1.5px;
@@ -197,13 +204,12 @@
             <input
               type="search"
               id="calendar-search-input"
-              list="calendar-search-suggestions"
               oninput="filterCalendarEvents()"
               placeholder="Tìm mã môn, tên môn, phòng thi, ca thi (VD: IT001, A101, Ca 1)..."
               aria-label="Tìm kiếm môn học, phòng thi hoặc ca thi"
               class="w-full pl-9 pr-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200/60 focus:bg-white text-slate-800 border border-transparent focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
             />
-            <datalist id="calendar-search-suggestions">
+            <datalist id="calendar-search-suggestions" class="hidden">
               <option value="IT001">IT001 - Lý thuyết Đồ thị</option>
               <option value="IT002">IT002 - Cấu trúc Dữ liệu &amp; Giải thuật</option>
               <option value="IT003">IT003 - Hệ Quản trị CSDL PostgreSQL</option>

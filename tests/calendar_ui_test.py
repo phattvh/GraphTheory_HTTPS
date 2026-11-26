@@ -78,6 +78,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "function renderShiftMatrixTable",
         "SHIFT_AXIS_ROWS",
         "SHIFT_COMPACT_TIME_RANGES",
+        "slotEventOverlap: false",
         'eventDisplay: "block"',
         "timeGridWeek",
         "dayGridMonth",
