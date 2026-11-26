@@ -7,6 +7,9 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 ## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
 
 ### Đã thêm (Added)
+- **Giao diện Đồ thị Xung đột `Cytoscape.js` (`UC09`, TV5 — Ngày 6):**
+  - Hoàn thiện `web/graph.html` và `web/js/admin/graph.js`: dựng đồ thị mẫu **10 đỉnh, 15 cạnh** tô 4 màu hợp lệ (0 cạnh trùng màu), hỗ trợ zoom/pan/fit, đổi bố cục (`cose`, `circle`, `grid`), inspector chi tiết đỉnh & cạnh bằng `textContent` (không `innerHTML`), hủy instance Cytoscape cũ khi khởi tạo lại.
+  - Thêm bộ kiểm thử `tests/graph_ui_test.py` và đăng ký vào `Makefile` (**22/22 bộ test**).
 - **Script nạp dữ liệu mẫu chuẩn (`scripts/seed.py`, TV3 — Ngày 6):**
   - Tạo `scripts/seed.py` (idempotent, giao dịch ACID, `random.Random(42)` lặp lại được) nạp 1 kỳ thi (`KTHK1_2026`), 15 môn học (`IT001`–`IT015`), 100 sinh viên (`22110001`–`22110100`), 10 phòng thi (`A101`–`C303`), 300 lượt đăng ký thi và 1 tài khoản sinh viên mẫu (`sv01`).
   - Thêm lệnh `make seed`, bộ kiểm thử `tests/seed_test.py` (kiểm tra idempotency, số lượng và chạy thử end-to-end `build_conflict_graph -> dsatur_coloring -> allocate_graph_schedule_with_overflow`) và đăng ký vào `Makefile` (**21/21 bộ test**).
