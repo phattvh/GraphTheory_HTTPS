@@ -7,6 +7,9 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 ## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
 
 ### Đã thêm (Added)
+- **Giao diện Thống kê KPI & Biểu đồ `Chart.js` (`UC13`, `UC14`, TV4 — Ngày 6):**
+  - Hoàn thiện `web/stats.html` và `web/js/admin/stats.js`: 4 thẻ KPI tổng quan, 2 biểu đồ canvas `Chart.js` (đối chứng DSatur vs Welsh–Powell & Top học phần có bậc đỉnh cao nhất), bảng chi tiết căn giữa dùng 100% DOM `textContent` và bộ chọn chuyển đổi kỳ thi (hủy instance Chart cũ trước khi vẽ lại).
+  - Thêm bộ kiểm thử `tests/stats_ui_test.py` và đăng ký vào `Makefile` (**23/23 bộ test**).
 - **Giao diện Đồ thị Xung đột `Cytoscape.js` (`UC09`, TV5 — Ngày 6):**
   - Hoàn thiện `web/graph.html` và `web/js/admin/graph.js`: dựng đồ thị mẫu **10 đỉnh, 15 cạnh** tô 4 màu hợp lệ (0 cạnh trùng màu), hỗ trợ zoom/pan/fit, đổi bố cục (`cose`, `circle`, `grid`), inspector chi tiết đỉnh & cạnh bằng `textContent` (không `innerHTML`), hủy instance Cytoscape cũ khi khởi tạo lại.
   - Thêm bộ kiểm thử `tests/graph_ui_test.py` và đăng ký vào `Makefile` (**22/22 bộ test**).
