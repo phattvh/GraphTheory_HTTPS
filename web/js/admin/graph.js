@@ -422,11 +422,6 @@ function renderEdgeInspector(edgeData) {
 
   listEl.replaceChildren();
   appendInspectorRow(listEl, "Số sinh viên thi cả 2 ca", `${edgeData.weight} SV`);
-  appendInspectorRow(
-    listEl,
-    "Kiểm chứng tô màu",
-    isValid ? `Hợp lệ (Ca ${srcShift} ≠ Ca ${tgtShift})` : `Trùng ca (Ca ${srcShift})`
-  );
 }
 
 /**
