@@ -175,8 +175,30 @@ def test_caddy_serves_api_js_if_running():
         pass
 
 
+def test_pinned_cdn_sri_and_html_script_wiring():
+    """Đảm bảo mọi thư viện jsDelivr cố định phiên bản đều có SRI sha384 và các trang đều nạp api.js."""
+    sri_pages = {
+        "calendar.html": 2,
+        "graph.html": 1,
+        "stats.html": 1,
+    }
+    for filename, expected_count in sri_pages.items():
+        html = (WEB_DIR / filename).read_text(encoding="utf-8")
+        assert html.count('integrity="sha384-') == expected_count, (
+            f"{filename} thiếu mã băm SRI sha384 trên script CDN"
+        )
+        assert html.count('crossorigin="anonymous"') == expected_count, (
+            f"{filename} thiếu crossorigin='anonymous' đi kèm SRI"
+        )
+
+    for page in ("index.html", "calendar.html", "graph.html", "stats.html", "student.html"):
+        html = (WEB_DIR / page).read_text(encoding="utf-8")
+        assert 'src="/js/core/api.js"' in html, f"{page} chưa nhúng /js/core/api.js"
+
+
 if __name__ == "__main__":
     test_api_js_exists_and_xss_clean()
     test_api_js_runtime_behavior()
+    test_pinned_cdn_sri_and_html_script_wiring()
     test_caddy_serves_api_js_if_running()
     print("ALL API CLIENT TESTS PASSED!")
