@@ -547,8 +547,6 @@ function stopColoringSimulation(restoreColors = true) {
     clearInterval(simulationTimerId);
     simulationTimerId = null;
   }
-  const labelEl = document.getElementById("btn-simulate-coloring-label");
-  if (labelEl) labelEl.textContent = "Mô phỏng tô màu";
   if (restoreColors) {
     applyColoringToCytoscape(currentShiftByNode);
     renderGraphLegend();
@@ -556,18 +554,17 @@ function stopColoringSimulation(restoreColors = true) {
 }
 
 /**
- * Chuyển đổi thuật toán tô màu (DSATUR hoặc WELSH_POWELL) và cập nhật lại đồ thị + Verifier.
+ * Chuyển đổi thuật toán tô màu (DSATUR hoặc WELSH_POWELL) và tự động chạy mô phỏng tô màu từng bước.
  * @param {"DSATUR"|"WELSH_POWELL"} algo
  */
 function selectGraphAlgorithm(algo) {
-  stopColoringSimulation(false);
   activeAlgorithm = algo === "WELSH_POWELL" ? "WELSH_POWELL" : "DSATUR";
   updateAlgorithmButtons();
-  return runAutoSchedule();
+  return startColoringSimulation();
 }
 
 /**
- * Thực thi thuật toán xếp lịch (tô màu đồ thị + kiểm chứng) và cập nhật giao diện.
+ * Thực thi thuật toán xếp lịch (tô màu đồ thị + kiểm chứng) và cập nhật giao diện ngay lập tức.
  */
 function runAutoSchedule() {
   stopColoringSimulation(false);
@@ -594,23 +591,19 @@ function runAutoSchedule() {
 }
 
 /**
- * Bật / dừng mô phỏng quá trình tô màu từng đỉnh theo thứ tự thuật toán đang chọn.
+ * Chạy mô phỏng quá trình tô màu từng đỉnh theo thứ tự thuật toán đang chọn.
  */
-function toggleColoringSimulation() {
-  if (simulationTimerId !== null) {
-    stopColoringSimulation(true);
-    clearGraphHighlight();
-    return false;
-  }
+function startColoringSimulation() {
+  stopColoringSimulation(false);
 
   const result = computeGraphColoring(activeAlgorithm);
   currentShiftByNode = result.shiftByNode;
   activeShiftFilter = null;
   activeFocusedNodeId = null;
+  if (cyInstance && typeof cyInstance.elements === "function") {
+    cyInstance.elements().removeClass("dimmed highlighted");
+  }
   updateClearFocusButtonVisibility();
-
-  const labelEl = document.getElementById("btn-simulate-coloring-label");
-  if (labelEl) labelEl.textContent = "Dừng mô phỏng";
 
   const partialMap = {};
   applyColoringToCytoscape(partialMap);
@@ -622,7 +615,7 @@ function toggleColoringSimulation() {
     if (stepIdx >= result.steps.length) {
       stopColoringSimulation(true);
       setStatusBannerText(
-        `Hoàn tất mô phỏng ${algoLabel}: ${result.steps.length}/${result.steps.length} đỉnh · χ(G) = ${result.chromaticNumber} ca`
+        `Hoàn tất ${algoLabel}: ${result.steps.length}/${result.steps.length} đỉnh · χ(G) = ${result.chromaticNumber} ca · ${result.conflicts} xung đột`
       );
       return;
     }
@@ -631,7 +624,7 @@ function toggleColoringSimulation() {
     applyColoringToCytoscape(partialMap);
     renderNodeInspector(cur.nodeId);
     setStatusBannerText(
-      `Bước ${cur.step}/${result.steps.length}: Tô ${cur.nodeId} (deg=${cur.degree}, sat=${cur.saturation}) → Ca ${cur.shift}`
+      `${algoLabel} · Bước ${cur.step}/${result.steps.length}: Tô ${cur.nodeId} (deg=${cur.degree}) → Ca ${cur.shift}`
     );
     stepIdx += 1;
   };
@@ -640,7 +633,7 @@ function toggleColoringSimulation() {
   if (typeof setInterval === "function") {
     simulationTimerId = setInterval(runNextStep, 450);
   }
-  return true;
+  return result;
 }
 
 function syncGraphExamSelectors(academicYear, preferredExamCode) {

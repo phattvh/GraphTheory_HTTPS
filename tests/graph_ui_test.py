@@ -24,7 +24,6 @@ def test_graph_html_elements():
         'id="graph-exam-select"',
         'id="btn-algo-dsatur"',
         'id="btn-algo-welsh-powell"',
-        'id="btn-simulate-coloring"',
         'id="btn-run-schedule"',
         'id="graph-node-search"',
         'id="cy"',
@@ -46,6 +45,7 @@ def test_graph_html_elements():
     assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
     assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
     assert 'id="graph-verifier-card"' not in html, "Đã xóa khung Schedule Verifier"
+    assert 'id="btn-simulate-coloring"' not in html, "Đã xóa nút Mô phỏng tô màu, tự chạy khi chọn thuật toán"
 
 
 def test_graph_js_structure_and_xss():
@@ -59,7 +59,7 @@ def test_graph_js_structure_and_xss():
         "function computeGraphColoring",
         "function selectGraphAlgorithm",
         "function runAutoSchedule",
-        "function toggleColoringSimulation",
+        "function startColoringSimulation",
         "function focusGraphNode",
         "function filterGraphByShift",
         "function clearGraphHighlight",
@@ -122,7 +122,6 @@ const elements = {
   "graph-exam-select": makeEl("select"),
   "btn-algo-dsatur": makeEl("button"),
   "btn-algo-welsh-powell": makeEl("button"),
-  "btn-simulate-coloring-label": makeEl("span"),
   "btn-graph-clear-focus": makeEl("button"),
   "graph-status-banner": makeEl("span"),
   "graph-legend-buttons": makeEl("div"),
@@ -232,16 +231,19 @@ assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
 
-// Kiểm tra thuật toán DSatur và Welsh-Powell chạy 0 xung đột và cập nhật thanh trạng thái
+// Kiểm tra bấm thuật toán Welsh-Powell / DSatur tự động chạy mô phỏng tô màu 0 xung đột
 const wpRes = sandbox.selectGraphAlgorithm("WELSH_POWELL");
 assert.strictEqual(wpRes.conflicts, 0, "Welsh-Powell không được có cạnh cùng màu");
 assert.ok(elements["graph-status-banner"].textContent.includes("Welsh-Powell"));
+assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
 assert.strictEqual(elements["btn-algo-welsh-powell"].attrs["aria-pressed"], "true");
 
 const dsRes = sandbox.selectGraphAlgorithm("DSATUR");
 assert.strictEqual(dsRes.conflicts, 0, "DSatur không được có cạnh cùng màu");
 assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô phỏng tô màu");
 assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
+assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
+sandbox.stopColoringSimulation(true);
 
 // Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
 const foundId = sandbox.searchGraphNode("IT008");
@@ -253,13 +255,6 @@ assert.strictEqual(filteredShift, 1);
 assert.ok(elements["graph-status-banner"].textContent.includes("Ca 1"));
 sandbox.clearGraphHighlight();
 assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
-
-// Kiểm tra bật & dừng mô phỏng tô màu từng bước
-const started = sandbox.toggleColoringSimulation();
-assert.strictEqual(started, true);
-assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
-sandbox.stopColoringSimulation(true);
-assert.strictEqual(elements["btn-simulate-coloring-label"].textContent, "Mô phỏng tô màu");
 """
     res = subprocess.run(
         ["node", "-e", script],
