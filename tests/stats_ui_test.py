@@ -3,8 +3,8 @@ Kiểm tra giao diện Thống kê & Phân tích (UC13, UC14 UI):
 - Nhúng thư viện Chart.js v4 qua CDN (kèm SRI sha384) trong web/stats.html
 - 4 thẻ KPI tổng quan đồng nhất (Môn/|E|, SV/Lượt thi, Số ca χ(G), Tỷ lệ lấp đầy phòng TB)
 - 2 biểu đồ Chart.js: (1) Tỷ lệ lấp đầy phòng theo từng Ca thi (không vẽ thời gian ms),
-  (2) Top 5 môn có bậc đỉnh cao nhất (trục Y gọn mã môn)
-- Bảng chi tiết phân bổ từng Ca thi (không lặp lại Top 5 môn) & chuyển đổi kỳ thi trong stats.js
+  (2) Phân bố số môn thi trong 1 ngày của sinh viên (Doughnut Chart)
+- Bảng chi tiết phân bổ từng Ca thi & chuyển đổi kỳ thi trong stats.js
 """
 
 from pathlib import Path
@@ -48,7 +48,7 @@ def test_stats_html_chartjs_cdn_and_canvases():
         'id="kpi-room-utilization"',
         "<canvas",
         'id="chart-shift-utilization"',
-        'id="chart-top-degree-courses"',
+        'id="chart-daily-exam-distribution"',
         'id="stats-shift-summary-tbody"',
         'src="/js/admin/stats.js"',
     ]:
@@ -77,7 +77,7 @@ def test_stats_html_chartjs_cdn_and_canvases():
         "function renderStatsKpiCards",
         "function renderStatsShiftSummaryTable",
         "function buildShiftUtilizationChartConfig",
-        "function buildTopDegreeChartConfig",
+        "function buildDailyExamDistributionChartConfig",
         "function initStatsCharts",
         "function handleStatsExamChange",
         "window.Chart",
@@ -119,7 +119,7 @@ const elements = {
   "kpi-room-utilization": makeEl("div"),
   "stats-shift-summary-tbody": makeEl("tbody"),
   "chart-shift-utilization": makeEl("canvas"),
-  "chart-top-degree-courses": makeEl("canvas"),
+  "chart-daily-exam-distribution": makeEl("canvas"),
 };
 
 const createdCharts = [];
@@ -152,7 +152,7 @@ vm.runInContext(fs.readFileSync("web/js/admin/stats.js", "utf8"), sandbox);
 
 // 1. Khởi tạo mặc định kỳ thi KTHK1_2026: tiêu đề gọn, lọc 2 cấp đồng bộ, tạo 2 biểu đồ & bảng 4 ca thi
 const res = sandbox.initStatsCharts("KTHK1_2026");
-assert.ok(res && res.shiftChart && res.degreeChart);
+assert.ok(res && res.shiftChart && res.dailyExamChart);
 assert.strictEqual(createdCharts.length, 2);
 assert.strictEqual(elements["stats-exam-heading"].textContent, "Thống kê & Phân tích Kỳ thi");
 assert.strictEqual(elements["stats-year-select"].value, "2026 - 2027");
@@ -161,11 +161,19 @@ assert.strictEqual(elements["stats-exam-select"].children.length, 1);
 assert.strictEqual(res.shiftChart.config.type, "bar");
 assert.deepStrictEqual(Array.from(res.shiftChart.config.data.labels), ["Ca 1", "Ca 2", "Ca 3", "Ca 4"]);
 assert.strictEqual(res.shiftChart.config.data.datasets.length, 1);
-assert.strictEqual(res.degreeChart.config.type, "bar");
-assert.strictEqual(res.degreeChart.config.options.indexAxis, "y");
+assert.strictEqual(res.dailyExamChart.config.type, "doughnut");
 assert.deepStrictEqual(
-  Array.from(res.degreeChart.config.data.labels),
-  ["IT002", "IT008", "IT006", "IT001", "IT003"]
+  Array.from(res.dailyExamChart.config.data.datasets[0].data),
+  [62, 31, 7]
+);
+assert.strictEqual(
+  res.dailyExamChart.config.data.datasets[0].data.reduce((a, b) => a + b, 0),
+  100
+);
+assert.ok(res.dailyExamChart.config.data.labels[0].includes("1 môn / ngày"));
+assert.strictEqual(
+  res.dailyExamChart.config.options.plugins.tooltip.callbacks.label({ dataIndex: 1, parsed: 31 }),
+  "31 sinh viên (31.0%)"
 );
 assert.strictEqual(elements["kpi-total-courses"].textContent, "15 Môn");
 assert.strictEqual(elements["kpi-total-students"].textContent, "100 SV");
@@ -176,14 +184,21 @@ assert.strictEqual(elements["stats-shift-summary-tbody"].children.length, 4);
 // 2. Chuyển Năm học sang 2025 - 2026: tự lọc #stats-exam-select chỉ còn kỳ thi năm 2025 - 2026 & vẽ lại 2 chart
 elements["stats-year-select"].value = "2025 - 2026";
 const res2 = sandbox.handleStatsYearChange();
-assert.ok(res2 && res2.shiftChart && res2.degreeChart);
+assert.ok(res2 && res2.shiftChart && res2.dailyExamChart);
 assert.strictEqual(res.shiftChart.destroyed, true);
-assert.strictEqual(res.degreeChart.destroyed, true);
+assert.strictEqual(res.dailyExamChart.destroyed, true);
 assert.strictEqual(elements["stats-exam-select"].value, "KTHK2_2025");
 assert.strictEqual(elements["stats-exam-select"].children.length, 1);
 assert.strictEqual(elements["kpi-total-courses"].textContent, "12 Môn");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "71.4%");
-assert.strictEqual(res2.degreeChart.config.data.labels[0], "IT004");
+assert.deepStrictEqual(
+  Array.from(res2.dailyExamChart.config.data.datasets[0].data),
+  [56, 24, 5]
+);
+assert.strictEqual(
+  res2.dailyExamChart.config.data.datasets[0].data.reduce((a, b) => a + b, 0),
+  85
+);
 """
 
     res = subprocess.run(
