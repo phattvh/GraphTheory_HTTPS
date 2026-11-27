@@ -11,6 +11,8 @@
 const STATS_EXAM_DATASETS = {
   KTHK1_2026: {
     ma_ky_thi: "KTHK1_2026",
+    nam_hoc: "2026 - 2027",
+    short_label: "KTHK1_2026 - Thi Cuối Kỳ HK1",
     ten_ky_thi: "Học kỳ 1 (2026 - 2027)",
     total_courses: 15,
     total_edges: 46,
@@ -76,6 +78,8 @@ const STATS_EXAM_DATASETS = {
   },
   KTHK2_2025: {
     ma_ky_thi: "KTHK2_2025",
+    nam_hoc: "2025 - 2026",
+    short_label: "KTHK2_2025 - Thi Cuối Kỳ HK2",
     ten_ky_thi: "Học kỳ 2 (2025 - 2026)",
     total_courses: 12,
     total_edges: 34,
@@ -187,7 +191,7 @@ function renderStatsKpiCards(dataset) {
 
   const headingEl = document.getElementById("stats-exam-heading");
   if (headingEl) {
-    headingEl.textContent = `Thống kê & Phân tích Kỳ thi: ${data.ten_ky_thi}`;
+    headingEl.textContent = "Thống kê & Phân tích Kỳ thi";
   }
 
   const coursesEl = document.getElementById("kpi-total-courses");
@@ -427,12 +431,78 @@ function buildTopDegreeChartConfig(dataset) {
 }
 
 /**
+ * Lấy danh sách năm học duy nhất sắp xếp mới nhất trước.
+ * @returns {string[]}
+ */
+function getAvailableAcademicYears() {
+  const years = new Set();
+  Object.values(STATS_EXAM_DATASETS).forEach((item) => {
+    if (item && item.nam_hoc) years.add(item.nam_hoc);
+  });
+  return Array.from(years).sort((a, b) => b.localeCompare(a));
+}
+
+/**
+ * Lọc danh sách kỳ thi thuộc một năm học cụ thể.
+ * @param {string} academicYear
+ * @returns {Array<Record<string, any>>}
+ */
+function getExamsByAcademicYear(academicYear) {
+  return Object.values(STATS_EXAM_DATASETS).filter((item) => item && item.nam_hoc === academicYear);
+}
+
+/**
+ * Đồng bộ 2 ô lọc Năm học -> Kỳ thi bằng DOM API an toàn (textContent).
+ * @param {string} academicYear
+ * @param {string} preferredExamCode
+ * @returns {string} Mã kỳ thi đang được chọn sau khi đồng bộ
+ */
+function syncStatsSelectors(academicYear, preferredExamCode) {
+  const years = getAvailableAcademicYears();
+  const activeYear = years.includes(academicYear) ? academicYear : years[0] || "";
+  const examsInYear = getExamsByAcademicYear(activeYear);
+  const matchedExam =
+    examsInYear.find((item) => item.ma_ky_thi === preferredExamCode) ||
+    examsInYear[0] ||
+    getStatsDataset("KTHK1_2026");
+
+  const yearSelect = document.getElementById("stats-year-select");
+  if (yearSelect && typeof yearSelect.replaceChildren === "function") {
+    yearSelect.replaceChildren();
+    years.forEach((yr) => {
+      const opt = document.createElement("option");
+      opt.value = yr;
+      opt.textContent = yr;
+      if (yr === activeYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    });
+    yearSelect.value = activeYear;
+  }
+
+  const examSelect = document.getElementById("stats-exam-select");
+  if (examSelect && typeof examSelect.replaceChildren === "function") {
+    examSelect.replaceChildren();
+    examsInYear.forEach((ex) => {
+      const opt = document.createElement("option");
+      opt.value = ex.ma_ky_thi;
+      opt.textContent = ex.short_label || `${ex.ma_ky_thi} - ${ex.ten_ky_thi}`;
+      if (ex.ma_ky_thi === matchedExam.ma_ky_thi) opt.selected = true;
+      examSelect.appendChild(opt);
+    });
+    examSelect.value = matchedExam.ma_ky_thi;
+  }
+
+  return matchedExam.ma_ky_thi;
+}
+
+/**
  * Khởi tạo hoặc vẽ lại cả 2 khung canvas biểu đồ Chart.js trên trang Thống kê.
  * @param {string} examCode
  */
 function initStatsCharts(examCode = activeStatsExamCode) {
   activeStatsExamCode = STATS_EXAM_DATASETS[examCode] ? examCode : "KTHK1_2026";
   const dataset = getStatsDataset(activeStatsExamCode);
+  syncStatsSelectors(dataset.nam_hoc, dataset.ma_ky_thi);
 
   renderStatsKpiCards(dataset);
   renderStatsShiftSummaryTable(dataset);
@@ -469,6 +539,17 @@ function initStatsCharts(examCode = activeStatsExamCode) {
     shiftChart: shiftUtilizationChartInstance,
     degreeChart: topDegreeChartInstance,
   };
+}
+
+/**
+ * Xử lý khi Admin đổi Năm học trên dropdown #stats-year-select:
+ * tự động lọc danh sách Kỳ thi thuộc năm đó và vẽ lại thống kê.
+ */
+function handleStatsYearChange() {
+  const yearSelect = document.getElementById("stats-year-select");
+  const selectedYear = yearSelect && yearSelect.value ? yearSelect.value : getAvailableAcademicYears()[0];
+  const resolvedExamCode = syncStatsSelectors(selectedYear, "");
+  return initStatsCharts(resolvedExamCode);
 }
 
 /**
