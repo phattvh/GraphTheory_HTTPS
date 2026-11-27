@@ -229,6 +229,10 @@ assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Số môn cần ch�
 assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301, C302");
 
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
+assert.strictEqual(
+  elements["graph-inspector-heading"].textContent,
+  "Cấu trúc Dữ liệu & Giải thuật - Lý thuyết Đồ thị"
+);
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
 
 // Kiểm tra bấm thuật toán Welsh-Powell / DSatur tự động chạy mô phỏng tô màu 0 xung đột

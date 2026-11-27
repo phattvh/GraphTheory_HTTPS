@@ -409,15 +409,18 @@ function renderEdgeInspector(edgeData) {
   const srcShift = getNodeShift(edgeData.source);
   const tgtShift = getNodeShift(edgeData.target);
   const isValid = srcShift !== tgtShift;
+  const srcMeta = SAMPLE_COURSE_METADATA[edgeData.source];
+  const tgtMeta = SAMPLE_COURSE_METADATA[edgeData.target];
+  const srcLabel = srcMeta ? srcMeta.ten_mon : edgeData.source;
+  const tgtLabel = tgtMeta ? tgtMeta.ten_mon : edgeData.target;
 
-  if (headingEl) headingEl.textContent = "Chi tiết Cạnh xung đột";
+  if (headingEl) headingEl.textContent = `${srcLabel} - ${tgtLabel}`;
   badgeEl.className = isValid
     ? "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
     : "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700";
   badgeEl.textContent = `Cạnh: ${edgeData.source} — ${edgeData.target}`;
 
   listEl.replaceChildren();
-  appendInspectorRow(listEl, "Cặp môn xung đột", `${edgeData.source} & ${edgeData.target}`);
   appendInspectorRow(listEl, "Số SV thi chung", `${edgeData.weight} SV`);
   appendInspectorRow(
     listEl,
