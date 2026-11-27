@@ -314,30 +314,6 @@ function applyColoringToCytoscape(shiftByNode) {
   });
 }
 
-function updateVerifierPanel(chromaticNumber, conflicts, algo) {
-  const algoLabel = algo === "WELSH_POWELL" ? "Welsh-Powell" : "DSatur";
-  const titleEl = document.getElementById("verifier-status-title");
-  const chromaticEl = document.getElementById("verifier-chromatic-number");
-  const conflictsEl = document.getElementById("verifier-edge-conflicts");
-  const capacityEl = document.getElementById("verifier-room-capacity");
-
-  if (titleEl) {
-    titleEl.textContent =
-      conflicts === 0
-        ? "Schedule Verifier: Hợp lệ 100%"
-        : `Schedule Verifier: Phát hiện ${conflicts} xung đột`;
-  }
-  if (chromaticEl) {
-    chromaticEl.textContent = `${chromaticNumber} ca thi (${algoLabel})`;
-  }
-  if (conflictsEl) {
-    conflictsEl.textContent = `${conflicts} cạnh cùng màu`;
-  }
-  if (capacityEl) {
-    capacityEl.textContent = "Đạt 100%";
-  }
-}
-
 function renderGraphLegend() {
   const container = document.getElementById("graph-legend-buttons");
   if (!container || typeof container.replaceChildren !== "function") return;
@@ -607,7 +583,6 @@ function runAutoSchedule() {
   }
   renderGraphLegend();
   updateClearFocusButtonVisibility();
-  updateVerifierPanel(result.chromaticNumber, result.conflicts, activeAlgorithm);
 
   const selectedId = activeFocusedNodeId || "IT002";
   renderNodeInspector(selectedId);
@@ -647,7 +622,6 @@ function toggleColoringSimulation() {
   const runNextStep = () => {
     if (stepIdx >= result.steps.length) {
       stopColoringSimulation(true);
-      updateVerifierPanel(result.chromaticNumber, result.conflicts, activeAlgorithm);
       setStatusBannerText(
         `Hoàn tất mô phỏng ${algoLabel}: ${result.steps.length}/${result.steps.length} đỉnh · χ(G) = ${result.chromaticNumber} ca`
       );

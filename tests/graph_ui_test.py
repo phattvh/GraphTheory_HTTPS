@@ -40,12 +40,12 @@ def test_graph_html_elements():
         'id="graph-legend"',
         'id="graph-inspector-badge"',
         'id="graph-inspector-details"',
-        'id="verifier-chromatic-number"',
         'src="/js/admin/graph.js"',
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
     assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
     assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
+    assert 'id="graph-verifier-card"' not in html, "Đã xóa khung Schedule Verifier"
 
 
 def test_graph_js_structure_and_xss():
@@ -130,10 +130,6 @@ const elements = {
   "graph-inspector-badge": makeEl("span"),
   "graph-inspector-details": makeEl("ul"),
   "graph-zoom-label": makeEl("span"),
-  "verifier-status-title": makeEl("span"),
-  "verifier-chromatic-number": makeEl("span"),
-  "verifier-edge-conflicts": makeEl("span"),
-  "verifier-room-capacity": makeEl("span"),
 };
 
 let capturedConfig = null;
@@ -234,16 +230,16 @@ assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
 
-// Kiểm tra thuật toán DSatur và Welsh-Powell chạy 0 xung đột và cập nhật Verifier
+// Kiểm tra thuật toán DSatur và Welsh-Powell chạy 0 xung đột và cập nhật thanh trạng thái
 const wpRes = sandbox.selectGraphAlgorithm("WELSH_POWELL");
 assert.strictEqual(wpRes.conflicts, 0, "Welsh-Powell không được có cạnh cùng màu");
-assert.ok(elements["verifier-chromatic-number"].textContent.includes("Welsh-Powell"));
+assert.ok(elements["graph-status-banner"].textContent.includes("Welsh-Powell"));
 assert.strictEqual(elements["btn-algo-welsh-powell"].attrs["aria-pressed"], "true");
 
 const dsRes = sandbox.selectGraphAlgorithm("DSATUR");
 assert.strictEqual(dsRes.conflicts, 0, "DSatur không được có cạnh cùng màu");
 assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô phỏng tô màu");
-assert.ok(elements["verifier-chromatic-number"].textContent.includes("DSatur"));
+assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
 
 // Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
 const foundId = sandbox.searchGraphNode("IT008");
