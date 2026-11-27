@@ -3,12 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTTPS — Đồ thị Xung đột & Xếp lịch DSatur</title>
+  <title>HTTPS - Đồ thị Xung đột &amp; Xếp lịch DSatur</title>
   <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
   <!-- Tailwind CSS & Cytoscape.js CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js" integrity="sha384-H3uzGzTfGHUAumB8+s4GEdfFwzAceN9wCCndN8AXubWKFIPuBSWKKtWDx7RhSf/z" crossorigin="anonymous" defer></script>
   <link rel="stylesheet" href="/css/layout.css" />
+  <style>
+    #tab-graph h2 {
+      font-size: 1.375rem;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+    #tab-graph h3 {
+      font-size: 1.05rem;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+  </style>
 </head>
 <body data-admin-page="graph" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
@@ -16,71 +28,150 @@
     <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
     <div id="admin-shell-mount"></div>
 
-    <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-6">
-      <!-- MÀN HÌNH FIGMA 03: ĐỒ THỊ XUNG ĐỘT & XẾP LỊCH DSATUR (UC08, UC09) -->
+    <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-5">
+      <!-- MÀN HÌNH 03: ĐỒ THỊ XUNG ĐỘT & XẾP LỊCH DSATUR (UC08, UC09) -->
       <section id="tab-graph" class="admin-tab-section flex-1 space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">
-              Thuật toán: DSatur (Đang chọn)
-            </button>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
-              Đối chứng: Welsh–Powell
-            </button>
+
+        <!-- Thanh tiêu đề & Bộ lọc 2 cấp Năm học -> Kỳ thi đồng bộ với trang Thống kê -->
+        <header class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200">
+          <div>
+            <h2 id="graph-page-heading" class="text-lg font-bold text-slate-900">
+              Đồ thị Xung đột &amp; Xếp lịch Tự động
+            </h2>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 no-print">
+            <div class="flex items-center gap-2">
+              <label for="graph-year-select" class="text-xs font-semibold text-slate-600">Năm học:</label>
+              <select
+                id="graph-year-select"
+                aria-label="Chọn năm học đồ thị"
+                onchange="handleGraphYearChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="2026 - 2027" selected>2026 - 2027</option>
+                <option value="2025 - 2026">2025 - 2026</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label for="graph-exam-select" class="text-xs font-semibold text-slate-600">Kỳ thi:</label>
+              <select
+                id="graph-exam-select"
+                aria-label="Chọn kỳ thi đồ thị"
+                onchange="handleGraphExamChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="KTHK1_2026" selected>KTHK1_2026 - Thi Cuối Kỳ HK1</option>
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <!-- Thanh công cụ Thuật toán, Bố cục, Tìm kiếm nhanh & Nút chạy Xếp lịch -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm no-print">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Chuyển đổi thuật toán DSatur / Welsh-Powell -->
+            <div class="inline-flex items-center gap-1.5" role="group" aria-label="Chọn thuật toán tô màu">
+              <button
+                id="btn-algo-dsatur"
+                type="button"
+                aria-pressed="true"
+                onclick="selectGraphAlgorithm('DSATUR')"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer"
+              >
+                DSatur
+              </button>
+              <button
+                id="btn-algo-welsh-powell"
+                type="button"
+                aria-pressed="false"
+                onclick="selectGraphAlgorithm('WELSH_POWELL')"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+              >
+                Welsh-Powell
+              </button>
+            </div>
+
+            <!-- Chọn bố cục đồ thị -->
             <select
               id="graph-layout-select"
               aria-label="Chọn bố cục đồ thị"
               onchange="changeGraphLayout(this.value)"
-              class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 focus:outline-none focus:border-blue-500"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 focus:outline-none focus:border-blue-600"
             >
-              <option value="cose">Layout: CoSE Force-Directed</option>
-              <option value="circle">Layout: Circle (Vòng tròn)</option>
-              <option value="grid">Layout: Grid (Lưới)</option>
+              <option value="cose">Bố cục: Lực đẩy (CoSE)</option>
+              <option value="circle">Bố cục: Vòng tròn (Circle)</option>
+              <option value="grid">Bố cục: Lưới (Grid)</option>
             </select>
-            <div class="inline-flex items-center gap-1 pl-2 border-l border-slate-200">
-              <button
-                id="btn-graph-zoom-in"
-                type="button"
-                onclick="zoomInGraph()"
-                title="Phóng to"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
-              >
-                +
-              </button>
-              <button
-                id="btn-graph-zoom-out"
-                type="button"
-                onclick="zoomOutGraph()"
-                title="Thu nhỏ"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
-              >
-                −
-              </button>
-              <button
-                id="btn-graph-fit"
-                type="button"
-                onclick="resetGraphView()"
-                title="Căn vừa khung hình"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
-              >
-                ⊡ Vừa khung
-              </button>
-              <span id="graph-zoom-label" class="text-[11px] font-mono text-slate-500 pl-1">100%</span>
+
+            <!-- Tìm kiếm & định vị nhanh đỉnh môn học -->
+            <div class="relative w-56">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                id="graph-node-search"
+                type="search"
+                list="graph-node-suggestions"
+                oninput="searchGraphNode(this.value)"
+                placeholder="Tìm mã môn (VD: IT002)..."
+                aria-label="Tìm kiếm và định vị môn học trên đồ thị"
+                class="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs font-medium bg-slate-50 hover:bg-slate-100 focus:bg-white text-slate-800 border border-slate-200 focus:border-blue-600 focus:outline-none transition"
+              />
+              <datalist id="graph-node-suggestions"></datalist>
             </div>
           </div>
-          <button type="button" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white shadow-sm">
-            ⚡ Chạy Xếp lịch Tự động (DSatur + FFD)
-          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Nút mô phỏng tô màu từng bước -->
+            <button
+              id="btn-simulate-coloring"
+              type="button"
+              onclick="toggleColoringSimulation()"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="6 4 20 12 6 20 6 4"></polygon>
+              </svg>
+              <span id="btn-simulate-coloring-label">Mô phỏng tô màu</span>
+            </button>
+
+            <!-- Nút chạy xếp lịch tự động -->
+            <button
+              id="btn-run-schedule"
+              type="button"
+              onclick="runAutoSchedule()"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-xs font-semibold text-white shadow-sm transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>Chạy Xếp lịch Tự động</span>
+            </button>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div id="cytoscape-container-shell" class="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <h3 class="text-sm font-bold text-slate-900 mb-3">
-              Đồ thị Xung đột G = (V, E, W) • Đỉnh = Môn thi • Cạnh = Số SV thi chung • Màu = Ca thi
-            </h3>
+        <!-- Bố cục chính 2 cột: Canvas Đồ thị (8 cột) + Inspector & Verifier (4 cột) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-center relative">
-              <div id="cy" class="w-full h-[440px]"></div>
+          <!-- CỘT TRÁI: Khung hiển thị Đồ thị Cytoscape.js -->
+          <div id="cytoscape-container-shell" class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <!-- Tiêu đề khung đồ thị & Thanh trạng thái mô phỏng / xếp lịch -->
+            <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-slate-200">
+              <h3 class="text-sm font-bold text-slate-900">
+                Đồ thị Xung đột Môn thi
+              </h3>
+              <span id="graph-status-banner" class="text-xs font-medium text-slate-600 tabular-nums">
+                10 đỉnh · 15 cạnh · DSatur (4 ca)
+              </span>
+            </div>
+
+            <!-- Vùng Canvas tương tác Cytoscape.js + Nút Zoom nổi -->
+            <div class="relative bg-slate-50/70">
+              <div id="cy" class="w-full h-[500px]"></div>
+
               <svg id="cy-fallback-svg" class="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] pointer-events-none" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <line x1="360" y1="220" x2="200" y2="110" stroke="#94A3B8" stroke-width="3"/>
                 <line x1="360" y1="220" x2="520" y2="110" stroke="#94A3B8" stroke-width="2.5"/>
@@ -110,42 +201,102 @@
                 <circle cx="630" cy="220" r="27" fill="#8B5CF6" stroke="#5B21B6" stroke-width="2"/>
                 <text x="630" y="224" text-anchor="middle" fill="#FFFFFF" font-size="10" font-weight="bold">IT007</text>
               </svg>
+
+              <!-- Nút xóa trạng thái Focus/Lọc nổi góc dưới trái -->
+              <button
+                id="btn-graph-clear-focus"
+                type="button"
+                onclick="clearGraphHighlight()"
+                class="hidden absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-sm text-xs font-semibold transition cursor-pointer"
+              >
+                Hiển thị toàn bộ đồ thị
+              </button>
+
+              <!-- Cụm điều khiển Zoom nổi góc dưới phải -->
+              <nav aria-label="Điều khiển thu phóng đồ thị" class="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 no-print">
+                <button
+                  id="btn-graph-zoom-in"
+                  type="button"
+                  onclick="zoomInGraph()"
+                  title="Phóng to"
+                  aria-label="Phóng to đồ thị"
+                  class="w-7 h-7 rounded-md text-xs font-bold bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
+                >
+                  +
+                </button>
+                <button
+                  id="btn-graph-zoom-out"
+                  type="button"
+                  onclick="zoomOutGraph()"
+                  title="Thu nhỏ"
+                  aria-label="Thu nhỏ đồ thị"
+                  class="w-7 h-7 rounded-md text-xs font-bold bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
+                >
+                  −
+                </button>
+                <button
+                  id="btn-graph-fit"
+                  type="button"
+                  onclick="resetGraphView()"
+                  title="Căn vừa khung hình"
+                  class="px-2.5 h-7 rounded-md text-xs font-medium bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
+                >
+                  Vừa khung
+                </button>
+                <span id="graph-zoom-label" class="h-7 px-2 rounded-md bg-white/95 border border-slate-200 inline-flex items-center text-[11px] font-mono font-semibold text-slate-600 tabular-nums">100%</span>
+              </nav>
             </div>
 
-            <div id="graph-legend" class="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-3 mt-3 border-t border-slate-100 font-medium">
-              <span>🔵 Ca 1: IT002, IT005, IT009</span>
-              <span>🟢 Ca 2: IT001, IT006, IT010</span>
-              <span>🟡 Ca 3: IT008, IT004</span>
-              <span>🟣 Ca 4: IT003, IT007</span>
-              <span class="text-slate-500 font-normal ml-auto">10 đỉnh • 15 cạnh • Kéo để pan, cuộn chuột để zoom</span>
+            <!-- Thanh chú giải tương tác theo Ca thi (Click để lọc & kiểm chứng 0 cạnh cùng màu) -->
+            <div id="graph-legend" class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-t border-slate-200 bg-white text-xs">
+              <div id="graph-legend-buttons" class="flex flex-wrap items-center gap-2"></div>
+              <span class="text-[11px] text-slate-500">Bấm Ca thi để lọc · Bấm đỉnh để xem láng giềng</span>
             </div>
           </div>
 
-          <div class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-sm font-bold text-slate-900">Chi tiết Đỉnh đang chọn (Node Inspector)</h3>
-            <div>
-              <span id="graph-inspector-badge" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
-                Đỉnh: IT002 • Màu 1 (Ca thi số 1)
-              </span>
+          <!-- CỘT PHẢI: Node/Edge Inspector + Schedule Verifier -->
+          <div class="lg:col-span-4 space-y-5">
+            <!-- Card Chi tiết Đỉnh / Cạnh đang chọn -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                <h3 id="graph-inspector-heading" class="text-sm font-bold text-slate-900">
+                  Chi tiết Đỉnh đang chọn
+                </h3>
+                <span id="graph-inspector-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                  Đỉnh: IT002 · Ca 1
+                </span>
+              </div>
+
+              <ul id="graph-inspector-details" class="divide-y divide-slate-100 text-xs text-slate-700"></ul>
             </div>
 
-            <ul id="graph-inspector-details" class="text-xs text-slate-700 space-y-2 leading-relaxed">
-              <li>• <strong>Tên môn:</strong> Cấu trúc Dữ liệu &amp; Giải thuật</li>
-              <li>• <strong>Số sinh viên đăng ký:</strong> 180 SV</li>
-              <li>• <strong>Độ bão hòa DSatur (Saturation):</strong> 3</li>
-              <li>• <strong>Bậc của đỉnh deg(v):</strong> 4 môn xung đột</li>
-              <li>• <strong>Xung đột mạnh nhất:</strong> IT001 (42 SV chung), IT008 (38 SV chung)</li>
-              <li>• <strong>Phân phòng (First-Fit Decreasing):</strong> A101 (100 SV) • A102 (80 SV)</li>
-            </ul>
+            <!-- Card Kiểm chứng Lịch thi (Schedule Verifier) -->
+            <div id="graph-verifier-card" class="p-5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-3">
+              <div class="flex items-center gap-2 font-bold text-sm text-emerald-900">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span id="verifier-status-title">Schedule Verifier: Hợp lệ 100%</span>
+              </div>
 
-            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
-              <div class="font-bold text-sm">✅ Schedule Verifier: HỢP LỆ 100%</div>
-              <div>• Sắc số đạt được: χ(G) = 4 ca thi (DSatur)</div>
-              <div>• Kiểm chứng cạnh: 0 cạnh nối 2 đỉnh cùng màu</div>
-              <div>• Kiểm chứng phòng: 100% ca thi đủ sức chứa</div>
-              <div>• Thời gian chạy NetworkX: 12.4 ms</div>
+              <div class="space-y-1.5 text-emerald-900">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Sắc số đạt được χ(G)</span>
+                  <span id="verifier-chromatic-number" class="font-bold tabular-nums">4 ca thi (DSatur)</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Kiểm chứng xung đột</span>
+                  <span id="verifier-edge-conflicts" class="font-bold tabular-nums">0 cạnh cùng màu</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Sức chứa phòng (FFD)</span>
+                  <span id="verifier-room-capacity" class="font-bold">Đạt 100%</span>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
       </section>
     </main>
