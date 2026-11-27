@@ -132,23 +132,29 @@ function getCurrentUser() {
     const token = getAccessToken();
     if (!token) return null;
 
-    const rawUser = localStorage.getItem(AUTH_USER_KEY);
-    if (rawUser) {
-      const parsed = JSON.parse(rawUser);
-      const validRole = normalizeRole(parsed && parsed.vai_tro);
-      if (parsed && validRole) {
-        return { ...parsed, vai_tro: validRole };
-      }
-    }
-
     const claims = parseJwtPayload(token);
     const claimRole = normalizeRole(claims && claims.vai_tro);
-    if (!claims || !claimRole) return null;
+    if (!claims || !claimRole) {
+      clearAuthSession();
+      return null;
+    }
+
+    let cached = {};
+    const rawUser = localStorage.getItem(AUTH_USER_KEY);
+    if (rawUser) {
+      try {
+        const parsed = JSON.parse(rawUser);
+        if (parsed && typeof parsed === "object") {
+          cached = parsed;
+        }
+      } catch (_) {}
+    }
+
     return {
-      ten_dang_nhap: claims.sub || "",
+      ten_dang_nhap: claims.sub || cached.ten_dang_nhap || "",
       vai_tro: claimRole,
-      mssv: claims.mssv || null,
-      ho_ten: claims.ho_ten || null,
+      mssv: claims.mssv || cached.mssv || null,
+      ho_ten: claims.ho_ten || cached.ho_ten || null,
     };
   } catch (_) {
     return null;
@@ -203,6 +209,29 @@ function navigateByRole(role) {
 }
 
 /**
+ * Bảo vệ điều hướng trang phía Client dựa duy nhất trên JWT hợp lệ (bỏ qua mọi query param ?role=...).
+ * @param {{ requireAuth?: boolean }} options
+ */
+function enforceRouteGuard(options = {}) {
+  const requireAuth = Boolean(options && options.requireAuth);
+  const path = (window.location && window.location.pathname) || "";
+  const isLoginPage = path.endsWith("/login.html");
+  const user = getCurrentUser();
+
+  if (user && (user.vai_tro === "sinh_vien" || user.vai_tro === "admin")) {
+    if (!isLoginPage) {
+      navigateByRole(user.vai_tro);
+    }
+    return user;
+  }
+
+  if (requireAuth && !isLoginPage) {
+    window.location.href = "/login.html";
+  }
+  return null;
+}
+
+/**
  * Đăng xuất người dùng: xóa JWT khỏi localStorage và quay về màn hình đăng nhập.
  */
 function handleLogout() {
@@ -210,21 +239,7 @@ function handleLogout() {
   window.location.href = "/login.html";
 }
 
-// Tự động kiểm tra tham số ?role=... hoặc đồng bộ quyền từ JWT khi tải trang
+// Đồng bộ phân quyền từ JWT khi tải trang (chế độ Lựa chọn A cuối Tuần 1: requireAuth=false, sang Ngày 8 bật true)
 document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const queryRole = params.get("role");
-  if (queryRole === "sinh_vien" || queryRole === "admin") {
-    navigateByRole(queryRole);
-    return;
-  }
-
-  const token = getAccessToken();
-  const user = token ? getCurrentUser() : null;
-  if (user && (user.vai_tro === "sinh_vien" || user.vai_tro === "admin")) {
-    const path = window.location.pathname || "";
-    if (!path.endsWith("/login.html")) {
-      navigateByRole(user.vai_tro);
-    }
-  }
+  enforceRouteGuard({ requireAuth: false });
 });
