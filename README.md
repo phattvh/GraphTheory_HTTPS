@@ -39,18 +39,20 @@ Sau khi khởi chạy thành công:
 
 ## Lệnh vận hành & Kiểm thử (`Makefile`)
 
-Dự án chuẩn hóa toàn bộ thao tác Docker và **17 bộ kiểm thử tự động** thông qua [Makefile](Makefile). Chạy `make help` (hoặc `make`) để xem nhanh danh sách lệnh:
+Dự án chuẩn hóa toàn bộ thao tác Docker, nạp dữ liệu mẫu và **25 bộ kiểm thử tự động** thông qua [Makefile](Makefile). Chạy `make help` (hoặc `make`) để xem nhanh danh sách lệnh:
 
-| Lệnh                | Mô tả                                                                                                                                                             |
-| :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make help`         | Hiển thị danh sách toàn bộ lệnh hỗ trợ                                                                                                                            |
-| `make up`           | Khởi chạy 3 container Docker (`postgres`, `fastapi`, `caddy`)                                                                                                     |
-| `make down`         | Dừng toàn bộ container Docker                                                                                                                                     |
-| `make logs`         | Xem log realtime (100 dòng gần nhất) của các container                                                                                                            |
-| `make test`         | Chạy toàn bộ **17 bộ kiểm thử** (`test-host` + `test-backend`)                                                                                                    |
-| `make test-host`    | Chạy 8 bộ test HTTP HTTPS, giao diện/runtime JS (`layout`, `login`, `student_room_ui`, `calendar_ui`) và `docs_test.py`                                           |
-| `make test-backend` | Chạy 9 bộ test CSDL, ORM/Schemas, thuật toán (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`), RBAC & bảo mật (`-W error`) trong container `fastapi` |
-| `make clean`        | Dọn thư mục cache (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `htmlcov`)                                                                                      |
+| Lệnh                | Mô tả                                                                                                                                                                     |
+| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `make help`         | Hiển thị danh sách toàn bộ lệnh hỗ trợ                                                                                                                                    |
+| `make up`           | Khởi chạy 3 container Docker (`postgres`, `fastapi`, `caddy`)                                                                                                             |
+| `make down`         | Dừng toàn bộ container Docker                                                                                                                                             |
+| `make logs`         | Xem log realtime (100 dòng gần nhất) của các container                                                                                                                    |
+| `make seed`         | Nạp dữ liệu mẫu idempotent vào PostgreSQL (1 kỳ thi, 15 môn, 100 SV, 10 phòng, 300 đăng ký)                                                                               |
+| `make db-reset`     | Dựng lại toàn bộ volume PostgreSQL (chạy lại `init.sql`) và nạp lại dữ liệu mẫu *(chỉ dùng cho dev)*                                                                      |
+| `make test`         | Chạy toàn bộ **25 bộ kiểm thử** (`test-host` + `test-backend`)                                                                                                            |
+| `make test-host`    | Chạy 13 bộ test HTTP HTTPS, API CRUD, giao diện/runtime JS (`layout`, `login`, `api_client`, `student_room_ui`, `import_ui`, `graph_ui`, `calendar_ui`, `stats_ui`, docs) |
+| `make test-backend` | Chạy 12 bộ test CSDL, ORM/Schemas/Services, Seed, thuật toán (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`, `overflow_allocator`, `verifier`), RBAC & JWT  |
+| `make clean`        | Dọn thư mục cache (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `htmlcov`)                                                                                              |
 
 ## Tham gia phát triển
 

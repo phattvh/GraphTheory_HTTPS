@@ -79,10 +79,10 @@ Mọi thay đổi bắt buộc vượt qua **100%** bộ kiểm thử tự độ
 make test
 ```
 
-Lệnh `make test` (xem đủ các lệnh bằng `make help`) lần lượt chạy hai nhóm gồm **17 bộ kiểm thử**:
+Lệnh `make test` (xem đủ các lệnh bằng `make help`) lần lượt chạy hai nhóm gồm **25 bộ kiểm thử**:
 
-- **`make test-host` (8 bộ):** Kiểm thử tích hợp qua `https://localhost` (Caddy HTTPS, OWASP headers, API xác thực, CRUD danh mục), kiểm thử giao diện & runtime JS (`layout`, `login`, `student_room_ui`, `calendar_ui`) và kiểm thử tính toàn vẹn tài liệu (`tests/docs_test.py`).
-- **`make test-backend` (9 bộ):** Chạy bên trong container `fastapi` để kiểm thử lược đồ 8 bảng PostgreSQL, ORM/Pydantic schemas, thuật toán đồ thị & phân phòng (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`), phân quyền RBAC và bảo mật mật khẩu/JWT (với cờ `-W error` để không bỏ lọt cảnh báo deprecation).
+- **`make test-host` (13 bộ):** Kiểm thử tích hợp qua `https://localhost` (Caddy HTTPS, OWASP headers, API xác thực, CRUD danh mục & đăng ký thi), kiểm thử giao diện & runtime JS (`layout`, `login`, `api_client`, `student_room_ui`, `import_ui`, `graph_ui`, `calendar_ui`, `stats_ui`, SRI CDN) và kiểm thử tính toàn vẹn tài liệu (`tests/docs_test.py`).
+- **`make test-backend` (12 bộ):** Chạy bên trong container `fastapi` để kiểm thử lược đồ 8 bảng PostgreSQL, ORM/CheckConstraints/Pydantic schemas & `transactional_scope`, `seed.py`, thuật toán đồ thị & phân phòng (`graph_builder`, `dsatur`, `welsh_powell`, `room_allocator`, `overflow_allocator`, `verifier`), phân quyền RBAC và bảo mật mật khẩu/JWT/`Settings` (với cờ `-W error`).
 
 **Quy tắc viết kiểm thử:**
 

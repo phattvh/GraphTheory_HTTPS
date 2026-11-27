@@ -1670,12 +1670,17 @@ function resetImportModalState() {
 function openImportModal(entity) {
   resetImportModalState();
   const selectEl = document.getElementById("import-entity-select");
+  const displayEl = document.getElementById("import-entity-display");
+  const titleEl = document.getElementById("import-modal-title");
   const target = entity && CRUD_HEADINGS[entity] ? entity : activeCrudEntity;
   if (selectEl && CRUD_HEADINGS[target]) {
     selectEl.value = target;
   }
+  const label = (IMPORT_SCHEMAS[target] && IMPORT_SCHEMAS[target].label) || "Dữ liệu";
+  if (displayEl) displayEl.textContent = label;
+  if (titleEl) titleEl.textContent = "Nạp & Xuất dữ liệu";
   updateImportEntityGuide();
-  openCrudModal("import-data-modal", "import-entity-select");
+  openCrudModal("import-data-modal", "import-dropzone");
 }
 
 function closeImportModal() {

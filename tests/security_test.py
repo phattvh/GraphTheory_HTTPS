@@ -107,9 +107,55 @@ def test_invalid_and_expired_tokens():
         pass
 
 
+def test_jwt_secret_and_app_env_validation():
+    """Kiểm tra Settings chặn JWT_SECRET < 32 bytes và chặn secret mặc định khi APP_ENV=production."""
+    from pydantic import ValidationError
+    from backend.core.config import Settings
+
+    # 1. Secret ngắn hơn 32 bytes bị từ chối ở mọi môi trường
+    for env in ("development", "production"):
+        try:
+            Settings(APP_ENV=env, JWT_SECRET="too-short-secret")
+            raise AssertionError(f"JWT_SECRET < 32 bytes phải bị chặn ở APP_ENV={env}")
+        except ValidationError:
+            pass
+
+    # 2. Secret mặc định được phép ở development nhưng bị chặn ở production (fail-fast)
+    dev_cfg = Settings(
+        APP_ENV="development",
+        JWT_SECRET="dev-secret-change-me-at-least-32-bytes",
+    )
+    assert dev_cfg.APP_ENV == "development"
+
+    for default_secret in (
+        "dev-secret-change-me-at-least-32-bytes",
+        "change-this-secret-in-production-at-least-32-bytes",
+    ):
+        try:
+            Settings(APP_ENV="production", JWT_SECRET=default_secret)
+            raise AssertionError("APP_ENV=production phải từ chối JWT_SECRET mặc định")
+        except ValidationError:
+            pass
+
+    # 3. Secret mạnh >= 32 bytes hoạt động bình thường ở production
+    prod_cfg = Settings(
+        APP_ENV="  PRODUCTION  ",
+        JWT_SECRET="9f8e7d6c5b4a3928172635445566778899aabbccddeeff00",
+    )
+    assert prod_cfg.APP_ENV == "production"
+
+    # 4. APP_ENV lạ phải bị chặn
+    try:
+        Settings(APP_ENV="staging_unknown", JWT_SECRET="9f8e7d6c5b4a3928172635445566778899aabbccddeeff00")
+        raise AssertionError("APP_ENV không hợp lệ phải bị từ chối")
+    except ValidationError:
+        pass
+
+
 if __name__ == "__main__":
     test_password_hash_and_verify()
     test_verify_seed_admin_hash()
     test_create_and_decode_access_token()
     test_invalid_and_expired_tokens()
+    test_jwt_secret_and_app_env_validation()
     print("ALL SECURITY TESTS PASSED!")

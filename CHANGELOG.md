@@ -4,9 +4,27 @@ Tài liệu ghi nhận chi tiết mọi thay đổi đáng chú ý của dự á
 
 ---
 
-## [Chưa phát hành] — Tuần 1 / Ngày 4 (2026-11-26)
+## [Chưa phát hành] — Tuần 1 / Ngày 6 & Gia cố Kiến trúc (2026-11-27)
 
 ### Đã thêm (Added)
+- **Gia cố Kiến trúc, Bảo mật & Nền móng Tích hợp Tuần 2 (TV3):**
+  - Bổ sung `openpyxl>=3.1.5` và `python-multipart>=0.0.18` vào `backend/requirements.txt` chuẩn bị cho API Upload CSV/Excel (`UC07`).
+  - Khởi tạo tầng điều phối giao dịch ACID `backend/services/__init__.py` (`transactional_scope`) và đồng bộ đủ 12 `CheckConstraint` trong `backend/models/models.py` khớp 1:1 với `db/init/init.sql`.
+  - Bổ sung kiểm chứng `Fail-Fast` trong `backend/core/config.py`: bắt buộc `JWT_SECRET >= 32 bytes` (256-bit) và từ chối secret mặc định khi `APP_ENV=production`.
+  - Hiện thực hóa `web/js/core/api.js` (`apiFetch`, `apiGet`, `apiPost`, `apiPut`, `apiDelete`, `ApiRequestError`), nhúng sẵn trên cả 5 trang Admin/Student, gắn mã băm **SRI (`sha384`)** cho toàn bộ thư viện CDN ghim phiên bản, vá lỗ hổng giả mạo quyền `?role=` trong `web/js/core/auth.js` (`enforceRouteGuard`), thêm target `make db-reset` và bộ kiểm thử `tests/api_client_test.py` (**25/25 bộ test**).
+- **API Quản lý Đăng ký dự thi (`UC05`, TV2 — Ngày 6):**
+  - Mở rộng `backend/routers/master_data.py` và `backend/schemas/master_data.py` thêm CRUD `/api/v1/dang-ky-thi` và `/api/v1/ky-thi/{ky_thi_id}/dang-ky-thi` dùng `contains_eager` (0 truy vấn N+1), chống trùng `uq_dang_ky` (`409`) và bảo vệ bằng `require_admin` (nâng tổng số lên **24 endpoint** danh mục & đăng ký).
+- **Module Kiểm chứng Lịch thi `Schedule Verifier` (`UC08.4`, TV1 — Ngày 6):**
+  - Triển khai `backend/algorithms/verifier.py` (`verify_zero_conflicts`, `verify_room_capacities`, `verify_student_completeness`, `verify_schedule`), gia cố gộp khóa ca thi `int`/`str` khi phát hiện trùng phòng và chặn sĩ số số thực lẻ, kèm `tests/verifier_test.py` (**24/24 bộ test**).
+- **Giao diện Thống kê KPI & Biểu đồ `Chart.js` (`UC13`, `UC14`, TV4 — Ngày 6):**
+  - Hoàn thiện `web/stats.html` và `web/js/admin/stats.js`: 4 thẻ KPI tổng quan, 2 biểu đồ canvas `Chart.js` (đối chứng DSatur vs Welsh–Powell & Top học phần có bậc đỉnh cao nhất), bảng chi tiết căn giữa dùng 100% DOM `textContent` và bộ chọn chuyển đổi kỳ thi (hủy instance Chart cũ trước khi vẽ lại).
+  - Thêm bộ kiểm thử `tests/stats_ui_test.py` và đăng ký vào `Makefile` (**23/23 bộ test**).
+- **Giao diện Đồ thị Xung đột `Cytoscape.js` (`UC09`, TV5 — Ngày 6):**
+  - Hoàn thiện `web/graph.html` và `web/js/admin/graph.js`: dựng đồ thị mẫu **10 đỉnh, 15 cạnh** tô 4 màu hợp lệ (0 cạnh trùng màu), hỗ trợ zoom/pan/fit, đổi bố cục (`cose`, `circle`, `grid`), inspector chi tiết đỉnh & cạnh bằng `textContent` (không `innerHTML`), hủy instance Cytoscape cũ khi khởi tạo lại.
+  - Thêm bộ kiểm thử `tests/graph_ui_test.py` và đăng ký vào `Makefile` (**22/22 bộ test**).
+- **Script nạp dữ liệu mẫu chuẩn (`scripts/seed.py`, TV3 — Ngày 6):**
+  - Tạo `scripts/seed.py` (idempotent, giao dịch ACID, `random.Random(42)` lặp lại được) nạp 1 kỳ thi (`KTHK1_2026`), 15 môn học (`IT001`–`IT015`), 100 sinh viên (`22110001`–`22110100`), 10 phòng thi (`A101`–`C303`), 300 lượt đăng ký thi và 1 tài khoản sinh viên mẫu (`sv01`).
+  - Thêm lệnh `make seed`, bộ kiểm thử `tests/seed_test.py` (kiểm tra idempotency, số lượng và chạy thử end-to-end `build_conflict_graph -> dsatur_coloring -> allocate_graph_schedule_with_overflow`) và đăng ký vào `Makefile` (**21/21 bộ test**).
 - **Xử lý vượt sức chứa FFD — Room Splitting & Shift Spilling (TV1 — Ngày 5):**
   - Bổ sung `split_course_into_rooms`, `allocate_shift_rooms_with_overflow`, `allocate_exam_rooms_with_spilling`, `allocate_graph_schedule_with_overflow` (`UC08.3`) trong `backend/algorithms/room_allocator.py`.
   - Gia cố biên: không tách ca vô ích cho môn vượt ngưỡng sức chứa đơn khi `allow_room_splitting=False` hoặc khi chỉ có môn quá tải toàn trường, và chuẩn hóa an toàn khóa `shift_id` lẫn kiểu.

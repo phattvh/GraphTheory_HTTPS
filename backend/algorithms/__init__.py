@@ -16,6 +16,12 @@ from .room_allocator import (
     allocate_exam_rooms_with_spilling,
     allocate_graph_schedule_with_overflow,
 )
+from .verifier import (
+    verify_zero_conflicts,
+    verify_room_capacities,
+    verify_student_completeness,
+    verify_schedule,
+)
 
 __all__ = [
     "build_conflict_graph",
@@ -31,4 +37,8 @@ __all__ = [
     "allocate_shift_rooms_with_overflow",
     "allocate_exam_rooms_with_spilling",
     "allocate_graph_schedule_with_overflow",
+    "verify_zero_conflicts",
+    "verify_room_capacities",
+    "verify_student_completeness",
+    "verify_schedule",
 ]

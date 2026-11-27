@@ -1,8 +1,9 @@
-"""API Routers cho Quản lý Dữ liệu Danh mục (TV2 - UC02, UC03, UC04, UC06).
+"""API Routers cho Quản lý Dữ liệu Danh mục & Đăng ký thi (TV2 - UC02 đến UC06).
 
 Bao gồm:
 - Ngày 4: Kỳ thi (/api/v1/ky-thi - UC02) & Môn học (/api/v1/mon-hoc - UC04)
 - Ngày 5: Sinh viên (/api/v1/sinh-vien - UC03) & Phòng thi (/api/v1/phong-thi - UC06)
+- Ngày 6: Đăng ký thi (/api/v1/dang-ky-thi & /api/v1/ky-thi/{ky_thi_id}/dang-ky-thi - UC05)
 
 Tham chiếu: docs/04. Database design.md, docs/06. Security and authorization.md,
           docs/08. Implementation plan.md, docs/09. Project structure.md
@@ -13,12 +14,14 @@ from typing import Annotated, Any, List, Optional, Type, TypeVar
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 
 from backend.core.database import get_db
 from backend.core.security import get_current_user, require_admin
-from backend.models.models import KyThi, MonHoc, NguoiDung, PhongThi, SinhVien
+from backend.models.models import DangKyThi, KyThi, MonHoc, NguoiDung, PhongThi, SinhVien
 from backend.schemas.master_data import (
+    DangKyThiCreate,
+    DangKyThiDetailOut,
     ExamStatus,
     KyThiCreate,
     KyThiOut,
@@ -39,6 +42,7 @@ router = APIRouter(prefix="/api/v1")
 
 ModelT = TypeVar("ModelT")
 PositiveBigIntId = Annotated[int, Path(..., gt=0, le=MAX_PG_BIGINT)]
+PositiveBigIntQuery = Annotated[int, Query(gt=0, le=MAX_PG_BIGINT)]
 SkipParam = Annotated[int, Query(ge=0, le=100_000)]
 LimitParam = Annotated[int, Query(ge=1, le=500)]
 
@@ -139,6 +143,70 @@ def _delete_record(
     db.delete(record)
     _commit_or_409(db, conflict_detail)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _serialize_registration(reg: DangKyThi) -> DangKyThiDetailOut:
+    """Chuyển ORM DangKyThi kèm quan hệ JOIN thành schema DangKyThiDetailOut."""
+    return DangKyThiDetailOut(
+        id=reg.id,
+        ky_thi_id=reg.ky_thi_id,
+        sinh_vien_id=reg.sinh_vien_id,
+        mon_hoc_id=reg.mon_hoc_id,
+        created_at=reg.created_at,
+        ma_ky_thi=reg.ky_thi.ma_ky_thi if reg.ky_thi else None,
+        ten_ky_thi=reg.ky_thi.ten_ky_thi if reg.ky_thi else None,
+        mssv=reg.sinh_vien.mssv if reg.sinh_vien else None,
+        ho_ten=reg.sinh_vien.ho_ten if reg.sinh_vien else None,
+        lop_sinh_hoat=reg.sinh_vien.lop_sinh_hoat if reg.sinh_vien else None,
+        ma_mon=reg.mon_hoc.ma_mon if reg.mon_hoc else None,
+        ten_mon=reg.mon_hoc.ten_mon if reg.mon_hoc else None,
+    )
+
+
+def _query_registrations(
+    db: Session,
+    ky_thi_id: Optional[int],
+    mon_hoc_id: Optional[int],
+    sinh_vien_id: Optional[int],
+    q: Optional[str],
+    skip: int,
+    limit: int,
+) -> List[DangKyThiDetailOut]:
+    """Truy vấn danh sách đăng ký thi bằng một câu JOIN duy nhất (không phát sinh N+1)."""
+    query = (
+        db.query(DangKyThi)
+        .join(KyThi, DangKyThi.ky_thi_id == KyThi.id)
+        .join(SinhVien, DangKyThi.sinh_vien_id == SinhVien.id)
+        .join(MonHoc, DangKyThi.mon_hoc_id == MonHoc.id)
+        .options(
+            contains_eager(DangKyThi.ky_thi),
+            contains_eager(DangKyThi.sinh_vien),
+            contains_eager(DangKyThi.mon_hoc),
+        )
+    )
+    if ky_thi_id is not None:
+        query = query.filter(DangKyThi.ky_thi_id == ky_thi_id)
+    if mon_hoc_id is not None:
+        query = query.filter(DangKyThi.mon_hoc_id == mon_hoc_id)
+    if sinh_vien_id is not None:
+        query = query.filter(DangKyThi.sinh_vien_id == sinh_vien_id)
+    query = _apply_text_search(
+        query,
+        q,
+        KyThi.ma_ky_thi,
+        SinhVien.mssv,
+        SinhVien.ho_ten,
+        SinhVien.lop_sinh_hoat,
+        MonHoc.ma_mon,
+        MonHoc.ten_mon,
+    )
+    records = (
+        query.order_by(MonHoc.ma_mon.asc(), SinhVien.mssv.asc(), DangKyThi.id.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return [_serialize_registration(reg) for reg in records]
 
 
 # ===========================================================================
@@ -556,4 +624,157 @@ def delete_phong_thi(
         phong_thi_id,
         "Không tìm thấy phòng thi.",
         "Không thể xóa phòng thi đang được sử dụng trong lịch thi.",
+    )
+
+
+# ===========================================================================
+# 5. QUẢN LÝ ĐĂNG KÝ THI — /api/v1/dang-ky-thi (UC05 - Ngày 6)
+# ===========================================================================
+@router.get(
+    "/dang-ky-thi",
+    response_model=List[DangKyThiDetailOut],
+    tags=["Đăng ký thi (UC05)"],
+)
+def list_dang_ky_thi(
+    ky_thi_id: Optional[PositiveBigIntQuery] = Query(
+        default=None, description="Lọc danh sách đăng ký theo ID kỳ thi"
+    ),
+    mon_hoc_id: Optional[PositiveBigIntQuery] = Query(
+        default=None, description="Lọc theo ID môn học"
+    ),
+    sinh_vien_id: Optional[PositiveBigIntQuery] = Query(
+        default=None, description="Lọc theo ID sinh viên"
+    ),
+    q: Optional[str] = Query(
+        default=None,
+        max_length=100,
+        description="Tìm theo mã kỳ thi, MSSV, họ tên, lớp, mã môn hoặc tên môn",
+    ),
+    skip: SkipParam = 0,
+    limit: LimitParam = 100,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Lấy danh sách sinh viên đăng ký dự thi theo kỳ thi / môn học (chỉ admin)."""
+    return _query_registrations(db, ky_thi_id, mon_hoc_id, sinh_vien_id, q, skip, limit)
+
+
+@router.get(
+    "/ky-thi/{ky_thi_id}/dang-ky-thi",
+    response_model=List[DangKyThiDetailOut],
+    tags=["Đăng ký thi (UC05)"],
+)
+def list_dang_ky_by_ky_thi(
+    ky_thi_id: PositiveBigIntId,
+    mon_hoc_id: Optional[PositiveBigIntQuery] = Query(
+        default=None, description="Lọc theo ID môn học trong kỳ thi"
+    ),
+    sinh_vien_id: Optional[PositiveBigIntQuery] = Query(
+        default=None, description="Lọc theo ID sinh viên trong kỳ thi"
+    ),
+    q: Optional[str] = Query(
+        default=None,
+        max_length=100,
+        description="Tìm theo MSSV, họ tên, lớp, mã môn hoặc tên môn",
+    ),
+    skip: SkipParam = 0,
+    limit: LimitParam = 100,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Lấy danh sách đăng ký thi của một kỳ thi cụ thể (chỉ admin)."""
+    _get_or_404(db, KyThi, ky_thi_id, "Không tìm thấy kỳ thi.")
+    return _query_registrations(db, ky_thi_id, mon_hoc_id, sinh_vien_id, q, skip, limit)
+
+
+@router.get(
+    "/dang-ky-thi/{dang_ky_id}",
+    response_model=DangKyThiDetailOut,
+    tags=["Đăng ký thi (UC05)"],
+)
+def get_dang_ky_thi(
+    dang_ky_id: PositiveBigIntId,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Lấy chi tiết một bản ghi đăng ký thi theo ID (chỉ admin)."""
+    reg = (
+        db.query(DangKyThi)
+        .join(KyThi, DangKyThi.ky_thi_id == KyThi.id)
+        .join(SinhVien, DangKyThi.sinh_vien_id == SinhVien.id)
+        .join(MonHoc, DangKyThi.mon_hoc_id == MonHoc.id)
+        .options(
+            contains_eager(DangKyThi.ky_thi),
+            contains_eager(DangKyThi.sinh_vien),
+            contains_eager(DangKyThi.mon_hoc),
+        )
+        .filter(DangKyThi.id == dang_ky_id)
+        .first()
+    )
+    if reg is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy bản ghi đăng ký thi.",
+        )
+    return _serialize_registration(reg)
+
+
+@router.post(
+    "/dang-ky-thi",
+    response_model=DangKyThiDetailOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Đăng ký thi (UC05)"],
+)
+def create_dang_ky_thi(
+    payload: DangKyThiCreate,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Thêm sinh viên đăng ký môn thi trong kỳ thi (chỉ admin; chống đăng ký trùng)."""
+    exam = _get_or_404(db, KyThi, payload.ky_thi_id, "Không tìm thấy kỳ thi.")
+    student = _get_or_404(
+        db, SinhVien, payload.sinh_vien_id, "Không tìm thấy sinh viên."
+    )
+    course = _get_or_404(db, MonHoc, payload.mon_hoc_id, "Không tìm thấy môn học.")
+
+    conflict_msg = "Sinh viên đã đăng ký môn học này trong kỳ thi."
+    duplicate = (
+        db.query(DangKyThi.id)
+        .filter(
+            DangKyThi.ky_thi_id == payload.ky_thi_id,
+            DangKyThi.sinh_vien_id == payload.sinh_vien_id,
+            DangKyThi.mon_hoc_id == payload.mon_hoc_id,
+        )
+        .first()
+    )
+    if duplicate is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=conflict_msg)
+
+    reg = DangKyThi(**payload.model_dump())
+    db.add(reg)
+    _commit_or_409(db, conflict_msg)
+    db.refresh(reg)
+    reg.ky_thi = exam
+    reg.sinh_vien = student
+    reg.mon_hoc = course
+    return _serialize_registration(reg)
+
+
+@router.delete(
+    "/dang-ky-thi/{dang_ky_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Đăng ký thi (UC05)"],
+)
+def delete_dang_ky_thi(
+    dang_ky_id: PositiveBigIntId,
+    _admin: NguoiDung = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Xóa sinh viên khỏi danh sách đăng ký môn thi (chỉ admin)."""
+    return _delete_record(
+        db,
+        DangKyThi,
+        dang_ky_id,
+        "Không tìm thấy bản ghi đăng ký thi.",
+        "Không thể xóa bản ghi đăng ký thi.",
     )

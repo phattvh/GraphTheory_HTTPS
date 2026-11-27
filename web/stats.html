@@ -3,87 +3,158 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTTPS — Thống kê & Phân tích Đồ thị</title>
+  <title>HTTPS - Thống kê &amp; Phân tích Đồ thị</title>
   <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
-  <!-- Tailwind CSS CDN theo 07. Technology stack.md -->
+  <!-- Tailwind CSS & Chart.js v4 CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous" defer></script>
   <link rel="stylesheet" href="/css/layout.css" />
+  <style>
+    #tab-stats h2 {
+      font-size: 1.375rem;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+    #tab-stats h3 {
+      font-size: 1.05rem;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+  </style>
 </head>
 <body data-admin-page="stats" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
 
   <div id="admin-layout-shell" class="flex-1 flex flex-col min-h-screen">
-    <!-- Header 2 tầng & Right Collapsible Drawer được render dùng chung bởi web/js/admin/layout.js -->
+    <!-- Header & Sidebar được render dùng chung bởi web/js/admin/layout.js -->
     <div id="admin-shell-mount"></div>
 
     <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-6">
-      <!-- MÀN HÌNH FIGMA 05: THỐNG KÊ KPI & BIỂU ĐỒ CHART.JS (UC13, UC14) -->
+      <!-- MÀN HÌNH 05: THỐNG KÊ KPI & BIỂU ĐỒ CHART.JS (UC13, UC14) -->
       <section id="tab-stats" class="admin-tab-section flex-1 space-y-6">
+
+        <!-- Thanh tiêu đề & Bộ lọc 2 cấp Năm học -> Kỳ thi -->
+        <header class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200">
+          <div>
+            <h2 id="stats-exam-heading" class="text-lg font-bold text-slate-900">
+              Thống kê &amp; Phân tích Kỳ thi
+            </h2>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 no-print">
+            <div class="flex items-center gap-2">
+              <label for="stats-year-select" class="text-xs font-semibold text-slate-600">Năm học:</label>
+              <select
+                id="stats-year-select"
+                aria-label="Chọn năm học thống kê"
+                onchange="handleStatsYearChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="2026 - 2027" selected>2026 - 2027</option>
+                <option value="2025 - 2026">2025 - 2026</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label for="stats-exam-select" class="text-xs font-semibold text-slate-600">Kỳ thi:</label>
+              <select
+                id="stats-exam-select"
+                aria-label="Chọn kỳ thi thống kê"
+                onchange="handleStatsExamChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="KTHK1_2026" selected>KTHK1_2026 - Thi Cuối Kỳ HK1</option>
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <!-- 4 Thẻ KPI Vận hành & Đồ thị Tổng quan (UC13) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs text-slate-500">Tổng số Môn thi |V|</div>
-            <div class="text-2xl font-bold text-slate-900 mt-1">15 Môn</div>
-            <div class="text-xs text-slate-500 mt-1">46 cạnh xung đột |E| trong đồ thị</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG MÔN THI |V|</div>
+            <div id="kpi-total-courses" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">15 Môn</div>
           </div>
+
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs text-slate-500">Tổng số Sinh viên</div>
-            <div class="text-2xl font-bold text-slate-900 mt-1">1,250 SV</div>
-            <div class="text-xs text-slate-500 mt-1">3,420 lượt đăng ký dự thi (dang_ky_thi)</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG SỐ SINH VIÊN</div>
+            <div id="kpi-total-students" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">100 SV</div>
           </div>
+
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs text-slate-500">Số Ca thi Tối thiểu χ(G)</div>
-            <div class="text-2xl font-bold text-blue-600 mt-1">4 Ca thi</div>
-            <div class="text-xs text-slate-500 mt-1">DSatur tiết kiệm 1 ca so với Welsh–Powell (5 ca)</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">SỐ CA THI TỐI ƯU χ(G)</div>
+            <div id="kpi-min-shifts" class="text-2xl font-bold text-blue-600 mt-1 tabular-nums">4 Ca</div>
           </div>
+
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs text-slate-500">Tỷ lệ Xung đột Lịch thi</div>
-            <div class="text-2xl font-bold text-emerald-600 mt-1">0.0%</div>
-            <div class="text-xs text-slate-500 mt-1">Đã kiểm chứng 100% bằng Schedule Verifier</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỶ LỆ LẤP ĐẦY PHÒNG TB</div>
+            <div id="kpi-room-utilization" class="text-2xl font-bold text-emerald-600 mt-1 tabular-nums">75.0%</div>
           </div>
         </div>
 
+        <!-- 2 Khung Canvas Biểu đồ Chart.js (UC13 & UC14) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <h3 class="text-sm font-bold text-slate-900">Biểu đồ 1 (Chart.js): Đối chứng Thuật toán DSatur vs Welsh–Powell</h3>
-            <p class="text-xs text-slate-500">So sánh sắc số đạt được χ(G) (số ca thi) và thời gian xử lý trên tập dữ liệu kỳ thi</p>
-            <div class="border border-dashed border-slate-300 rounded-lg p-12 text-center text-sm text-slate-500 bg-slate-50">
-              Khung Canvas Chart.js: 🟦 DSatur (4 Ca thi - 12.4 ms) vs 🟧 Welsh–Powell (5 Ca thi - 9.8 ms)
+          <!-- Biểu đồ 1: Tỷ lệ lấp đầy phòng & Sĩ số theo từng Ca thi -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">
+              Biểu đồ 1: Tỷ lệ lấp đầy phòng theo từng Ca thi
+            </h3>
+
+            <div class="relative w-full h-72">
+              <canvas
+                id="chart-shift-utilization"
+                role="img"
+                aria-label="Biểu đồ Chart.js tỷ lệ lấp đầy phòng thi theo từng ca"
+              ></canvas>
             </div>
           </div>
 
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div>
-              <h3 class="text-sm font-bold text-slate-900">Biểu đồ 2 (Chart.js): Top 5 Môn học có Bậc đỉnh deg(v) cao nhất</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Các học phần xung đột với nhiều môn khác nhất được DSatur ưu tiên tô màu trước</p>
-            </div>
-            <div class="space-y-3 text-xs">
-              <div>
-                <div class="flex justify-between font-semibold mb-1"><span>1. IT002 - Cấu trúc Dữ liệu &amp; Giải thuật</span><span class="text-slate-500">deg(v) = 11 môn • 180 SV</span></div>
-                <div class="w-full h-4 bg-slate-100 rounded-md overflow-hidden"><div class="bg-blue-600 h-full w-[92%]"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-semibold mb-1"><span>2. IT008 - Toán Rời rạc &amp; Tổ hợp</span><span class="text-slate-500">deg(v) = 10 môn • 175 SV</span></div>
-                <div class="w-full h-4 bg-slate-100 rounded-md overflow-hidden"><div class="bg-blue-600 h-full w-[84%]"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-semibold mb-1"><span>3. IT006 - Trí tuệ Nhân tạo (AI)</span><span class="text-slate-500">deg(v) = 9 môn • 160 SV</span></div>
-                <div class="w-full h-4 bg-slate-100 rounded-md overflow-hidden"><div class="bg-blue-600 h-full w-[75%]"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-semibold mb-1"><span>4. IT001 - Lý thuyết Đồ thị</span><span class="text-slate-500">deg(v) = 8 môn • 145 SV</span></div>
-                <div class="w-full h-4 bg-slate-100 rounded-md overflow-hidden"><div class="bg-blue-600 h-full w-[66%]"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-semibold mb-1"><span>5. IT003 - Hệ Quản trị CSDL PostgreSQL</span><span class="text-slate-500">deg(v) = 7 môn • 132 SV</span></div>
-                <div class="w-full h-4 bg-slate-100 rounded-md overflow-hidden"><div class="bg-blue-600 h-full w-[58%]"></div></div>
-              </div>
+          <!-- Biểu đồ 2: Top Môn học có Bậc đỉnh deg(v) cao nhất -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <h3 class="text-sm font-bold text-slate-900">
+              Biểu đồ 2: Top 5 Môn có Bậc xung đột cao nhất
+            </h3>
+
+            <div class="relative w-full h-72">
+              <canvas
+                id="chart-top-degree-courses"
+                role="img"
+                aria-label="Biểu đồ Chart.js top môn học có bậc đỉnh xung đột cao nhất"
+              ></canvas>
             </div>
           </div>
         </div>
+
+        <!-- Bảng chi tiết Phân bổ từng Ca thi (Bổ sung thông tin vận hành, không lặp Biểu đồ 2) -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-sm font-bold text-slate-900">
+            Chi tiết Phân bổ từng Ca thi
+          </h3>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-center border-collapse border border-slate-200 text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200 divide-x divide-slate-200 text-center">
+                  <th class="py-2.5 px-3">Ca thi</th>
+                  <th class="py-2.5 px-3">Khung giờ</th>
+                  <th class="py-2.5 px-3">Số môn thi</th>
+                  <th class="py-2.5 px-3">Tổng sĩ số</th>
+                  <th class="py-2.5 px-3">Phòng sử dụng</th>
+                  <th class="py-2.5 px-3">Tỷ lệ lấp đầy</th>
+                  <th class="py-2.5 px-3">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody id="stats-shift-summary-tbody" class="divide-y divide-slate-200 text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+
       </section>
     </main>
   </div>
 
   <script src="/js/core/auth.js"></script>
+  <script src="/js/core/api.js"></script>
   <script src="/js/admin/layout.js"></script>
+  <script src="/js/admin/stats.js" defer></script>
 </body>
 </html>

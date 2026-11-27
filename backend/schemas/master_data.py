@@ -275,3 +275,15 @@ class DangKyThiOut(DangKyThiBase):
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DangKyThiDetailOut(DangKyThiOut):
+    """Schema trả về chi tiết đăng ký thi kèm thông tin hiển thị của kỳ thi, sinh viên và môn học."""
+
+    ma_ky_thi: Optional[str] = None
+    ten_ky_thi: Optional[str] = None
+    mssv: Optional[str] = None
+    ho_ten: Optional[str] = None
+    lop_sinh_hoat: Optional[str] = None
+    ma_mon: Optional[str] = None
+    ten_mon: Optional[str] = None
