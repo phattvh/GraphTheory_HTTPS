@@ -390,12 +390,11 @@ function renderNodeInspector(nodeId) {
   };
   const adjEdges = getAdjacentEdgesForNode(nodeId);
 
-  if (headingEl) headingEl.textContent = "Chi tiết Đỉnh đang chọn";
+  if (headingEl) headingEl.textContent = meta.ten_mon;
   badgeEl.className = `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${shiftInfo.badgeClass}`;
   badgeEl.textContent = `Mã học phần: ${nodeId} (${shiftInfo.label})`;
 
   listEl.replaceChildren();
-  appendInspectorRow(listEl, "Tên học phần", meta.ten_mon);
   appendInspectorRow(listEl, "Sinh viên đăng ký", `${meta.so_sv} SV`);
   appendInspectorRow(listEl, "Số môn cần chọn khác ca", `${adjEdges.length} môn`);
   appendInspectorRow(listEl, "Mã phòng", meta.rooms.join(", ") || "Chưa phân phòng");
