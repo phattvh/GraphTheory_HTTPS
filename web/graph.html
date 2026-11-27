@@ -248,6 +248,32 @@
 
               <ul id="graph-inspector-details" class="divide-y divide-slate-100 text-xs text-slate-700"></ul>
             </div>
+
+            <!-- Card Kiểm chứng Lịch thi (Schedule Verifier) -->
+            <div id="graph-verifier-card" class="p-5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-3">
+              <div class="flex items-center gap-2 font-bold text-sm text-emerald-900">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span id="verifier-status-title">Schedule Verifier: Hợp lệ 100%</span>
+              </div>
+
+              <div class="space-y-1.5 text-emerald-900">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Sắc số đạt được χ(G)</span>
+                  <span id="verifier-chromatic-number" class="font-bold tabular-nums">4 ca thi (DSatur)</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Kiểm chứng xung đột</span>
+                  <span id="verifier-edge-conflicts" class="font-bold tabular-nums">0 cạnh cùng màu</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-emerald-800/80">Sức chứa phòng (FFD)</span>
+                  <span id="verifier-room-capacity" class="font-bold">Đạt 100%</span>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>

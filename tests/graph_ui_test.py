@@ -39,12 +39,13 @@ def test_graph_html_elements():
         'id="graph-legend"',
         'id="graph-inspector-badge"',
         'id="graph-inspector-details"',
+        'id="graph-verifier-card"',
+        'id="verifier-chromatic-number"',
         'src="/js/admin/graph.js"',
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
     assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
     assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
-    assert 'id="graph-verifier-card"' not in html, "Đã xóa khung Schedule Verifier"
     assert 'id="btn-simulate-coloring"' not in html, "Đã xóa nút Mô phỏng tô màu, tự chạy khi chọn thuật toán"
 
 
@@ -129,6 +130,10 @@ const elements = {
   "graph-inspector-badge": makeEl("span"),
   "graph-inspector-details": makeEl("ul"),
   "graph-zoom-label": makeEl("span"),
+  "verifier-status-title": makeEl("span"),
+  "verifier-chromatic-number": makeEl("span"),
+  "verifier-edge-conflicts": makeEl("span"),
+  "verifier-room-capacity": makeEl("span"),
 };
 
 let capturedConfig = null;
@@ -248,6 +253,9 @@ assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô ph�
 assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
 assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
 sandbox.stopColoringSimulation(true);
+sandbox.runAutoSchedule();
+assert.ok(elements["verifier-chromatic-number"].textContent.includes("DSatur"));
+assert.strictEqual(elements["verifier-edge-conflicts"].textContent, "0 cạnh cùng màu");
 
 // Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
 const foundId = sandbox.searchGraphNode("IT008");
