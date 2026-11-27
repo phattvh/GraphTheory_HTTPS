@@ -316,6 +316,26 @@ def test_verifier_edge_cases():
     assert report_over["is_valid"] is False
     assert any("+5" in err and "thực tế xếp 35 SV" in err for err in report_over["errors"])
 
+    # 10.5 Trùng phòng giữa key int (1) và str ("1") của cùng ca thi phải bị bắt lỗi
+    c2_mixed_keys = verify_room_capacities(
+        {
+            1: {"allocations": [{"ma_mon": "M1", "ma_phong": "P1", "so_sinh_vien": 20, "suc_chua": 50}]},
+            "1": {"allocations": [{"ma_mon": "M2", "ma_phong": "P1", "so_sinh_vien": 20, "suc_chua": 50}]},
+        },
+        rooms=rooms,
+    )
+    assert c2_mixed_keys["passed"] is False
+    assert len(c2_mixed_keys["double_booked_rooms"]) == 1
+    assert c2_mixed_keys["double_booked_rooms"][0]["shift"] == 1
+
+    # 10.6 Sĩ số kiểu số thực lẻ (30.7) không được bị cắt phần thập phân thành 30
+    c2_float = verify_room_capacities(
+        {1: {"allocations": [{"ma_mon": "M1", "ma_phong": "P1", "so_sinh_vien": 30.7, "suc_chua": 50}]}},
+        rooms=rooms,
+    )
+    assert c2_float["passed"] is False
+    assert len(c2_float["capacity_violations"]) == 1
+
 
 if __name__ == "__main__":
     test_valid_full_pipeline_schedule()

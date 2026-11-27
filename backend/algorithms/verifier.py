@@ -22,9 +22,14 @@ def _safe_str(value: Any, default: str = "") -> str:
 
 
 def _safe_int(value: Any, default: Optional[int] = None) -> Optional[int]:
-    """Ép kiểu số nguyên an toàn, chống crash với None/bool/inf/chuỗi bẩn."""
+    """Ép kiểu số nguyên an toàn, chống crash với None/bool/inf/NaN/số thực lẻ/chuỗi bẩn."""
     if value is None or isinstance(value, bool):
         return default
+    if isinstance(value, float):
+        try:
+            return int(value) if value.is_integer() else default
+        except (ValueError, OverflowError):
+            return default
     try:
         return int(value)
     except (ValueError, TypeError, OverflowError):
@@ -198,8 +203,12 @@ def verify_room_capacities(
                 if ma_phong not in active_room_caps:
                     active_room_caps[ma_phong] = cap
 
-    for shift_id, shift_data in sorted(shifts_allocation.items(), key=lambda x: str(x[0])):
-        allocations = _extract_allocations_list(shift_data)
+    merged_shifts: Dict[Any, List[Dict[str, Any]]] = defaultdict(list)
+    for raw_shift_id, shift_data in sorted(shifts_allocation.items(), key=lambda x: str(x[0])):
+        norm_shift = _normalize_shift_id(raw_shift_id)
+        merged_shifts[norm_shift].extend(_extract_allocations_list(shift_data))
+
+    for shift_id, allocations in sorted(merged_shifts.items(), key=lambda x: str(x[0])):
         seen_rooms: Dict[str, List[str]] = defaultdict(list)
 
         for alloc in allocations:
