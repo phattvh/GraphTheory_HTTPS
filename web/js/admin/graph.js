@@ -8,11 +8,11 @@
  */
 
 const CYTOSCAPE_SHIFT_COLORS = {
-  1: { bg: "#2563EB", border: "#1E3A8A", dotClass: "bg-blue-600", badgeClass: "bg-blue-100 text-blue-800", label: "Ca 1" },
-  2: { bg: "#10B981", border: "#065F46", dotClass: "bg-emerald-600", badgeClass: "bg-emerald-100 text-emerald-800", label: "Ca 2" },
-  3: { bg: "#F59E0B", border: "#92400E", dotClass: "bg-amber-500", badgeClass: "bg-amber-100 text-amber-800", label: "Ca 3" },
-  4: { bg: "#8B5CF6", border: "#5B21B6", dotClass: "bg-violet-600", badgeClass: "bg-violet-100 text-violet-800", label: "Ca 4" },
-  5: { bg: "#EC4899", border: "#9D174D", dotClass: "bg-pink-600", badgeClass: "bg-pink-100 text-pink-800", label: "Ca 5" },
+  1: { bg: "#2563EB", border: "#1E3A8A", dotClass: "bg-blue-600", badgeClass: "bg-blue-100 text-blue-800", label: "Ca 1", timeRange: "7h30 - 9h00" },
+  2: { bg: "#10B981", border: "#065F46", dotClass: "bg-emerald-600", badgeClass: "bg-emerald-100 text-emerald-800", label: "Ca 2", timeRange: "9h30 - 11h00" },
+  3: { bg: "#F59E0B", border: "#92400E", dotClass: "bg-amber-500", badgeClass: "bg-amber-100 text-amber-800", label: "Ca 3", timeRange: "13h30 - 15h00" },
+  4: { bg: "#8B5CF6", border: "#5B21B6", dotClass: "bg-violet-600", badgeClass: "bg-violet-100 text-violet-800", label: "Ca 4", timeRange: "15h30 - 17h00" },
+  5: { bg: "#EC4899", border: "#9D174D", dotClass: "bg-pink-600", badgeClass: "bg-pink-100 text-pink-800", label: "Ca 5", timeRange: "17h30 - 19h00" },
 };
 
 const UNCOLORED_NODE_STYLE = {
@@ -347,7 +347,7 @@ function renderGraphLegend() {
     dot.setAttribute("aria-hidden", "true");
 
     const text = document.createElement("span");
-    text.textContent = `${info.label}: ${grouped[shift].join(", ")}`;
+    text.textContent = info.timeRange ? `${info.label}: ${info.timeRange}` : info.label;
 
     btn.append(dot, text);
     container.appendChild(btn);
