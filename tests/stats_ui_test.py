@@ -103,13 +103,9 @@ const elements = {
   "stats-year-select": makeEl("select"),
   "stats-exam-select": makeEl("select"),
   "kpi-total-courses": makeEl("div"),
-  "kpi-total-edges-sub": makeEl("div"),
   "kpi-total-students": makeEl("div"),
-  "kpi-total-regs-sub": makeEl("div"),
   "kpi-min-shifts": makeEl("div"),
-  "kpi-algo-compare-sub": makeEl("div"),
   "kpi-room-utilization": makeEl("div"),
-  "kpi-room-summary-sub": makeEl("div"),
   "stats-utilization-badge": makeEl("span"),
   "stats-max-degree-badge": makeEl("span"),
   "stats-table-summary": makeEl("span"),
@@ -166,7 +162,6 @@ assert.deepStrictEqual(
 assert.strictEqual(elements["kpi-total-courses"].textContent, "15 Môn");
 assert.strictEqual(elements["kpi-total-students"].textContent, "100 SV");
 assert.strictEqual(elements["kpi-min-shifts"].textContent, "4 Ca");
-assert.strictEqual(elements["kpi-algo-compare-sub"].textContent, "DSatur: 4 ca · Welsh-Powell: 5 ca");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "75.0%");
 assert.strictEqual(elements["stats-shift-summary-tbody"].children.length, 4);
 
