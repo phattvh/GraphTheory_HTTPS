@@ -233,7 +233,7 @@ assert.strictEqual(
   elements["graph-inspector-heading"].textContent,
   "Cấu trúc Dữ liệu & Giải thuật - Lý thuyết Đồ thị"
 );
-assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
+assert.strictEqual(elements["graph-inspector-badge"].textContent, "IT002 - IT001");
 
 // Kiểm tra bấm thuật toán Welsh-Powell / DSatur tự động chạy mô phỏng tô màu 0 xung đột
 const wpRes = sandbox.selectGraphAlgorithm("WELSH_POWELL");

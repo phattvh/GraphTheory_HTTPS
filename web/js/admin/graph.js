@@ -418,7 +418,7 @@ function renderEdgeInspector(edgeData) {
   badgeEl.className = isValid
     ? "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
     : "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700";
-  badgeEl.textContent = `Cạnh: ${edgeData.source} — ${edgeData.target}`;
+  badgeEl.textContent = `${edgeData.source} - ${edgeData.target}`;
 
   listEl.replaceChildren();
   appendInspectorRow(listEl, "Số sinh viên thi cả 2 ca", `${edgeData.weight} SV`);
