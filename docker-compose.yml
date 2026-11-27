@@ -29,6 +29,7 @@ services:
     container_name: graphtheory_fastapi
     restart: unless-stopped
     environment:
+      APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: postgresql://${POSTGRES_USER:-exam_user}:${POSTGRES_PASSWORD:-exam_pass}@postgres:5432/${POSTGRES_DB:-graphtheory_db}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-at-least-32-bytes}
     ports:

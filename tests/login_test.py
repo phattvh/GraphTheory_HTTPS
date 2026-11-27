@@ -238,6 +238,22 @@ st = sandbox.resolveCapsLockState(st, { type: "keydown", key: "CapsLock", code: 
 assert.strictEqual(st.capsOn, true);
 st = sandbox.resolveCapsLockState(st, { type: "keyup", key: "CapsLock", code: "CapsLock", modifierState: false });
 assert.strictEqual(st.capsOn, false);
+
+// 13. ?role=admin query param or tampered localStorage current_user CANNOT bypass sinh_vien JWT guard
+store.set("access_token", svJwt);
+store.set("current_user", JSON.stringify({ ten_dang_nhap: "22110399", vai_tro: "admin" }));
+sandbox.window.location = { pathname: "/index.html", search: "?role=admin", href: "/index.html?role=admin" };
+assert.strictEqual(sandbox.getCurrentUser().vai_tro, "sinh_vien");
+sandbox.enforceRouteGuard({ requireAuth: false });
+assert.strictEqual(sandbox.window.location.href, "/student.html");
+
+// 14. Unauthenticated route guard honors requireAuth option (false for Week 1 preview, true for Day 8+)
+sandbox.clearAuthSession();
+sandbox.window.location = { pathname: "/graph.html", search: "?role=sinh_vien", href: "/graph.html?role=sinh_vien" };
+sandbox.enforceRouteGuard({ requireAuth: false });
+assert.strictEqual(sandbox.window.location.href, "/graph.html?role=sinh_vien");
+sandbox.enforceRouteGuard({ requireAuth: true });
+assert.strictEqual(sandbox.window.location.href, "/login.html");
 """
     res = subprocess.run(
         ["node", "-e", script],

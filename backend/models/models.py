@@ -1,12 +1,13 @@
 """SQLAlchemy ORM Models for 8 database tables.
 
 Phụ trách: TV2 (Backend: CSDL & Dữ liệu đầu vào)
-Tham chiếu: docs/04. Database design.md
+Tham chiếu: docs/04. Database design.md & db/init/init.sql
 """
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Column,
     Date,
     DateTime,
@@ -25,6 +26,10 @@ class NguoiDung(Base):
     """Bảng nguoi_dung: Tài khoản & Phân quyền (FastAPI Native JWT)."""
 
     __tablename__ = "nguoi_dung"
+    __table_args__ = (
+        CheckConstraint("vai_tro IN ('admin', 'sinh_vien')", name="ck_nguoi_dung_vai_tro"),
+        CheckConstraint("vai_tro != 'sinh_vien' OR mssv IS NOT NULL", name="ck_sv_co_mssv"),
+    )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     ten_dang_nhap = Column(String(50), nullable=False, unique=True)
@@ -48,6 +53,14 @@ class KyThi(Base):
     """Bảng ky_thi: Thông tin các đợt thi (UC02)."""
 
     __tablename__ = "ky_thi"
+    __table_args__ = (
+        CheckConstraint("ngay_ket_thuc >= ngay_bat_dau", name="ck_ky_thi_ngay"),
+        CheckConstraint("so_ca_moi_ngay > 0", name="ck_ky_thi_so_ca"),
+        CheckConstraint(
+            "trang_thai IN ('khoi_tao', 'da_xep_lich', 'cong_bo')",
+            name="ck_ky_thi_trang_thai",
+        ),
+    )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     ma_ky_thi = Column(String(50), nullable=False, unique=True)
@@ -71,6 +84,10 @@ class MonHoc(Base):
     """Bảng mon_hoc: Danh mục môn thi / học phần (UC04)."""
 
     __tablename__ = "mon_hoc"
+    __table_args__ = (
+        CheckConstraint("thoi_luong_phut > 0", name="ck_mon_hoc_thoi_luong"),
+        CheckConstraint("so_tin_chi > 0", name="ck_mon_hoc_tin_chi"),
+    )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     ma_mon = Column(String(20), nullable=False, unique=True)
@@ -109,6 +126,9 @@ class PhongThi(Base):
     """Bảng phong_thi: Danh mục phòng thi (UC06)."""
 
     __tablename__ = "phong_thi"
+    __table_args__ = (
+        CheckConstraint("suc_chua > 0", name="ck_phong_thi_suc_chua"),
+    )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     ma_phong = Column(String(50), nullable=False, unique=True)
@@ -156,6 +176,12 @@ class CaThi(Base):
     __tablename__ = "ca_thi"
     __table_args__ = (
         UniqueConstraint("ky_thi_id", "stt_ca", name="uq_ca_thi"),
+        CheckConstraint("stt_ca > 0", name="ck_ca_thi_stt"),
+        CheckConstraint("gio_ket_thuc > gio_bat_dau", name="ck_ca_thi_gio"),
+        CheckConstraint(
+            "thuat_toan IN ('DSATUR', 'WELSH_POWELL')",
+            name="ck_ca_thi_thuat_toan",
+        ),
     )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
@@ -181,6 +207,7 @@ class LichThi(Base):
     __tablename__ = "lich_thi"
     __table_args__ = (
         UniqueConstraint("ca_thi_id", "phong_thi_id", name="uq_lich_phong"),
+        CheckConstraint("so_luong_sv > 0", name="ck_lich_thi_so_luong"),
     )
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
