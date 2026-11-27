@@ -171,6 +171,10 @@ assert.strictEqual(
   100
 );
 assert.ok(res.dailyExamChart.config.data.labels[0].includes("1 môn / ngày"));
+assert.strictEqual(
+  res.dailyExamChart.config.options.plugins.tooltip.callbacks.label({ dataIndex: 1, parsed: 31 }),
+  "31 sinh viên (31.0%)"
+);
 assert.strictEqual(elements["kpi-total-courses"].textContent, "15 Môn");
 assert.strictEqual(elements["kpi-total-students"].textContent, "100 SV");
 assert.strictEqual(elements["kpi-min-shifts"].textContent, "4 Ca");

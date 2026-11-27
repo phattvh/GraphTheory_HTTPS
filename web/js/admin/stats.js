@@ -69,9 +69,9 @@ const STATS_EXAM_DATASETS = {
       },
     ],
     daily_exam_distribution: [
-      { label: "1 môn / ngày", students: 62, percent: 62.0, note: "Lịch thi nhẹ nhàng" },
-      { label: "2 môn / ngày", students: 31, percent: 31.0, note: "Mức tải trung bình" },
-      { label: "3+ môn / ngày", students: 7, percent: 7.0, note: "Lịch thi dày, cần lưu ý" },
+      { label: "1 môn / ngày", students: 62 },
+      { label: "2 môn / ngày", students: 31 },
+      { label: "3+ môn / ngày", students: 7 },
     ],
   },
   KTHK2_2025: {
@@ -134,9 +134,9 @@ const STATS_EXAM_DATASETS = {
       },
     ],
     daily_exam_distribution: [
-      { label: "1 môn / ngày", students: 56, percent: 65.9, note: "Lịch thi nhẹ nhàng" },
-      { label: "2 môn / ngày", students: 24, percent: 28.2, note: "Mức tải trung bình" },
-      { label: "3+ môn / ngày", students: 5, percent: 5.9, note: "Lịch thi dày, cần lưu ý" },
+      { label: "1 môn / ngày", students: 56 },
+      { label: "2 môn / ngày", students: 24 },
+      { label: "3+ môn / ngày", students: 5 },
     ],
   },
 };
@@ -386,7 +386,7 @@ function buildDailyExamDistributionChartConfig(dataset) {
               const bucket = buckets[ctx.dataIndex];
               if (!bucket) return `${ctx.parsed} SV`;
               const pct = ((Number(bucket.students || 0) / totalStudents) * 100).toFixed(1);
-              return `${bucket.students} sinh viên (${pct}%) · ${bucket.note}`;
+              return `${bucket.students} sinh viên (${pct}%)`;
             },
           },
         },
