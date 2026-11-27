@@ -38,6 +38,8 @@ def test_stats_html_chartjs_cdn_and_canvases():
         "chart.js@4.4.7/dist/chart.umd.min.js",
         'data-admin-page="stats"',
         'id="tab-stats"',
+        'id="stats-year-select"',
+        'onchange="handleStatsYearChange()"',
         'id="stats-exam-select"',
         'onchange="handleStatsExamChange()"',
         'id="kpi-total-courses"',
@@ -57,6 +59,10 @@ def test_stats_html_chartjs_cdn_and_canvases():
 
     for js_marker in [
         "STATS_EXAM_DATASETS",
+        "function getAvailableAcademicYears",
+        "function getExamsByAcademicYear",
+        "function syncStatsSelectors",
+        "function handleStatsYearChange",
         "function renderStatsKpiCards",
         "function renderStatsShiftSummaryTable",
         "function buildShiftUtilizationChartConfig",
@@ -71,7 +77,7 @@ def test_stats_html_chartjs_cdn_and_canvases():
 
 
 def test_stats_js_runtime_charts_and_exam_switch():
-    """Chạy kiểm thử runtime bằng Node.js cho 2 biểu đồ Chart.js, 4 thẻ KPI, bảng từng ca và đổi kỳ thi."""
+    """Chạy kiểm thử runtime bằng Node.js cho 2 biểu đồ Chart.js, 4 thẻ KPI, lọc 2 cấp Năm học -> Kỳ thi."""
     if not shutil.which("node"):
         return
 
@@ -85,6 +91,7 @@ const makeEl = (tag = "div") => ({
   className: "",
   textContent: "",
   value: "",
+  selected: false,
   children: [],
   replaceChildren: function(...nodes) { this.children = nodes; },
   appendChild: function(node) { this.children.push(node); return node; },
@@ -93,6 +100,7 @@ const makeEl = (tag = "div") => ({
 
 const elements = {
   "stats-exam-heading": makeEl("h2"),
+  "stats-year-select": makeEl("select"),
   "stats-exam-select": makeEl("select"),
   "kpi-total-courses": makeEl("div"),
   "kpi-total-edges-sub": makeEl("div"),
@@ -138,10 +146,14 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync("web/js/admin/stats.js", "utf8"), sandbox);
 
-// 1. Khởi tạo mặc định kỳ thi KTHK1_2026: tạo đúng 2 biểu đồ Chart.js & bảng phân bổ 4 ca thi
+// 1. Khởi tạo mặc định kỳ thi KTHK1_2026: tiêu đề gọn, lọc 2 cấp đồng bộ, tạo 2 biểu đồ & bảng 4 ca thi
 const res = sandbox.initStatsCharts("KTHK1_2026");
 assert.ok(res && res.shiftChart && res.degreeChart);
 assert.strictEqual(createdCharts.length, 2);
+assert.strictEqual(elements["stats-exam-heading"].textContent, "Thống kê & Phân tích Kỳ thi");
+assert.strictEqual(elements["stats-year-select"].value, "2026 - 2027");
+assert.strictEqual(elements["stats-exam-select"].value, "KTHK1_2026");
+assert.strictEqual(elements["stats-exam-select"].children.length, 1);
 assert.strictEqual(res.shiftChart.config.type, "bar");
 assert.deepStrictEqual(Array.from(res.shiftChart.config.data.labels), ["Ca 1", "Ca 2", "Ca 3", "Ca 4"]);
 assert.strictEqual(res.shiftChart.config.data.datasets.length, 1);
@@ -158,12 +170,14 @@ assert.strictEqual(elements["kpi-algo-compare-sub"].textContent, "DSatur: 4 ca �
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "75.0%");
 assert.strictEqual(elements["stats-shift-summary-tbody"].children.length, 4);
 
-// 2. Chuyển sang kỳ thi KTHK2_2025: hủy 2 chart cũ và vẽ 2 chart mới với dữ liệu mới
-elements["stats-exam-select"].value = "KTHK2_2025";
-const res2 = sandbox.handleStatsExamChange();
+// 2. Chuyển Năm học sang 2025 - 2026: tự lọc #stats-exam-select chỉ còn kỳ thi năm 2025 - 2026 & vẽ lại 2 chart
+elements["stats-year-select"].value = "2025 - 2026";
+const res2 = sandbox.handleStatsYearChange();
 assert.ok(res2 && res2.shiftChart && res2.degreeChart);
 assert.strictEqual(res.shiftChart.destroyed, true);
 assert.strictEqual(res.degreeChart.destroyed, true);
+assert.strictEqual(elements["stats-exam-select"].value, "KTHK2_2025");
+assert.strictEqual(elements["stats-exam-select"].children.length, 1);
 assert.strictEqual(elements["kpi-total-courses"].textContent, "12 Môn");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "71.4%");
 assert.ok(elements["stats-max-degree-badge"].textContent.includes("IT004"));

@@ -32,25 +32,39 @@
       <!-- MÀN HÌNH 05: THỐNG KÊ KPI & BIỂU ĐỒ CHART.JS (UC13, UC14) -->
       <section id="tab-stats" class="admin-tab-section flex-1 space-y-6">
 
-        <!-- Thanh tiêu đề & Bộ chọn Kỳ thi thống kê -->
+        <!-- Thanh tiêu đề & Bộ lọc 2 cấp Năm học -> Kỳ thi -->
         <header class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200">
           <div>
             <h2 id="stats-exam-heading" class="text-lg font-bold text-slate-900">
-              Thống kê &amp; Phân tích Kỳ thi: Học kỳ 1 (2026 - 2027)
+              Thống kê &amp; Phân tích Kỳ thi
             </h2>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2.5 no-print">
-            <label for="stats-exam-select" class="text-xs font-semibold text-slate-600">Kỳ thi:</label>
-            <select
-              id="stats-exam-select"
-              aria-label="Chọn kỳ thi thống kê"
-              onchange="handleStatsExamChange()"
-              class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
-            >
-              <option value="KTHK1_2026" selected>KTHK1_2026 - Thi Cuối Kỳ HK1 (2026 - 2027)</option>
-              <option value="KTHK2_2025">KTHK2_2025 - Thi Cuối Kỳ HK2 (2025 - 2026)</option>
-            </select>
+          <div class="flex flex-wrap items-center gap-3 no-print">
+            <div class="flex items-center gap-2">
+              <label for="stats-year-select" class="text-xs font-semibold text-slate-600">Năm học:</label>
+              <select
+                id="stats-year-select"
+                aria-label="Chọn năm học thống kê"
+                onchange="handleStatsYearChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="2026 - 2027" selected>2026 - 2027</option>
+                <option value="2025 - 2026">2025 - 2026</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label for="stats-exam-select" class="text-xs font-semibold text-slate-600">Kỳ thi:</label>
+              <select
+                id="stats-exam-select"
+                aria-label="Chọn kỳ thi thống kê"
+                onchange="handleStatsExamChange()"
+                class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+              >
+                <option value="KTHK1_2026" selected>KTHK1_2026 - Thi Cuối Kỳ HK1</option>
+              </select>
+            </div>
           </div>
         </header>
 
