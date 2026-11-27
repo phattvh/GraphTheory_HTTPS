@@ -26,16 +26,16 @@ const GRAPH_EXAM_OPTIONS = [
 ];
 
 const SAMPLE_COURSE_METADATA = {
-  IT001: { ten_mon: "Lý thuyết Đồ thị", so_sv: 145, saturation: 3, rooms: ["A101 (100 SV)", "B201 (45 SV)"] },
-  IT002: { ten_mon: "Cấu trúc Dữ liệu & Giải thuật", so_sv: 180, saturation: 3, rooms: ["A101 (100 SV)", "A102 (80 SV)"] },
-  IT003: { ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", so_sv: 120, saturation: 2, rooms: ["A101 (60 SV)", "A102 (60 SV)"] },
-  IT004: { ten_mon: "Lập trình Web", so_sv: 110, saturation: 2, rooms: ["A102 (60 SV)", "B201 (50 SV)"] },
-  IT005: { ten_mon: "An toàn & Bảo mật Thông tin", so_sv: 95, saturation: 2, rooms: ["B201 (50 SV)", "C301 (45 SV)"] },
-  IT006: { ten_mon: "Trí tuệ Nhân tạo", so_sv: 130, saturation: 3, rooms: ["A101 (70 SV)", "A102 (60 SV)"] },
-  IT007: { ten_mon: "Mạng Máy tính & Truyền thông", so_sv: 105, saturation: 2, rooms: ["A102 (60 SV)", "B201 (45 SV)"] },
-  IT008: { ten_mon: "Toán Rời rạc & Tổ hợp", so_sv: 160, saturation: 3, rooms: ["A101 (100 SV)", "B201 (60 SV)"] },
-  IT009: { ten_mon: "Phân tích & Thiết kế Hệ thống", so_sv: 90, saturation: 2, rooms: ["B201 (45 SV)", "C301 (45 SV)"] },
-  IT010: { ten_mon: "Học máy Ứng dụng", so_sv: 85, saturation: 2, rooms: ["C301 (45 SV)", "C302 (40 SV)"] },
+  IT001: { ten_mon: "Lý thuyết Đồ thị", so_sv: 145, rooms: ["A101", "B201"] },
+  IT002: { ten_mon: "Cấu trúc Dữ liệu & Giải thuật", so_sv: 180, rooms: ["A101", "A102"] },
+  IT003: { ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", so_sv: 120, rooms: ["A101", "A102"] },
+  IT004: { ten_mon: "Lập trình Web", so_sv: 110, rooms: ["A102", "B201"] },
+  IT005: { ten_mon: "An toàn & Bảo mật Thông tin", so_sv: 95, rooms: ["B201", "C301"] },
+  IT006: { ten_mon: "Trí tuệ Nhân tạo", so_sv: 130, rooms: ["A101", "A102"] },
+  IT007: { ten_mon: "Mạng Máy tính & Truyền thông", so_sv: 105, rooms: ["A102", "B201"] },
+  IT008: { ten_mon: "Toán Rời rạc & Tổ hợp", so_sv: 160, rooms: ["A101", "B201"] },
+  IT009: { ten_mon: "Phân tích & Thiết kế Hệ thống", so_sv: 90, rooms: ["B201", "C301"] },
+  IT010: { ten_mon: "Học máy Ứng dụng", so_sv: 85, rooms: ["C301", "C302"] },
 };
 
 const CYTOSCAPE_STYLE = [
@@ -146,7 +146,6 @@ let activeFocusedNodeId = null;
 let simulationTimerId = null;
 let activeExamCode = "KTHK1_2026";
 let currentShiftByNode = {};
-let currentSaturationByNode = {};
 
 function getGraphNodesList() {
   return SAMPLE_GRAPH_ELEMENTS.filter((el) => el.data && !el.data.source);
@@ -411,7 +410,6 @@ function renderNodeInspector(nodeId) {
   const meta = SAMPLE_COURSE_METADATA[nodeId] || {
     ten_mon: nodeId,
     so_sv: 0,
-    saturation: 0,
     rooms: [],
   };
   const adjEdges = getAdjacentEdgesForNode(nodeId);
@@ -429,13 +427,8 @@ function renderNodeInspector(nodeId) {
   listEl.replaceChildren();
   appendInspectorRow(listEl, "Tên học phần", meta.ten_mon);
   appendInspectorRow(listEl, "Sinh viên đăng ký", `${meta.so_sv} SV`);
-  appendInspectorRow(listEl, "Bậc đỉnh deg(v)", `${adjEdges.length} môn xung đột`);
-  const satVal =
-    typeof currentSaturationByNode[nodeId] === "number"
-      ? currentSaturationByNode[nodeId]
-      : meta.saturation;
-  appendInspectorRow(listEl, "Độ bão hòa DSatur", String(satVal));
-  appendInspectorRow(listEl, "Phân phòng (FFD)", meta.rooms.join(" · ") || "Chưa phân phòng");
+  appendInspectorRow(listEl, "Số môn cần chọn khác ca", `${adjEdges.length} môn`);
+  appendInspectorRow(listEl, "Mã phòng", meta.rooms.join(", ") || "Chưa phân phòng");
 
   // Các nút click nhanh tới môn xung đột mạnh nhất
   const conflictsWrap = document.createElement("div");
@@ -629,7 +622,6 @@ function runAutoSchedule() {
   stopColoringSimulation(false);
   const result = computeGraphColoring(activeAlgorithm);
   currentShiftByNode = result.shiftByNode;
-  currentSaturationByNode = result.saturationByNode;
   activeShiftFilter = null;
   activeFocusedNodeId = null;
 
@@ -663,7 +655,6 @@ function toggleColoringSimulation() {
 
   const result = computeGraphColoring(activeAlgorithm);
   currentShiftByNode = result.shiftByNode;
-  currentSaturationByNode = result.saturationByNode;
   activeShiftFilter = null;
   activeFocusedNodeId = null;
   updateClearFocusButtonVisibility();

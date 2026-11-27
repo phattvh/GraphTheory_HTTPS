@@ -222,6 +222,13 @@ assert.ok(capturedConfig.layout.spacingFactor < 1);
 // Kiểm tra click node & click edge cập nhật Inspector
 eventHandlers["tap:node"]({ target: { id: () => "IT010" } });
 assert.strictEqual(elements["graph-inspector-badge"].textContent, "Mã học phần: IT010 (Ca 2)");
+const inspectorLabels = elements["graph-inspector-details"].children.map((li) => li.children[0].textContent);
+const inspectorValues = elements["graph-inspector-details"].children.map((li) => li.children[1].textContent);
+assert.ok(inspectorLabels.includes("Số môn cần chọn khác ca"));
+assert.ok(!inspectorLabels.includes("Độ bão hòa DSatur"));
+assert.ok(inspectorLabels.includes("Mã phòng"));
+assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Số môn cần chọn khác ca")], "1 môn");
+assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301, C302");
 
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
