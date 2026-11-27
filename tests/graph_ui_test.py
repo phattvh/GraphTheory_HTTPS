@@ -20,6 +20,13 @@ def test_graph_html_elements():
     for marker in [
         'data-admin-page="graph"',
         'id="tab-graph"',
+        'id="graph-year-select"',
+        'id="graph-exam-select"',
+        'id="btn-algo-dsatur"',
+        'id="btn-algo-welsh-powell"',
+        'id="btn-simulate-coloring"',
+        'id="btn-run-schedule"',
+        'id="graph-node-search"',
         'id="cy"',
         'id="cy-fallback-svg"',
         "cytoscape.min.js",
@@ -35,6 +42,7 @@ def test_graph_html_elements():
         'id="graph-legend"',
         'id="graph-inspector-badge"',
         'id="graph-inspector-details"',
+        'id="verifier-chromatic-number"',
         'src="/js/admin/graph.js"',
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
@@ -48,6 +56,14 @@ def test_graph_js_structure_and_xss():
     for symbol in [
         "SAMPLE_GRAPH_ELEMENTS",
         "CYTOSCAPE_STYLE",
+        "function computeGraphColoring",
+        "function selectGraphAlgorithm",
+        "function runAutoSchedule",
+        "function toggleColoringSimulation",
+        "function focusGraphNode",
+        "function filterGraphByShift",
+        "function clearGraphHighlight",
+        "function searchGraphNode",
         "function initConflictGraph",
         "function zoomInGraph",
         "function zoomOutGraph",
@@ -83,9 +99,14 @@ const makeClassList = (initial = []) => {
 const makeEl = (tag = "div") => {
   const el = {
     tagName: tag.toUpperCase(),
+    className: "",
     textContent: "",
+    value: "",
+    selected: false,
     children: [],
+    attrs: {},
     classList: makeClassList(),
+    setAttribute: (k, v) => { el.attrs[k] = String(v); },
     append: (...nodes) => el.children.push(...nodes),
     appendChild: (node) => el.children.push(node),
     replaceChildren: (...nodes) => { el.children = [...nodes]; },
@@ -96,9 +117,23 @@ const makeEl = (tag = "div") => {
 const elements = {
   cy: makeEl("div"),
   "cy-fallback-svg": makeEl("svg"),
+  "graph-year-select": makeEl("select"),
+  "graph-exam-select": makeEl("select"),
+  "graph-node-suggestions": makeEl("datalist"),
+  "btn-algo-dsatur": makeEl("button"),
+  "btn-algo-welsh-powell": makeEl("button"),
+  "btn-simulate-coloring-label": makeEl("span"),
+  "btn-graph-clear-focus": makeEl("button"),
+  "graph-status-banner": makeEl("span"),
+  "graph-legend-buttons": makeEl("div"),
+  "graph-inspector-heading": makeEl("h3"),
   "graph-inspector-badge": makeEl("span"),
   "graph-inspector-details": makeEl("ul"),
   "graph-zoom-label": makeEl("span"),
+  "verifier-status-title": makeEl("span"),
+  "verifier-chromatic-number": makeEl("span"),
+  "verifier-edge-conflicts": makeEl("span"),
+  "verifier-room-capacity": makeEl("span"),
 };
 
 let capturedConfig = null;
@@ -190,6 +225,35 @@ assert.ok(elements["graph-inspector-badge"].textContent.includes("IT010"));
 
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
+
+// Kiểm tra thuật toán DSatur và Welsh-Powell chạy 0 xung đột và cập nhật Verifier
+const wpRes = sandbox.selectGraphAlgorithm("WELSH_POWELL");
+assert.strictEqual(wpRes.conflicts, 0, "Welsh-Powell không được có cạnh cùng màu");
+assert.ok(elements["verifier-chromatic-number"].textContent.includes("Welsh-Powell"));
+assert.strictEqual(elements["btn-algo-welsh-powell"].attrs["aria-pressed"], "true");
+
+const dsRes = sandbox.selectGraphAlgorithm("DSATUR");
+assert.strictEqual(dsRes.conflicts, 0, "DSatur không được có cạnh cùng màu");
+assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô phỏng tô màu");
+assert.ok(elements["verifier-chromatic-number"].textContent.includes("DSatur"));
+
+// Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
+const foundId = sandbox.searchGraphNode("IT008");
+assert.strictEqual(foundId, "IT008");
+assert.ok(elements["graph-inspector-badge"].textContent.includes("IT008"));
+
+const filteredShift = sandbox.filterGraphByShift(1);
+assert.strictEqual(filteredShift, 1);
+assert.ok(elements["graph-status-banner"].textContent.includes("Ca 1"));
+sandbox.clearGraphHighlight();
+assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
+
+// Kiểm tra bật & dừng mô phỏng tô màu từng bước
+const started = sandbox.toggleColoringSimulation();
+assert.strictEqual(started, true);
+assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
+sandbox.stopColoringSimulation(true);
+assert.strictEqual(elements["btn-simulate-coloring-label"].textContent, "Mô phỏng tô màu");
 """
     res = subprocess.run(
         ["node", "-e", script],
