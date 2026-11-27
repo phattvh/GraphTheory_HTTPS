@@ -759,20 +759,6 @@ function handleGraphExamChange() {
   return runAutoSchedule();
 }
 
-function populateGraphSearchSuggestions() {
-  const datalist = document.getElementById("graph-node-suggestions");
-  if (!datalist || typeof datalist.replaceChildren !== "function") return;
-  datalist.replaceChildren();
-  getGraphNodesList().forEach((n) => {
-    const id = n.data.id;
-    const meta = SAMPLE_COURSE_METADATA[id];
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = meta ? `${id} - ${meta.ten_mon}` : id;
-    datalist.appendChild(opt);
-  });
-}
-
 function updateZoomStatusLabel() {
   const zoomLabel = document.getElementById("graph-zoom-label");
   if (!zoomLabel || !cyInstance || typeof cyInstance.zoom !== "function") return;
@@ -842,7 +828,6 @@ function initConflictGraph() {
   if (fallback) fallback.classList.add("hidden");
 
   syncGraphExamSelectors("2026 - 2027", activeExamCode);
-  populateGraphSearchSuggestions();
 
   currentShiftByNode = Object.fromEntries(
     getGraphNodesList().map((n) => [n.data.id, n.data.shift])

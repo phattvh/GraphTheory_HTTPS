@@ -45,6 +45,7 @@ def test_graph_html_elements():
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
     assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
+    assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
 
 
 def test_graph_js_structure_and_xss():
@@ -119,7 +120,6 @@ const elements = {
   "cy-fallback-svg": makeEl("svg"),
   "graph-year-select": makeEl("select"),
   "graph-exam-select": makeEl("select"),
-  "graph-node-suggestions": makeEl("datalist"),
   "btn-algo-dsatur": makeEl("button"),
   "btn-algo-welsh-powell": makeEl("button"),
   "btn-simulate-coloring-label": makeEl("span"),

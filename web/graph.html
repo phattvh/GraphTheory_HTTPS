@@ -20,6 +20,10 @@
       line-height: 1.4;
       letter-spacing: -0.01em;
     }
+    #graph-node-search::-webkit-calendar-picker-indicator {
+      display: none !important;
+      -webkit-appearance: none;
+    }
   </style>
 </head>
 <body data-admin-page="graph" class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
@@ -102,13 +106,11 @@
               <input
                 id="graph-node-search"
                 type="search"
-                list="graph-node-suggestions"
                 oninput="searchGraphNode(this.value)"
                 placeholder="Tìm mã môn (VD: IT002)..."
                 aria-label="Tìm kiếm và định vị môn học trên đồ thị"
                 class="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs font-medium bg-slate-50 hover:bg-slate-100 focus:bg-white text-slate-800 border border-slate-200 focus:border-blue-600 focus:outline-none transition"
               />
-              <datalist id="graph-node-suggestions"></datalist>
             </div>
           </div>
 
