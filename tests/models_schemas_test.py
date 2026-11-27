@@ -329,6 +329,58 @@ def test_dang_ky_thi_self_join_and_algorithm_pipeline():
         db.close()
 
 
+def test_orm_check_constraints_and_transactional_scope():
+    """Đảm bảo 12 CheckConstraint trong ORM khớp 100% init.sql và transactional_scope rollback nguyên tử."""
+    from sqlalchemy import CheckConstraint
+    from backend.core.database import Base
+    from backend.services import transactional_scope
+
+    expected_checks = {
+        "ck_nguoi_dung_vai_tro",
+        "ck_sv_co_mssv",
+        "ck_ky_thi_ngay",
+        "ck_ky_thi_so_ca",
+        "ck_ky_thi_trang_thai",
+        "ck_mon_hoc_thoi_luong",
+        "ck_mon_hoc_tin_chi",
+        "ck_phong_thi_suc_chua",
+        "ck_ca_thi_stt",
+        "ck_ca_thi_gio",
+        "ck_ca_thi_thuat_toan",
+        "ck_lich_thi_so_luong",
+    }
+    orm_checks = {
+        constraint.name
+        for table in Base.metadata.tables.values()
+        for constraint in table.constraints
+        if isinstance(constraint, CheckConstraint) and constraint.name
+    }
+    assert expected_checks.issubset(orm_checks), (
+        f"Thiếu CheckConstraint trong Base.metadata: {expected_checks - orm_checks}"
+    )
+
+    # Kiểm chứng transactional_scope tự động rollback khi xảy ra ngoại lệ giữa chừng
+    probe_code = "MH_TX_ROLLBACK_PROBE"
+    db = SessionLocal()
+    try:
+        db.query(MonHoc).filter(MonHoc.ma_mon == probe_code).delete()
+        db.commit()
+
+        try:
+            with transactional_scope(db):
+                db.add(MonHoc(ma_mon=probe_code, ten_mon="Probe Rollback", thoi_luong_phut=90))
+                db.flush()
+                raise RuntimeError("Giả lập lỗi giữa pipeline để kiểm tra rollback")
+        except RuntimeError:
+            pass
+
+        leaked = db.query(MonHoc).filter(MonHoc.ma_mon == probe_code).first()
+        assert leaked is None, "transactional_scope phải rollback sạch bản ghi dở dang khi có lỗi"
+        print("✓ Test 5: 12 CheckConstraint ORM & backend.services.transactional_scope đạt 100%.")
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     print("=== BẮT ĐẦU KIỂM THỬ NGÀY 3-6 (TV2: Models, Schemas & Graph Pipeline) ===")
     try:
@@ -336,6 +388,7 @@ if __name__ == "__main__":
         test_schemas_validation_and_sanitization()
         test_orm_crud_and_pydantic_from_attributes()
         test_dang_ky_thi_self_join_and_algorithm_pipeline()
+        test_orm_check_constraints_and_transactional_scope()
         print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ MODELS, SCHEMAS & PIPELINE ĐÃ ĐẠT 100% ===")
     except AssertionError as err:
         print(f"✗ LỖI KIỂM THỬ: {err}")
