@@ -260,6 +260,63 @@ def test_large_seed_scale_dataset_dsatur_and_welsh_powell():
         )
 
 
+def test_verifier_edge_cases():
+    """Test 10: Edge cases (empty-alloc fallback color_map, int/str shift IDs, DiGraph/self-loop, missing ma_mon)."""
+    # 10.1 shifts_allocation có key nhưng không có allocation -> vẫn phải fallback kiểm tra color_map
+    g_conflict = nx.Graph()
+    g_conflict.add_edge("A", "B", weight=5)
+    c1_fallback = verify_zero_conflicts(
+        g_conflict,
+        color_map={"A": "1", "B": 1},
+        shifts_allocation={1: {"allocations": []}},
+    )
+    assert c1_fallback["passed"] is False
+    assert len(c1_fallback["edge_conflicts"]) == 1
+    assert c1_fallback["edge_conflicts"][0]["shift"] == 1
+
+    # 10.2 DiGraph có 2 cạnh ngược chiều (A->B và B->A) + self-loop (A->A) -> chỉ đếm đúng 1 xung đột (A, B)
+    di_g = nx.DiGraph()
+    di_g.add_edge("A", "B", weight=3)
+    di_g.add_edge("B", "A", weight=3)
+    di_g.add_edge("A", "A", weight=1)
+    c1_di = verify_zero_conflicts(di_g, color_map={"A": 1, "B": 1})
+    assert c1_di["passed"] is False
+    assert len(c1_di["edge_conflicts"]) == 1
+
+    # 10.3 Bản ghi allocation thiếu ma_mon không được lọt qua Quality Gate
+    g_single = nx.Graph()
+    g_single.add_node("M1", size=20)
+    rooms = [
+        {"ma_phong": "P1", "suc_chua": 50, "dang_su_dung": True},
+        {"ma_phong": "P2", "suc_chua": 50, "dang_su_dung": True},
+    ]
+    bad_blank_course = {
+        "shifts_allocation": {
+            1: {
+                "allocations": [
+                    {"ma_mon": "M1", "ma_phong": "P1", "so_sinh_vien": 20, "suc_chua": 50},
+                    {"ma_mon": "", "ma_phong": "P2", "so_sinh_vien": 10, "suc_chua": 50},
+                ]
+            }
+        }
+    }
+    report_blank = verify_schedule(g_single, bad_blank_course, rooms=rooms)
+    assert report_blank["is_valid"] is False
+    assert report_blank["summary"]["room_capacity_passed"] is False
+
+    # 10.4 Thông báo lỗi xếp thừa sinh viên hiển thị rõ chênh lệch (+5)
+    g_over = nx.Graph()
+    g_over.add_node("M1", size=30)
+    over_schedule = {
+        "shifts_allocation": {
+            1: {"allocations": [{"ma_mon": "M1", "ma_phong": "P1", "so_sinh_vien": 35, "suc_chua": 50}]}
+        }
+    }
+    report_over = verify_schedule(g_over, over_schedule, rooms=rooms)
+    assert report_over["is_valid"] is False
+    assert any("+5" in err and "thực tế xếp 35 SV" in err for err in report_over["errors"])
+
+
 if __name__ == "__main__":
     test_valid_full_pipeline_schedule()
     test_valid_schedule_with_room_splitting()
@@ -270,4 +327,5 @@ if __name__ == "__main__":
     test_detect_missing_unexpected_and_mismatched_students()
     test_empty_and_dirty_inputs()
     test_large_seed_scale_dataset_dsatur_and_welsh_powell()
+    test_verifier_edge_cases()
     print("\nALL SCHEDULE VERIFIER TESTS PASSED 100%!")
