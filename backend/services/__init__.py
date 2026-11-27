@@ -18,6 +18,16 @@ from typing import Iterator
 from sqlalchemy.orm import Session
 
 
+from backend.services.import_service import (
+    DangKyThiImportRow,
+    ImportParseResult,
+    ImportRowError,
+    ImportValidationError,
+    parse_import_bytes,
+    parse_upload_file,
+)
+
+
 @contextmanager
 def transactional_scope(db: Session) -> Iterator[Session]:
     """Thực thi khối nghiệp vụ trong một giao dịch ACID nguyên tử (commit hoặc rollback toàn bộ)."""
@@ -29,4 +39,12 @@ def transactional_scope(db: Session) -> Iterator[Session]:
         raise
 
 
-__all__ = ["transactional_scope"]
+__all__ = [
+    "DangKyThiImportRow",
+    "ImportParseResult",
+    "ImportRowError",
+    "ImportValidationError",
+    "parse_import_bytes",
+    "parse_upload_file",
+    "transactional_scope",
+]

@@ -53,6 +53,7 @@ test-backend:
 	$(COMPOSE) exec -T fastapi python tests/db_schema_test.py
 	$(COMPOSE) exec -T fastapi python tests/backend_db_test.py
 	$(COMPOSE) exec -T fastapi python tests/models_schemas_test.py
+	$(COMPOSE) exec -T fastapi python tests/import_service_test.py
 	$(COMPOSE) exec -T fastapi python tests/seed_test.py
 	$(COMPOSE) exec -T fastapi python tests/graph_builder_test.py
 	$(COMPOSE) exec -T fastapi python tests/dsatur_test.py
