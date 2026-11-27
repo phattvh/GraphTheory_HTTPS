@@ -11,10 +11,17 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pydantic import ValidationError
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
+from backend.algorithms import (
+    allocate_graph_schedule_rooms_ffd,
+    allocate_graph_schedule_with_overflow,
+    build_conflict_graph,
+    dsatur_coloring,
+    welsh_powell_coloring,
+)
 from backend.core.database import SessionLocal, engine
-from backend.models import MonHoc, PhongThi, SinhVien
+from backend.models import DangKyThi, KyThi, MonHoc, PhongThi, SinhVien
 from backend.schemas import (
     DangKyThiCreate,
     KyThiCreate,
@@ -212,13 +219,124 @@ def test_orm_crud_and_pydantic_from_attributes():
         db.close()
 
 
+def test_dang_ky_thi_self_join_and_algorithm_pipeline():
+    """Kiểm chứng dữ liệu DangKyThi trong Postgres kết nối trơn tru với Graph Builder, DSatur, Welsh-Powell, FFD & Overflow."""
+    db = SessionLocal()
+    try:
+        exam = KyThi(
+            ma_ky_thi="KT_PIPE_D6",
+            ten_ky_thi="Kỳ thi kiểm chứng Pipeline Đồ thị",
+            ngay_bat_dau=date(2026, 9, 1),
+            ngay_ket_thuc=date(2026, 9, 10),
+        )
+        m1 = MonHoc(ma_mon="PIPE_M1", ten_mon="Môn 1", thoi_luong_phut=90, so_tin_chi=3)
+        m2 = MonHoc(ma_mon="PIPE_M2", ten_mon="Môn 2", thoi_luong_phut=90, so_tin_chi=3)
+        m3 = MonHoc(ma_mon="PIPE_M3", ten_mon="Môn 3", thoi_luong_phut=90, so_tin_chi=3)
+        sv1 = SinhVien(mssv="PIPE_SV1", ho_ten="SV 1")
+        sv2 = SinhVien(mssv="PIPE_SV2", ho_ten="SV 2")
+        sv3 = SinhVien(mssv="PIPE_SV3", ho_ten="SV 3")
+        p1 = PhongThi(ma_phong="PIPE_P1", ten_phong="Phòng 1", suc_chua=50, dang_su_dung=True)
+        p2 = PhongThi(ma_phong="PIPE_P2", ten_phong="Phòng 2", suc_chua=30, dang_su_dung=True)
+
+        db.add_all([exam, m1, m2, m3, sv1, sv2, sv3, p1, p2])
+        db.flush()
+
+        # SV1: M1, M2, M3 (tam giác xung đột K3)
+        # SV2: M1, M2 (tăng trọng số cạnh (M1, M2) lên 2)
+        # SV3: M2 (M2 có 3 SV, M1 có 2 SV, M3 có 1 SV)
+        regs = [
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv1.id, mon_hoc_id=m1.id),
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv1.id, mon_hoc_id=m2.id),
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv1.id, mon_hoc_id=m3.id),
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv2.id, mon_hoc_id=m1.id),
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv2.id, mon_hoc_id=m2.id),
+            DangKyThi(ky_thi_id=exam.id, sinh_vien_id=sv3.id, mon_hoc_id=m2.id),
+        ]
+        db.add_all(regs)
+        db.flush()
+
+        # 1. Truy vấn Self-Join trực tiếp trên Postgres để đối chiếu trọng số xung đột
+        edge_rows = db.execute(
+            text(
+                """
+                SELECT m1.ma_mon, m2.ma_mon, COUNT(*) AS trong_so
+                FROM dang_ky_thi dk1
+                JOIN dang_ky_thi dk2
+                  ON dk1.ky_thi_id = dk2.ky_thi_id
+                 AND dk1.sinh_vien_id = dk2.sinh_vien_id
+                 AND dk1.mon_hoc_id < dk2.mon_hoc_id
+                JOIN mon_hoc m1 ON dk1.mon_hoc_id = m1.id
+                JOIN mon_hoc m2 ON dk2.mon_hoc_id = m2.id
+                WHERE dk1.ky_thi_id = :ky_thi_id
+                GROUP BY m1.ma_mon, m2.ma_mon
+                ORDER BY m1.ma_mon, m2.ma_mon
+                """
+            ),
+            {"ky_thi_id": exam.id},
+        ).fetchall()
+        weights = {tuple(sorted((r[0], r[1]))): r[2] for r in edge_rows}
+        assert weights == {
+            ("PIPE_M1", "PIPE_M2"): 2,
+            ("PIPE_M1", "PIPE_M3"): 1,
+            ("PIPE_M2", "PIPE_M3"): 1,
+        }, f"Self-Join weights mismatch: {weights}"
+
+        # 2. Đưa danh sách đăng ký vào build_conflict_graph -> DSatur / Welsh-Powell -> FFD & Overflow
+        reg_dicts = [
+            {"mssv": sv1.mssv, "ma_mon": m1.ma_mon},
+            {"mssv": sv1.mssv, "ma_mon": m2.ma_mon},
+            {"mssv": sv1.mssv, "ma_mon": m3.ma_mon},
+            {"mssv": sv2.mssv, "ma_mon": m1.ma_mon},
+            {"mssv": sv2.mssv, "ma_mon": m2.ma_mon},
+            {"mssv": sv3.mssv, "ma_mon": m2.ma_mon},
+        ]
+        G = build_conflict_graph(reg_dicts)
+        assert G.number_of_nodes() == 3 and G.number_of_edges() == 3
+        assert G["PIPE_M1"]["PIPE_M2"]["weight"] == 2
+        assert G.nodes["PIPE_M2"]["size"] == 3
+
+        dsatur_res = dsatur_coloring(G)
+        wp_res = welsh_powell_coloring(G)
+        # Đồ thị đầy đủ K3 bắt buộc sắc số = 3 và 0% xung đột ở cả hai thuật toán
+        assert dsatur_res["total_colors"] == 3 and dsatur_res["is_valid"] and dsatur_res["conflicts_count"] == 0
+        assert wp_res["total_colors"] == 3 and wp_res["is_valid"] and wp_res["conflicts_count"] == 0
+
+        rooms = [
+            {"ma_phong": p1.ma_phong, "ten_phong": p1.ten_phong, "suc_chua": p1.suc_chua, "dang_su_dung": True},
+            {"ma_phong": p2.ma_phong, "ten_phong": p2.ten_phong, "suc_chua": p2.suc_chua, "dang_su_dung": True},
+        ]
+        ffd_res = allocate_graph_schedule_rooms_ffd(G, dsatur_res["color_map"], rooms)
+        assert ffd_res["is_all_successful"] is True
+        assert ffd_res["total_shifts"] == 3
+        assert ffd_res["total_courses"] == 3
+        assert ffd_res["total_allocations_count"] == 3
+        assert ffd_res["total_unallocated_count"] == 0
+
+        overflow_res = allocate_graph_schedule_with_overflow(
+            G=G,
+            color_map=dsatur_res["color_map"],
+            rooms=rooms,
+            allow_room_splitting=True,
+            allow_shift_spilling=True,
+        )
+        assert overflow_res["is_all_successful"] is True
+        assert overflow_res["is_conflict_free"] is True
+        assert overflow_res["total_unallocated_count"] == 0
+
+        db.rollback()
+        print("✓ Test 4: DangKyThi Self-Join Postgres -> Graph Builder -> DSatur/Welsh-Powell -> FFD & Overflow pass 100%.")
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
-    print("=== BẮT ĐẦU KIỂM THỬ NGÀY 3 (TV2: MonHoc, SinhVien, PhongThi Models & Schemas) ===")
+    print("=== BẮT ĐẦU KIỂM THỬ NGÀY 3-6 (TV2: Models, Schemas & Graph Pipeline) ===")
     try:
         test_orm_columns_match_postgres_tables()
         test_schemas_validation_and_sanitization()
         test_orm_crud_and_pydantic_from_attributes()
-        print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ NGÀY 3 ĐÃ ĐẠT 100% ===")
+        test_dang_ky_thi_self_join_and_algorithm_pipeline()
+        print("=== TẤT CẢ CÁC BƯỚC KIỂM THỬ MODELS, SCHEMAS & PIPELINE ĐÃ ĐẠT 100% ===")
     except AssertionError as err:
         print(f"✗ LỖI KIỂM THỬ: {err}")
         sys.exit(1)

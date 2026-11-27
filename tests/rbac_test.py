@@ -84,6 +84,9 @@ def test_unauthenticated_and_invalid_tokens_return_401():
         ("POST", "/api/v1/sinh-vien", {"mssv": "NOAUTH", "ho_ten": "X"}),
         ("GET", "/api/v1/phong-thi", None),
         ("POST", "/api/v1/phong-thi", {"ma_phong": "NOAUTH", "ten_phong": "X", "suc_chua": 30}),
+        ("GET", "/api/v1/dang-ky-thi", None),
+        ("GET", "/api/v1/ky-thi/1/dang-ky-thi", None),
+        ("POST", "/api/v1/dang-ky-thi", {"ky_thi_id": 1, "sinh_vien_id": 1, "mon_hoc_id": 1}),
     ]
     for method, path, payload in protected_routes:
         code, headers, _ = request_json(method, path, payload)
@@ -232,6 +235,9 @@ def test_role_guard_student_vs_admin():
             ("POST", "/api/v1/sinh-vien", {"mssv": "SV_TRY", "ho_ten": "X"}),
             ("GET", "/api/v1/phong-thi", None),
             ("POST", "/api/v1/phong-thi", {"ma_phong": "P_TRY", "ten_phong": "X", "suc_chua": 30}),
+            ("GET", "/api/v1/dang-ky-thi", None),
+            ("GET", f"/api/v1/ky-thi/{pub_exam_id}/dang-ky-thi", None),
+            ("POST", "/api/v1/dang-ky-thi", {"ky_thi_id": pub_exam_id, "sinh_vien_id": 1, "mon_hoc_id": course_id}),
         ]
         for method, path, payload in forbidden_calls:
             code, _, _ = request_json(method, path, payload, token=sv_token)
