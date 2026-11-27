@@ -413,12 +413,6 @@ function renderNodeInspector(nodeId) {
     rooms: [],
   };
   const adjEdges = getAdjacentEdgesForNode(nodeId);
-  const sortedConflicts = adjEdges
-    .map((e) => ({
-      other: e.data.source === nodeId ? e.data.target : e.data.source,
-      weight: e.data.weight,
-    }))
-    .sort((a, b) => b.weight - a.weight);
 
   if (headingEl) headingEl.textContent = "Chi tiết Đỉnh đang chọn";
   badgeEl.className = `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${shiftInfo.badgeClass}`;
@@ -429,24 +423,6 @@ function renderNodeInspector(nodeId) {
   appendInspectorRow(listEl, "Sinh viên đăng ký", `${meta.so_sv} SV`);
   appendInspectorRow(listEl, "Số môn cần chọn khác ca", `${adjEdges.length} môn`);
   appendInspectorRow(listEl, "Mã phòng", meta.rooms.join(", ") || "Chưa phân phòng");
-
-  // Các nút click nhanh tới môn xung đột mạnh nhất
-  const conflictsWrap = document.createElement("div");
-  conflictsWrap.className = "flex flex-wrap justify-end gap-1.5";
-  if (sortedConflicts.length === 0) {
-    conflictsWrap.textContent = "Không có";
-  } else {
-    sortedConflicts.slice(0, 3).forEach((c) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className =
-        "px-2 py-0.5 rounded-md bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 text-[11px] font-semibold transition cursor-pointer";
-      btn.textContent = `${c.other} (${c.weight} SV)`;
-      btn.onclick = () => focusGraphNode(c.other);
-      conflictsWrap.appendChild(btn);
-    });
-  }
-  appendInspectorRow(listEl, "Xung đột mạnh nhất", conflictsWrap);
 }
 
 function renderEdgeInspector(edgeData) {

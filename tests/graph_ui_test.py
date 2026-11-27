@@ -226,6 +226,7 @@ const inspectorLabels = elements["graph-inspector-details"].children.map((li) =>
 const inspectorValues = elements["graph-inspector-details"].children.map((li) => li.children[1].textContent);
 assert.ok(inspectorLabels.includes("Số môn cần chọn khác ca"));
 assert.ok(!inspectorLabels.includes("Độ bão hòa DSatur"));
+assert.ok(!inspectorLabels.includes("Xung đột mạnh nhất"));
 assert.ok(inspectorLabels.includes("Mã phòng"));
 assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Số môn cần chọn khác ca")], "1 môn");
 assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301, C302");
