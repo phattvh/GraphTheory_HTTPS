@@ -421,7 +421,7 @@ function renderEdgeInspector(edgeData) {
   badgeEl.textContent = `Cạnh: ${edgeData.source} — ${edgeData.target}`;
 
   listEl.replaceChildren();
-  appendInspectorRow(listEl, "Số SV thi chung", `${edgeData.weight} SV`);
+  appendInspectorRow(listEl, "Số sinh viên thi cả 2 ca", `${edgeData.weight} SV`);
   appendInspectorRow(
     listEl,
     "Kiểm chứng tô màu",
