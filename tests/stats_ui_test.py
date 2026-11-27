@@ -56,6 +56,17 @@ def test_stats_html_chartjs_cdn_and_canvases():
 
     assert html.count("<canvas") >= 2, "web/stats.html phải có ít nhất 2 khung <canvas> biểu đồ Chart.js"
     assert "Thời gian chạy (ms)" not in js, "Không vẽ cột thời gian chạy (ms) không cần thiết trên biểu đồ"
+    for removed_clutter in [
+        "kpi-total-edges-sub",
+        "kpi-total-regs-sub",
+        "kpi-algo-compare-sub",
+        "kpi-room-summary-sub",
+        "stats-utilization-badge",
+        "stats-max-degree-badge",
+        "stats-table-summary",
+        "Di chuột vào từng thanh",
+    ]:
+        assert removed_clutter not in html, f"web/stats.html không được còn chữ phụ thừa: {removed_clutter}"
 
     for js_marker in [
         "STATS_EXAM_DATASETS",
@@ -106,9 +117,6 @@ const elements = {
   "kpi-total-students": makeEl("div"),
   "kpi-min-shifts": makeEl("div"),
   "kpi-room-utilization": makeEl("div"),
-  "stats-utilization-badge": makeEl("span"),
-  "stats-max-degree-badge": makeEl("span"),
-  "stats-table-summary": makeEl("span"),
   "stats-shift-summary-tbody": makeEl("tbody"),
   "chart-shift-utilization": makeEl("canvas"),
   "chart-top-degree-courses": makeEl("canvas"),
@@ -175,7 +183,7 @@ assert.strictEqual(elements["stats-exam-select"].value, "KTHK2_2025");
 assert.strictEqual(elements["stats-exam-select"].children.length, 1);
 assert.strictEqual(elements["kpi-total-courses"].textContent, "12 Môn");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "71.4%");
-assert.ok(elements["stats-max-degree-badge"].textContent.includes("IT004"));
+assert.strictEqual(res2.degreeChart.config.data.labels[0], "IT004");
 """
 
     res = subprocess.run(

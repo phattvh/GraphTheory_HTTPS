@@ -213,17 +213,6 @@ function renderStatsKpiCards(dataset) {
   if (utilEl) {
     utilEl.textContent = `${Number(data.avg_room_utilization_percent).toFixed(1)}%`;
   }
-
-  const utilBadgeEl = document.getElementById("stats-utilization-badge");
-  if (utilBadgeEl) {
-    utilBadgeEl.textContent = `TB: ${Number(data.avg_room_utilization_percent).toFixed(1)}%`;
-  }
-
-  const maxDegreeBadgeEl = document.getElementById("stats-max-degree-badge");
-  if (maxDegreeBadgeEl && Array.isArray(data.top_degree_courses) && data.top_degree_courses.length > 0) {
-    const topCourse = data.top_degree_courses[0];
-    maxDegreeBadgeEl.textContent = `Max deg(v) = ${topCourse.deg} (${topCourse.ma_mon})`;
-  }
 }
 
 /**
@@ -233,13 +222,9 @@ function renderStatsKpiCards(dataset) {
 function renderStatsShiftSummaryTable(dataset) {
   const data = dataset || getStatsDataset();
   const tbody = document.getElementById("stats-shift-summary-tbody");
-  const summaryEl = document.getElementById("stats-table-summary");
   if (!tbody) return;
 
   const shifts = Array.isArray(data.shifts_breakdown) ? data.shifts_breakdown : [];
-  if (summaryEl) {
-    summaryEl.textContent = `${shifts.length} ca thi · ${data.total_courses} môn · ${formatNumberVi(data.total_registrations)} lượt thi`;
-  }
 
   tbody.replaceChildren();
   shifts.forEach((shift) => {
