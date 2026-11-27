@@ -221,7 +221,7 @@ assert.ok(capturedConfig.layout.spacingFactor < 1);
 
 // Kiểm tra click node & click edge cập nhật Inspector
 eventHandlers["tap:node"]({ target: { id: () => "IT010" } });
-assert.ok(elements["graph-inspector-badge"].textContent.includes("IT010"));
+assert.strictEqual(elements["graph-inspector-badge"].textContent, "Mã học phần: IT010 (Ca 2)");
 
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));

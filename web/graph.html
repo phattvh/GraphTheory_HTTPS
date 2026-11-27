@@ -108,7 +108,7 @@
                   id="graph-node-search"
                   type="search"
                   oninput="searchGraphNode(this.value)"
-                  placeholder="Tìm mã môn (VD: IT002)..."
+                  placeholder="Tìm mã môn (VD: IT002,...)"
                   aria-label="Tìm kiếm và định vị môn học trên đồ thị"
                   aria-describedby="graph-node-search-hint"
                   class="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs font-medium bg-slate-50 hover:bg-slate-100 focus:bg-white text-slate-800 border border-slate-200 focus:border-blue-600 focus:outline-none transition"
@@ -159,9 +159,6 @@
               <h3 class="text-sm font-bold text-slate-900">
                 Đồ thị Xung đột Môn thi
               </h3>
-              <span id="graph-status-banner" class="text-xs font-medium text-slate-600 tabular-nums">
-                10 đỉnh · 15 cạnh · DSatur (4 ca)
-              </span>
             </div>
 
             <!-- Vùng Canvas tương tác Cytoscape.js + Nút Zoom nổi -->
@@ -237,7 +234,7 @@
                   title="Căn vừa khung hình"
                   class="px-2.5 h-7 rounded-md text-xs font-medium bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
                 >
-                  Vừa khung
+                  Mặc định
                 </button>
                 <span id="graph-zoom-label" class="h-7 px-2 rounded-md bg-white/95 border border-slate-200 inline-flex items-center text-[11px] font-mono font-semibold text-slate-600 tabular-nums">100%</span>
               </nav>
@@ -246,7 +243,6 @@
             <!-- Thanh chú giải tương tác theo Ca thi (Click để lọc & kiểm chứng 0 cạnh cùng màu) -->
             <div id="graph-legend" class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-t border-slate-200 bg-white text-xs">
               <div id="graph-legend-buttons" class="flex flex-wrap items-center gap-2"></div>
-              <span class="text-[11px] text-slate-500">Bấm Ca thi để lọc · Bấm đỉnh để xem láng giềng</span>
             </div>
           </div>
 
@@ -259,7 +255,7 @@
                   Chi tiết Đỉnh đang chọn
                 </h3>
                 <span id="graph-inspector-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                  Đỉnh: IT002 · Ca 1
+                  Mã học phần: IT002 (Ca 1)
                 </span>
               </div>
 

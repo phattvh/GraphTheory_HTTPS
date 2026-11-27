@@ -424,7 +424,7 @@ function renderNodeInspector(nodeId) {
 
   if (headingEl) headingEl.textContent = "Chi tiết Đỉnh đang chọn";
   badgeEl.className = `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${shiftInfo.badgeClass}`;
-  badgeEl.textContent = `Đỉnh: ${nodeId} · Màu ${shift} (${shiftInfo.label})`;
+  badgeEl.textContent = `Mã học phần: ${nodeId} (${shiftInfo.label})`;
 
   listEl.replaceChildren();
   appendInspectorRow(listEl, "Tên học phần", meta.ten_mon);
