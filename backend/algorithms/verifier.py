@@ -44,6 +44,19 @@ def _is_room_active(value: Any) -> bool:
     return bool(value)
 
 
+def _normalize_shift_id(shift_id: Any) -> Any:
+    """Chuẩn hóa mã ca thi (đồng nhất 1 và '1' khi nhận JSON payload)."""
+    if isinstance(shift_id, bool) or shift_id is None:
+        return shift_id
+    if isinstance(shift_id, int):
+        return shift_id
+    text = str(shift_id).strip()
+    try:
+        return int(text)
+    except ValueError:
+        return text
+
+
 def _extract_allocations_list(shift_data: Any) -> List[Dict[str, Any]]:
     """Trích xuất danh sách bản ghi phân phòng từ dữ liệu của một ca thi."""
     if isinstance(shift_data, dict):
@@ -78,18 +91,19 @@ def verify_zero_conflicts(
     # Thu thập tập ca thi của từng môn từ shifts_allocation (nguồn thực tế sau phân phòng)
     if isinstance(shifts_allocation, dict) and shifts_allocation:
         for shift_id, shift_data in shifts_allocation.items():
+            norm_shift = _normalize_shift_id(shift_id)
             for alloc in _extract_allocations_list(shift_data):
                 ma_mon = _safe_str(alloc.get("ma_mon"))
-                if ma_mon:
-                    course_shifts[ma_mon].add(shift_id)
+                if ma_mon and norm_shift is not None:
+                    course_shifts[ma_mon].add(norm_shift)
 
-    # Bổ sung từ color_map nếu shifts_allocation chưa có hoặc rỗng
-    if isinstance(color_map, dict):
+    # Bổ sung từ color_map nếu shifts_allocation không có bản ghi phân phòng nào
+    if not course_shifts and isinstance(color_map, dict):
         for raw_mon, shift_id in color_map.items():
             ma_mon = _safe_str(raw_mon)
-            if ma_mon and shift_id is not None:
-                if not shifts_allocation:
-                    course_shifts[ma_mon].add(shift_id)
+            norm_shift = _normalize_shift_id(shift_id)
+            if ma_mon and norm_shift is not None:
+                course_shifts[ma_mon].add(norm_shift)
 
     # 1. Kiểm tra môn xuất hiện ở >= 2 ca thi khác nhau
     multi_shift_courses: List[Dict[str, Any]] = []
@@ -103,9 +117,12 @@ def verify_zero_conflicts(
     # 2. Kiểm tra mọi cạnh (u, v) in E không bao giờ có chung ca thi
     edge_conflicts: List[Dict[str, Any]] = []
     if G is not None and isinstance(G, nx.Graph):
-        for u, v, edge_data in G.edges(data=True):
+        graph = G.to_undirected() if G.is_directed() else G
+        for u, v, edge_data in graph.edges(data=True):
             u_code = _safe_str(u)
             v_code = _safe_str(v)
+            if not u_code or not v_code or u_code == v_code:
+                continue
             if u_code in course_shifts and v_code in course_shifts:
                 shared_shifts = course_shifts[u_code] & course_shifts[v_code]
                 for shared_shift in sorted(shared_shifts, key=lambda s: str(s)):
@@ -191,7 +208,20 @@ def verify_room_capacities(
             so_sv = _safe_int(alloc.get("so_sinh_vien"), default=None)
             declared_cap = _safe_int(alloc.get("suc_chua"), default=None)
 
-            # Kiểm tra mã phòng hợp lệ
+            # Kiểm tra mã môn và mã phòng hợp lệ
+            if not ma_mon:
+                capacity_violations.append({
+                    "shift": shift_id,
+                    "ma_mon": "",
+                    "ma_phong": ma_phong,
+                    "so_sinh_vien": so_sv,
+                    "suc_chua": declared_cap,
+                    "reason": "Thiếu mã môn thi trong bản ghi phân bổ",
+                })
+                if ma_phong:
+                    seen_rooms[ma_phong].append("<unknown>")
+                continue
+
             if not ma_phong:
                 invalid_rooms.append({
                     "shift": shift_id,
@@ -433,7 +463,8 @@ def verify_schedule(
         errors.append(f"[Môn lạ] Môn {extra} xuất hiện trong lịch nhưng không thuộc kỳ thi.")
     for mm in completeness_check["student_count_mismatches"]:
         errors.append(
-            f"[Lệch sĩ số] Môn {mm['ma_mon']}: dự kiến {mm['expected']} SV nhưng chỉ xếp được {mm['actual']} SV."
+            f"[Lệch sĩ số] Môn {mm['ma_mon']}: dự kiến {mm['expected']} SV "
+            f"nhưng thực tế xếp {mm['actual']} SV (chênh lệch {mm['diff']:+d})."
         )
 
     total_violations = (
