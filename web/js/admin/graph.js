@@ -804,14 +804,17 @@ function getConcentricLayoutOptions() {
   return {
     name: "concentric",
     animate: false,
-    padding: 36,
+    padding: 32,
     avoidOverlap: true,
-    minNodeSpacing: 52,
-    equidistant: true,
+    minNodeSpacing: 54,
+    spacingFactor: 0.95,
+    equidistant: false,
     startAngle: (3 / 2) * Math.PI,
-    concentric: (node) =>
-      node && typeof node.data === "function" ? Number(node.data("degree") || 0) : 0,
-    levelWidth: () => 2,
+    concentric: (node) => {
+      const deg = node && typeof node.data === "function" ? Number(node.data("degree") || 0) : 0;
+      return deg >= 4 ? 2 : 1;
+    },
+    levelWidth: () => 1,
   };
 }
 

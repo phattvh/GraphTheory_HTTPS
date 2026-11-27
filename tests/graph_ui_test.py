@@ -214,10 +214,10 @@ sandbox.resetGraphView();
 assert.strictEqual(fitCalls, 1);
 assert.strictEqual(elements["graph-zoom-label"].textContent, "100%");
 
-// Kiểm tra dùng bố cục mặc định Concentric theo bậc đỉnh
+// Kiểm tra dùng bố cục mặc định Concentric 2 vòng gọn gàng theo bậc đỉnh
 assert.strictEqual(capturedConfig.layout.name, "concentric");
 assert.strictEqual(capturedConfig.layout.avoidOverlap, true);
-assert.strictEqual(capturedConfig.layout.equidistant, true);
+assert.ok(capturedConfig.layout.spacingFactor < 1);
 
 // Kiểm tra click node & click edge cập nhật Inspector
 eventHandlers["tap:node"]({ target: { id: () => "IT010" } });
