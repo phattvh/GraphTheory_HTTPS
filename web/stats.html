@@ -29,14 +29,14 @@
     <div id="admin-shell-mount"></div>
 
     <main id="admin-main-content" class="flex-1 flex flex-col w-full p-6 space-y-6">
-      <!-- MÀN HÌNH FIGMA 05: THỐNG KÊ KPI & BIỂU ĐỒ CHART.JS (UC13, UC14) -->
+      <!-- MÀN HÌNH 05: THỐNG KÊ KPI & BIỂU ĐỒ CHART.JS (UC13, UC14) -->
       <section id="tab-stats" class="admin-tab-section flex-1 space-y-6">
 
         <!-- Thanh tiêu đề & Bộ chọn Kỳ thi thống kê -->
         <header class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200">
           <div>
             <h2 id="stats-exam-heading" class="text-lg font-bold text-slate-900">
-              Thống kê &amp; Giám sát Đồ thị Xung đột: Học kỳ 1 (2026 - 2027)
+              Thống kê &amp; Phân tích Kỳ thi: Học kỳ 1 (2026 - 2027)
             </h2>
           </div>
 
@@ -54,46 +54,56 @@
           </div>
         </header>
 
-        <!-- 4 Thẻ KPI Tổng quan Kỳ thi (UC13) -->
+        <!-- 4 Thẻ KPI Vận hành & Đồ thị Tổng quan (UC13) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG SỐ MÔN THI</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG MÔN THI |V|</div>
             <div id="kpi-total-courses" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">15 Môn</div>
+            <div id="kpi-total-edges-sub" class="text-xs text-slate-500 mt-1 tabular-nums">46 cạnh xung đột |E|</div>
           </div>
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG SỐ SINH VIÊN</div>
-            <div id="kpi-total-students" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">1,250 SV</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">SINH VIÊN / LƯỢT THI</div>
+            <div id="kpi-total-students" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">100 SV</div>
+            <div id="kpi-total-regs-sub" class="text-xs text-slate-500 mt-1 tabular-nums">300 lượt đăng ký thi</div>
           </div>
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">SỐ CA THI</div>
-            <div id="kpi-min-shifts" class="text-lg font-bold text-blue-600 mt-2 tabular-nums">DSatur: 4 ca | Welsh-Powell: 5 ca</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">SỐ CA THI TỐI ƯU χ(G)</div>
+            <div id="kpi-min-shifts" class="text-2xl font-bold text-blue-600 mt-1 tabular-nums">4 Ca</div>
+            <div id="kpi-algo-compare-sub" class="text-xs text-slate-500 mt-1 tabular-nums">DSatur: 4 ca · Welsh-Powell: 5 ca</div>
           </div>
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỶ LỆ XUNG ĐỘT LỊCH THI</div>
-            <div id="kpi-conflict-rate" class="text-2xl font-bold text-emerald-600 mt-1 tabular-nums">0.0%</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỶ LỆ LẤP ĐẦY PHÒNG TB</div>
+            <div id="kpi-room-utilization" class="text-2xl font-bold text-emerald-600 mt-1 tabular-nums">75.0%</div>
+            <div id="kpi-room-summary-sub" class="text-xs text-slate-500 mt-1 tabular-nums">0% xung đột lịch · 10 phòng</div>
           </div>
         </div>
 
-        <!-- 2 Khung Canvas Biểu đồ Mẫu Chart.js (UC13 & UC14) -->
+        <!-- 2 Khung Canvas Biểu đồ Chart.js (UC13 & UC14) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Biểu đồ 1: Đối chứng Thuật toán DSatur vs Welsh-Powell & Phân bố Ca thi -->
+          <!-- Biểu đồ 1: Tỷ lệ lấp đầy phòng & Sĩ số theo từng Ca thi -->
           <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h3 class="text-sm font-bold text-slate-900">
-                  Biểu đồ 1: Đối chứng Thuật toán DSatur & Welsh-Powell
+                  Biểu đồ 1: Tỷ lệ lấp đầy phòng theo từng Ca thi
                 </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Theo dõi mức độ sử dụng sức chứa phòng thi ở từng ca để phát hiện ca tải cao
+                </p>
               </div>
+              <span id="stats-utilization-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 tabular-nums">
+                TB: 75.0%
+              </span>
             </div>
 
             <div class="relative w-full h-72">
               <canvas
-                id="chart-algo-comparison"
+                id="chart-shift-utilization"
                 role="img"
-                aria-label="Biểu đồ Chart.js đối chứng thuật toán DSatur và Welsh-Powell"
+                aria-label="Biểu đồ Chart.js tỷ lệ lấp đầy phòng thi theo từng ca"
               ></canvas>
             </div>
           </div>
@@ -103,12 +113,15 @@
             <div class="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h3 class="text-sm font-bold text-slate-900">
-                  Biểu đồ 2: Top Môn học có Bậc đỉnh deg(v) cao nhất
+                  Biểu đồ 2: Top 5 Môn có Bậc xung đột cao nhất
                 </h3>
                 <p class="text-xs text-slate-500 mt-0.5">
-                  Các học phần xung đột với nhiều môn khác nhất được DSatur ưu tiên tô màu trước
+                  Di chuột vào từng thanh để xem tên học phần đầy đủ và sĩ số dự thi
                 </p>
               </div>
+              <span id="stats-max-degree-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 tabular-nums">
+                Max deg(v) = 11 (IT002)
+              </span>
             </div>
 
             <div class="relative w-full h-72">
@@ -121,14 +134,14 @@
           </div>
         </div>
 
-        <!-- Bảng chi tiết Phân bố Môn thi & Sĩ số theo Ca thi (Accessible Data Fallback cho Biểu đồ) -->
+        <!-- Bảng chi tiết Phân bổ từng Ca thi (Bổ sung thông tin vận hành, không lặp Biểu đồ 2) -->
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-bold text-slate-900">
-              BẢNG PHÂN TÍCH
+              Chi tiết Phân bổ từng Ca thi
             </h3>
             <span id="stats-table-summary" class="text-xs font-semibold text-slate-500 tabular-nums">
-              5 học phần có bậc xung đột cao nhất
+              4 ca thi · 15 môn · 300 lượt thi
             </span>
           </div>
 
@@ -136,15 +149,16 @@
             <table class="w-full text-center border-collapse border border-slate-200 text-xs">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 font-bold border border-slate-200 divide-x divide-slate-200 text-center">
-                  <th class="py-2.5 px-3">Hạng</th>
-                  <th class="py-2.5 px-3">Mã môn</th>
-                  <th class="py-2.5 px-3">Tên học phần</th>
-                  <th class="py-2.5 px-3">Bậc đỉnh deg(v)</th>
-                  <th class="py-2.5 px-3">Số SV đăng ký</th>
-                  <th class="py-2.5 px-3">Ca thi được gán</th>
+                  <th class="py-2.5 px-3">Ca thi</th>
+                  <th class="py-2.5 px-3">Khung giờ</th>
+                  <th class="py-2.5 px-3">Số môn thi</th>
+                  <th class="py-2.5 px-3">Tổng sĩ số</th>
+                  <th class="py-2.5 px-3">Phòng sử dụng</th>
+                  <th class="py-2.5 px-3">Tỷ lệ lấp đầy</th>
+                  <th class="py-2.5 px-3">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody id="stats-top-degree-tbody" class="divide-y divide-slate-200 text-slate-700"></tbody>
+              <tbody id="stats-shift-summary-tbody" class="divide-y divide-slate-200 text-slate-700"></tbody>
             </table>
           </div>
         </div>
