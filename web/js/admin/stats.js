@@ -199,19 +199,9 @@ function renderStatsKpiCards(dataset) {
     coursesEl.textContent = `${data.total_courses} Môn`;
   }
 
-  const edgesSubEl = document.getElementById("kpi-total-edges-sub");
-  if (edgesSubEl) {
-    edgesSubEl.textContent = `${formatNumberVi(data.total_edges)} cạnh xung đột |E|`;
-  }
-
   const studentsEl = document.getElementById("kpi-total-students");
   if (studentsEl) {
     studentsEl.textContent = `${formatNumberVi(data.total_students)} SV`;
-  }
-
-  const regsSubEl = document.getElementById("kpi-total-regs-sub");
-  if (regsSubEl) {
-    regsSubEl.textContent = `${formatNumberVi(data.total_registrations)} lượt đăng ký thi`;
   }
 
   const shiftsEl = document.getElementById("kpi-min-shifts");
@@ -219,30 +209,9 @@ function renderStatsKpiCards(dataset) {
     shiftsEl.textContent = `${data.dsatur_shifts} Ca`;
   }
 
-  const algoSubEl = document.getElementById("kpi-algo-compare-sub");
-  if (algoSubEl) {
-    algoSubEl.textContent = `DSatur: ${data.dsatur_shifts} ca · Welsh-Powell: ${data.welsh_powell_shifts} ca`;
-  }
-
   const utilEl = document.getElementById("kpi-room-utilization");
   if (utilEl) {
     utilEl.textContent = `${Number(data.avg_room_utilization_percent).toFixed(1)}%`;
-  }
-
-  const roomSubEl = document.getElementById("kpi-room-summary-sub");
-  if (roomSubEl) {
-    roomSubEl.textContent = `0% xung đột lịch · ${data.total_rooms} phòng`;
-  }
-
-  const utilBadgeEl = document.getElementById("stats-utilization-badge");
-  if (utilBadgeEl) {
-    utilBadgeEl.textContent = `TB: ${Number(data.avg_room_utilization_percent).toFixed(1)}%`;
-  }
-
-  const maxDegreeBadgeEl = document.getElementById("stats-max-degree-badge");
-  if (maxDegreeBadgeEl && Array.isArray(data.top_degree_courses) && data.top_degree_courses.length > 0) {
-    const topCourse = data.top_degree_courses[0];
-    maxDegreeBadgeEl.textContent = `Max deg(v) = ${topCourse.deg} (${topCourse.ma_mon})`;
   }
 }
 
@@ -253,13 +222,9 @@ function renderStatsKpiCards(dataset) {
 function renderStatsShiftSummaryTable(dataset) {
   const data = dataset || getStatsDataset();
   const tbody = document.getElementById("stats-shift-summary-tbody");
-  const summaryEl = document.getElementById("stats-table-summary");
   if (!tbody) return;
 
   const shifts = Array.isArray(data.shifts_breakdown) ? data.shifts_breakdown : [];
-  if (summaryEl) {
-    summaryEl.textContent = `${shifts.length} ca thi · ${data.total_courses} môn · ${formatNumberVi(data.total_registrations)} lượt thi`;
-  }
 
   tbody.replaceChildren();
   shifts.forEach((shift) => {
