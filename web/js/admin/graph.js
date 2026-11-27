@@ -814,20 +814,19 @@ function resetGraphView() {
   updateZoomStatusLabel();
 }
 
-function changeGraphLayout(layoutName) {
-  const allowed = ["cose", "circle", "grid"];
-  const chosen = allowed.includes(layoutName) ? layoutName : "cose";
-  if (!cyInstance || typeof cyInstance.layout !== "function") return chosen;
-  const layout = cyInstance.layout({
-    name: chosen,
+function getConcentricLayoutOptions() {
+  return {
+    name: "concentric",
     animate: false,
-    padding: 28,
-  });
-  if (layout && typeof layout.run === "function") {
-    layout.run();
-  }
-  resetGraphView();
-  return chosen;
+    padding: 36,
+    avoidOverlap: true,
+    minNodeSpacing: 52,
+    equidistant: true,
+    startAngle: (3 / 2) * Math.PI,
+    concentric: (node) =>
+      node && typeof node.data === "function" ? Number(node.data("degree") || 0) : 0,
+    levelWidth: () => 2,
+  };
 }
 
 function initConflictGraph() {
@@ -853,11 +852,7 @@ function initConflictGraph() {
     container,
     elements: SAMPLE_GRAPH_ELEMENTS,
     style: CYTOSCAPE_STYLE,
-    layout: {
-      name: "cose",
-      animate: false,
-      padding: 28,
-    },
+    layout: getConcentricLayoutOptions(),
     minZoom: 0.4,
     maxZoom: 2.5,
     wheelSensitivity: 0.25,

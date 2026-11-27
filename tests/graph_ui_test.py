@@ -30,8 +30,6 @@ def test_graph_html_elements():
         'id="cy"',
         'id="cy-fallback-svg"',
         "cytoscape.min.js",
-        'id="graph-layout-select"',
-        'onchange="changeGraphLayout(this.value)"',
         'id="btn-graph-zoom-in"',
         'onclick="zoomInGraph()"',
         'id="btn-graph-zoom-out"',
@@ -46,6 +44,7 @@ def test_graph_html_elements():
         'src="/js/admin/graph.js"',
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
+    assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
 
 
 def test_graph_js_structure_and_xss():
@@ -64,13 +63,14 @@ def test_graph_js_structure_and_xss():
         "function filterGraphByShift",
         "function clearGraphHighlight",
         "function searchGraphNode",
+        "function getConcentricLayoutOptions",
         "function initConflictGraph",
         "function zoomInGraph",
         "function zoomOutGraph",
         "function resetGraphView",
-        "function changeGraphLayout",
         "function renderNodeInspector",
         "function renderEdgeInspector",
+        'name: "concentric"',
         "userZoomingEnabled: true",
         "userPanningEnabled: true",
     ]:
@@ -214,10 +214,10 @@ sandbox.resetGraphView();
 assert.strictEqual(fitCalls, 1);
 assert.strictEqual(elements["graph-zoom-label"].textContent, "100%");
 
-// Kiểm tra đổi layout
-const chosenLayout = sandbox.changeGraphLayout("circle");
-assert.strictEqual(chosenLayout, "circle");
-assert.strictEqual(lastLayoutName, "circle");
+// Kiểm tra dùng bố cục mặc định Concentric theo bậc đỉnh
+assert.strictEqual(capturedConfig.layout.name, "concentric");
+assert.strictEqual(capturedConfig.layout.avoidOverlap, true);
+assert.strictEqual(capturedConfig.layout.equidistant, true);
 
 // Kiểm tra click node & click edge cập nhật Inspector
 eventHandlers["tap:node"]({ target: { id: () => "IT010" } });
