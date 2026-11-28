@@ -46,6 +46,7 @@ def test_graph_html_elements():
     assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
     assert 'id="graph-verifier-card"' not in html, "Đã xóa khung Schedule Verifier"
     assert 'id="btn-simulate-coloring"' not in html, "Đã xóa nút Mô phỏng tô màu, tự chạy khi chọn thuật toán"
+    assert "Các môn phải thi khác ca với môn bạn tìm" not in html, "Đã bỏ dòng gợi ý dưới ô tìm kiếm đỉnh"
 
 
 def test_graph_js_structure_and_xss():
