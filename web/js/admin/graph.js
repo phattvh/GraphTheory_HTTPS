@@ -21,8 +21,8 @@ const UNCOLORED_NODE_STYLE = {
 };
 
 const GRAPH_EXAM_OPTIONS = [
-  { ma_ky_thi: "KTHK1_2026", nam_hoc: "2026 - 2027", label: "KTHK1_2026 - Thi Cuối Kỳ HK1" },
-  { ma_ky_thi: "KTHK2_2025", nam_hoc: "2025 - 2026", label: "KTHK2_2025 - Thi Cuối Kỳ HK2" },
+  { ma_ky_thi: "KTHK1_2026", nam_hoc: "2026 - 2027", label: "KTHK1_2026 - Thi cuối kỳ HK1" },
+  { ma_ky_thi: "KTHK2_2025", nam_hoc: "2025 - 2026", label: "KTHK2_2025 - Thi cuối kỳ HK2" },
 ];
 
 const SAMPLE_COURSE_METADATA = {

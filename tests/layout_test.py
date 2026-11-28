@@ -49,7 +49,7 @@ def test_admin_pages_and_student_structure():
     assert "0% Xung đột SV • χ(G) = 4 Ca thi" not in layout_js, "Không còn hiển thị badge xung đột trên header"
     assert "📥 Import Excel" not in layout_js, "Không còn nút Import Excel trên header"
     assert "⚡ Xếp lịch DSatur" not in layout_js, "Không còn nút Xếp lịch DSatur trên header"
-    assert "CRUD_ENTITIES" in layout_js and '"Kỳ thi"' in layout_js and '"Quản lý Sinh viên"' in layout_js
+    assert "CRUD_ENTITIES" in layout_js and '"Kỳ thi"' in layout_js and '"Sinh viên"' in layout_js
     assert 'activePage === "crud"' in layout_js and 'id="crud-entity-menubar"' in layout_js
     assert 'id="crud-entity-menubar" class="w-full px-6 bg-white' in layout_js, "Thanh danh mục CRUD phải cùng màu nền trắng với header phía trên"
     assert "bg-slate-50/90" not in layout_js, "Không dùng nền xám tách biệt cho thanh danh mục CRUD"
@@ -146,7 +146,7 @@ def test_admin_pages_and_student_structure():
         'id="student-header"',
         'id="student-main-content"',
         'id="student-fullcalendar-shell"',
-        "Student Portal",
+        "Cổng thông tin lịch thi sinh viên",
         'src="/js/core/auth.js"',
         'onclick="handleLogout()"',
     ]:

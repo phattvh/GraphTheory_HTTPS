@@ -12,7 +12,7 @@ const STATS_EXAM_DATASETS = {
   KTHK1_2026: {
     ma_ky_thi: "KTHK1_2026",
     nam_hoc: "2026 - 2027",
-    short_label: "KTHK1_2026 - Thi Cuối Kỳ HK1",
+    short_label: "KTHK1_2026 - Thi cuối kỳ HK1",
     ten_ky_thi: "Học kỳ 1 (2026 - 2027)",
     total_courses: 15,
     total_edges: 46,
@@ -77,7 +77,7 @@ const STATS_EXAM_DATASETS = {
   KTHK2_2025: {
     ma_ky_thi: "KTHK2_2025",
     nam_hoc: "2025 - 2026",
-    short_label: "KTHK2_2025 - Thi Cuối Kỳ HK2",
+    short_label: "KTHK2_2025 - Thi cuối kỳ HK2",
     ten_ky_thi: "Học kỳ 2 (2025 - 2026)",
     total_courses: 12,
     total_edges: 34,
@@ -187,12 +187,12 @@ function renderStatsKpiCards(dataset) {
 
   const headingEl = document.getElementById("stats-exam-heading");
   if (headingEl) {
-    headingEl.textContent = "Thống kê & Phân tích Kỳ thi";
+    headingEl.textContent = "Thống kê & phân tích kỳ thi";
   }
 
   const coursesEl = document.getElementById("kpi-total-courses");
   if (coursesEl) {
-    coursesEl.textContent = `${data.total_courses} Môn`;
+    coursesEl.textContent = `${data.total_courses} môn`;
   }
 
   const studentsEl = document.getElementById("kpi-total-students");
@@ -202,7 +202,7 @@ function renderStatsKpiCards(dataset) {
 
   const shiftsEl = document.getElementById("kpi-min-shifts");
   if (shiftsEl) {
-    shiftsEl.textContent = `${data.dsatur_shifts} Ca`;
+    shiftsEl.textContent = `${data.dsatur_shifts} ca`;
   }
 
   const utilEl = document.getElementById("kpi-room-utilization");
