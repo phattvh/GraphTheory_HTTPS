@@ -55,7 +55,7 @@ def test_calendar_html_fullcalendar_cdn_and_views():
         "Ca 2: 9h30 - 11h00",
         "Ca 3: 13h30 - 15h00",
         "Ca 4: 15h30 - 17h00",
-        ">Lịch thi Toàn trường<",
+        ">Lịch thi toàn trường<",
         'src="/js/admin/calendar.js"',
     ]:
         assert required_marker in html, f"web/calendar.html thiếu thành phần bắt buộc: {required_marker}"

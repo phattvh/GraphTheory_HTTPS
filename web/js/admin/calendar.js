@@ -722,7 +722,7 @@ function handleAcademicPeriodChange(changedField = "week") {
   updateCalendarViewButtons(currentCalendarView);
 
   const semesterLabel =
-    semesterVal === "HK2" ? "Học Kỳ 2" : semesterVal === "HK3" ? "Học Kỳ Hè" : "Học Kỳ 1";
+    semesterVal === "HK2" ? "Học kỳ 2" : semesterVal === "HK3" ? "Học kỳ hè" : "Học kỳ 1";
 
   if (
     rangeHeading &&
