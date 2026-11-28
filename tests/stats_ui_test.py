@@ -154,7 +154,7 @@ vm.runInContext(fs.readFileSync("web/js/admin/stats.js", "utf8"), sandbox);
 const res = sandbox.initStatsCharts("KTHK1_2026");
 assert.ok(res && res.shiftChart && res.dailyExamChart);
 assert.strictEqual(createdCharts.length, 2);
-assert.strictEqual(elements["stats-exam-heading"].textContent, "Thống kê & Phân tích Kỳ thi");
+assert.strictEqual(elements["stats-exam-heading"].textContent, "Thống kê & phân tích kỳ thi");
 assert.strictEqual(elements["stats-year-select"].value, "2026 - 2027");
 assert.strictEqual(elements["stats-exam-select"].value, "KTHK1_2026");
 assert.strictEqual(elements["stats-exam-select"].children.length, 1);
@@ -175,9 +175,9 @@ assert.strictEqual(
   res.dailyExamChart.config.options.plugins.tooltip.callbacks.label({ dataIndex: 1, parsed: 31 }),
   "31 sinh viên (31.0%)"
 );
-assert.strictEqual(elements["kpi-total-courses"].textContent, "15 Môn");
+assert.strictEqual(elements["kpi-total-courses"].textContent, "15 môn");
 assert.strictEqual(elements["kpi-total-students"].textContent, "100 SV");
-assert.strictEqual(elements["kpi-min-shifts"].textContent, "4 Ca");
+assert.strictEqual(elements["kpi-min-shifts"].textContent, "4 ca");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "75.0%");
 assert.strictEqual(elements["stats-shift-summary-tbody"].children.length, 4);
 
@@ -189,7 +189,7 @@ assert.strictEqual(res.shiftChart.destroyed, true);
 assert.strictEqual(res.dailyExamChart.destroyed, true);
 assert.strictEqual(elements["stats-exam-select"].value, "KTHK2_2025");
 assert.strictEqual(elements["stats-exam-select"].children.length, 1);
-assert.strictEqual(elements["kpi-total-courses"].textContent, "12 Môn");
+assert.strictEqual(elements["kpi-total-courses"].textContent, "12 môn");
 assert.strictEqual(elements["kpi-room-utilization"].textContent, "71.4%");
 assert.deepStrictEqual(
   Array.from(res2.dailyExamChart.config.data.datasets[0].data),

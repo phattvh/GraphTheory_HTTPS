@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTTPS - Thống kê &amp; Phân tích Đồ thị</title>
+  <title>HTTPS - Thống kê &amp; phân tích kỳ thi</title>
   <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
   <!-- Tailwind CSS & Chart.js v4 CDN theo 07. Technology stack.md -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +36,7 @@
         <header class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200">
           <div>
             <h2 id="stats-exam-heading" class="text-lg font-bold text-slate-900">
-              Thống kê &amp; Phân tích Kỳ thi
+              Thống kê &amp; phân tích kỳ thi
             </h2>
           </div>
 
@@ -62,7 +62,7 @@
                 onchange="handleStatsExamChange()"
                 class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
               >
-                <option value="KTHK1_2026" selected>KTHK1_2026 - Thi Cuối Kỳ HK1</option>
+                <option value="KTHK1_2026" selected>KTHK1_2026 - Thi cuối kỳ HK1</option>
               </select>
             </div>
           </div>
@@ -72,7 +72,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">TỔNG MÔN THI |V|</div>
-            <div id="kpi-total-courses" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">15 Môn</div>
+            <div id="kpi-total-courses" class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">15 môn</div>
           </div>
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -82,7 +82,7 @@
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">SỐ CA THI TỐI ƯU χ(G)</div>
-            <div id="kpi-min-shifts" class="text-2xl font-bold text-blue-600 mt-1 tabular-nums">4 Ca</div>
+            <div id="kpi-min-shifts" class="text-2xl font-bold text-blue-600 mt-1 tabular-nums">4 ca</div>
           </div>
 
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -96,7 +96,7 @@
           <!-- Biểu đồ 1: Tỷ lệ lấp đầy phòng & Sĩ số theo từng Ca thi -->
           <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
             <h3 class="text-sm font-bold text-slate-900">
-              Biểu đồ 1: Tỷ lệ lấp đầy phòng theo từng Ca thi
+              Biểu đồ 1: Tỷ lệ lấp đầy phòng theo từng ca thi
             </h3>
 
             <div class="relative w-full h-72">
@@ -111,7 +111,7 @@
           <!-- Biểu đồ 2: Phân bố số môn thi trong 1 ngày của Sinh viên (UC14) -->
           <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
             <h3 class="text-sm font-bold text-slate-900">
-              Biểu đồ 2: Phân bố số môn thi trong 1 ngày của Sinh viên
+              Biểu đồ 2: Phân bố số môn thi trong 1 ngày của sinh viên
             </h3>
 
             <div class="relative w-full h-72">
@@ -127,7 +127,7 @@
         <!-- Bảng chi tiết Phân bổ từng Ca thi (Bổ sung thông tin vận hành, không lặp Biểu đồ 2) -->
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-sm font-bold text-slate-900">
-            Chi tiết Phân bổ từng Ca thi
+            Chi tiết phân bổ từng ca thi
           </h3>
 
           <div class="overflow-x-auto">
