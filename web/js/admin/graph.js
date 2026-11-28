@@ -1,26 +1,41 @@
 /**
- * Cấu hình nhúng CDN Cytoscape.js & Khởi tạo đồ thị xung đột mẫu 10 đỉnh, 15 cạnh (UC09)
- * — web/js/admin/graph.js
+ * Cấu hình Cytoscape.js & Điều khiển Đồ thị Xung đột + Xếp lịch Tự động (UC08, UC09)
+ * - Đồ thị mẫu 10 đỉnh, 15 cạnh (tự động tính bậc đỉnh deg(v), kích thước đỉnh tỷ lệ bậc)
+ * - Chuyển đổi thuật toán DSatur / Welsh-Powell & Chạy Xếp lịch Tự động
+ * - Mô phỏng tô màu từng bước (Step-by-step Animation)
+ * - Neighborhood Focus (làm mờ đỉnh/cạnh không liên quan khi chọn đỉnh), lọc theo Ca thi, tìm kiếm đỉnh
+ * - 100% DOM API an toàn (textContent)
  */
 
 const CYTOSCAPE_SHIFT_COLORS = {
-  1: { bg: "#2563EB", border: "#1E3A8A", label: "Ca 1" },
-  2: { bg: "#10B981", border: "#065F46", label: "Ca 2" },
-  3: { bg: "#F59E0B", border: "#92400E", label: "Ca 3" },
-  4: { bg: "#8B5CF6", border: "#5B21B6", label: "Ca 4" },
+  1: { bg: "#2563EB", border: "#1E3A8A", dotClass: "bg-blue-600", badgeClass: "bg-blue-100 text-blue-800", label: "Ca 1", timeRange: "7h30 - 9h00" },
+  2: { bg: "#10B981", border: "#065F46", dotClass: "bg-emerald-600", badgeClass: "bg-emerald-100 text-emerald-800", label: "Ca 2", timeRange: "9h30 - 11h00" },
+  3: { bg: "#F59E0B", border: "#92400E", dotClass: "bg-amber-500", badgeClass: "bg-amber-100 text-amber-800", label: "Ca 3", timeRange: "13h30 - 15h00" },
+  4: { bg: "#8B5CF6", border: "#5B21B6", dotClass: "bg-violet-600", badgeClass: "bg-violet-100 text-violet-800", label: "Ca 4", timeRange: "15h30 - 17h00" },
+  5: { bg: "#EC4899", border: "#9D174D", dotClass: "bg-pink-600", badgeClass: "bg-pink-100 text-pink-800", label: "Ca 5", timeRange: "17h30 - 19h00" },
 };
 
+const UNCOLORED_NODE_STYLE = {
+  bg: "#CBD5E1",
+  border: "#64748B",
+};
+
+const GRAPH_EXAM_OPTIONS = [
+  { ma_ky_thi: "KTHK1_2026", nam_hoc: "2026 - 2027", label: "KTHK1_2026 - Thi Cuối Kỳ HK1" },
+  { ma_ky_thi: "KTHK2_2025", nam_hoc: "2025 - 2026", label: "KTHK2_2025 - Thi Cuối Kỳ HK2" },
+];
+
 const SAMPLE_COURSE_METADATA = {
-  IT001: { ten_mon: "Lý thuyết Đồ thị", so_sv: 145, saturation: 3, rooms: ["A101 (100 SV)", "B201 (45 SV)"] },
-  IT002: { ten_mon: "Cấu trúc Dữ liệu & Giải thuật", so_sv: 180, saturation: 3, rooms: ["A101 (100 SV)", "A102 (80 SV)"] },
-  IT003: { ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", so_sv: 120, saturation: 2, rooms: ["A101 (60 SV)", "A102 (60 SV)"] },
-  IT004: { ten_mon: "Lập trình Web", so_sv: 110, saturation: 2, rooms: ["A102 (60 SV)", "B201 (50 SV)"] },
-  IT005: { ten_mon: "An toàn & Bảo mật Thông tin", so_sv: 95, saturation: 2, rooms: ["B201 (50 SV)", "C301 (45 SV)"] },
-  IT006: { ten_mon: "Trí tuệ Nhân tạo", so_sv: 130, saturation: 3, rooms: ["A101 (70 SV)", "A102 (60 SV)"] },
-  IT007: { ten_mon: "Mạng Máy tính & Truyền thông", so_sv: 105, saturation: 2, rooms: ["A102 (60 SV)", "B201 (45 SV)"] },
-  IT008: { ten_mon: "Toán Rời rạc & Tổ hợp", so_sv: 160, saturation: 3, rooms: ["A101 (100 SV)", "B201 (60 SV)"] },
-  IT009: { ten_mon: "Phân tích & Thiết kế Hệ thống", so_sv: 90, saturation: 2, rooms: ["B201 (45 SV)", "C301 (45 SV)"] },
-  IT010: { ten_mon: "Học máy Ứng dụng", so_sv: 85, saturation: 2, rooms: ["C301 (45 SV)", "C302 (40 SV)"] },
+  IT001: { ten_mon: "Lý thuyết Đồ thị", so_sv: 145, rooms: ["A101", "B201"] },
+  IT002: { ten_mon: "Cấu trúc Dữ liệu & Giải thuật", so_sv: 180, rooms: ["A101", "A102"] },
+  IT003: { ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", so_sv: 120, rooms: ["A101", "A102"] },
+  IT004: { ten_mon: "Lập trình Web", so_sv: 110, rooms: ["A102", "B201"] },
+  IT005: { ten_mon: "An toàn & Bảo mật Thông tin", so_sv: 95, rooms: ["B201", "C301"] },
+  IT006: { ten_mon: "Trí tuệ Nhân tạo", so_sv: 130, rooms: ["A101", "A102"] },
+  IT007: { ten_mon: "Mạng Máy tính & Truyền thông", so_sv: 105, rooms: ["A102", "B201"] },
+  IT008: { ten_mon: "Toán Rời rạc & Tổ hợp", so_sv: 160, rooms: ["A101", "B201"] },
+  IT009: { ten_mon: "Phân tích & Thiết kế Hệ thống", so_sv: 90, rooms: ["B201", "C301"] },
+  IT010: { ten_mon: "Học máy Ứng dụng", so_sv: 85, rooms: ["C301", "C302"] },
 };
 
 const CYTOSCAPE_STYLE = [
@@ -36,8 +51,10 @@ const CYTOSCAPE_STYLE = [
       "font-weight": "700",
       "text-valign": "center",
       "text-halign": "center",
-      width: 56,
-      height: 56,
+      width: "mapData(degree, 1, 5, 48, 68)",
+      height: "mapData(degree, 1, 5, 48, 68)",
+      "transition-property": "background-color, border-color, opacity, border-width",
+      "transition-duration": "180ms",
     },
   },
   {
@@ -52,6 +69,28 @@ const CYTOSCAPE_STYLE = [
       "text-background-color": "#F8FAFC",
       "text-background-opacity": 0.9,
       "text-background-padding": "2px",
+      "transition-property": "line-color, opacity, width",
+      "transition-duration": "180ms",
+    },
+  },
+  {
+    selector: ".dimmed",
+    style: {
+      opacity: 0.16,
+    },
+  },
+  {
+    selector: ".highlighted",
+    style: {
+      opacity: 1,
+      "border-width": 4,
+    },
+  },
+  {
+    selector: "edge.highlighted",
+    style: {
+      "line-color": "#2563EB",
+      opacity: 1,
     },
   },
   {
@@ -73,16 +112,16 @@ const CYTOSCAPE_STYLE = [
 
 // Đồ thị mẫu 10 đỉnh (IT001..IT010), 15 cạnh xung đột, tô 4 màu (0 cạnh nối 2 đỉnh cùng màu)
 const SAMPLE_GRAPH_ELEMENTS = [
-  { data: { id: "IT002", label: "IT002", shift: 1, color: "#2563EB", borderColor: "#1E3A8A" } },
-  { data: { id: "IT005", label: "IT005", shift: 1, color: "#2563EB", borderColor: "#1E3A8A" } },
-  { data: { id: "IT009", label: "IT009", shift: 1, color: "#2563EB", borderColor: "#1E3A8A" } },
-  { data: { id: "IT001", label: "IT001", shift: 2, color: "#10B981", borderColor: "#065F46" } },
-  { data: { id: "IT006", label: "IT006", shift: 2, color: "#10B981", borderColor: "#065F46" } },
-  { data: { id: "IT010", label: "IT010", shift: 2, color: "#10B981", borderColor: "#065F46" } },
-  { data: { id: "IT008", label: "IT008", shift: 3, color: "#F59E0B", borderColor: "#92400E" } },
-  { data: { id: "IT004", label: "IT004", shift: 3, color: "#F59E0B", borderColor: "#92400E" } },
-  { data: { id: "IT003", label: "IT003", shift: 4, color: "#8B5CF6", borderColor: "#5B21B6" } },
-  { data: { id: "IT007", label: "IT007", shift: 4, color: "#8B5CF6", borderColor: "#5B21B6" } },
+  { data: { id: "IT002", label: "IT002", shift: 1, degree: 4, color: "#2563EB", borderColor: "#1E3A8A" } },
+  { data: { id: "IT005", label: "IT005", shift: 1, degree: 2, color: "#2563EB", borderColor: "#1E3A8A" } },
+  { data: { id: "IT009", label: "IT009", shift: 1, degree: 2, color: "#2563EB", borderColor: "#1E3A8A" } },
+  { data: { id: "IT001", label: "IT001", shift: 2, degree: 4, color: "#10B981", borderColor: "#065F46" } },
+  { data: { id: "IT006", label: "IT006", shift: 2, degree: 4, color: "#10B981", borderColor: "#065F46" } },
+  { data: { id: "IT010", label: "IT010", shift: 2, degree: 1, color: "#10B981", borderColor: "#065F46" } },
+  { data: { id: "IT008", label: "IT008", shift: 3, degree: 5, color: "#F59E0B", borderColor: "#92400E" } },
+  { data: { id: "IT004", label: "IT004", shift: 3, degree: 3, color: "#F59E0B", borderColor: "#92400E" } },
+  { data: { id: "IT003", label: "IT003", shift: 4, degree: 3, color: "#8B5CF6", borderColor: "#5B21B6" } },
+  { data: { id: "IT007", label: "IT007", shift: 4, degree: 2, color: "#8B5CF6", borderColor: "#5B21B6" } },
   { data: { id: "e1", source: "IT002", target: "IT001", weight: 42, weightLabel: "42 SV" } },
   { data: { id: "e2", source: "IT002", target: "IT008", weight: 38, weightLabel: "38 SV" } },
   { data: { id: "e3", source: "IT002", target: "IT003", weight: 24, weightLabel: "24 SV" } },
@@ -101,76 +140,571 @@ const SAMPLE_GRAPH_ELEMENTS = [
 ];
 
 let cyInstance = null;
+let activeAlgorithm = "DSATUR";
+let activeShiftFilter = null;
+let activeFocusedNodeId = null;
+let simulationTimerId = null;
+let activeExamCode = "KTHK1_2026";
+let currentShiftByNode = {};
 
-function appendInspectorLine(listEl, label, value) {
-  const li = document.createElement("li");
-  const strong = document.createElement("strong");
-  strong.textContent = `${label}: `;
-  li.append("• ", strong, String(value));
-  listEl.appendChild(li);
+function getGraphNodesList() {
+  return SAMPLE_GRAPH_ELEMENTS.filter((el) => el.data && !el.data.source);
+}
+
+function getGraphEdgesList() {
+  return SAMPLE_GRAPH_ELEMENTS.filter((el) => el.data && el.data.source);
 }
 
 function getAdjacentEdgesForNode(nodeId) {
-  return SAMPLE_GRAPH_ELEMENTS.filter(
-    (el) => el.data && el.data.source && (el.data.source === nodeId || el.data.target === nodeId)
+  return getGraphEdgesList().filter(
+    (el) => el.data.source === nodeId || el.data.target === nodeId
   );
 }
 
+function buildAdjacencyMap() {
+  const adj = {};
+  getGraphNodesList().forEach((n) => {
+    adj[n.data.id] = new Set();
+  });
+  getGraphEdgesList().forEach((e) => {
+    if (adj[e.data.source]) adj[e.data.source].add(e.data.target);
+    if (adj[e.data.target]) adj[e.data.target].add(e.data.source);
+  });
+  return adj;
+}
+
+/**
+ * Chạy thuật toán tô màu DSatur hoặc Welsh-Powell trên đồ thị hiện tại
+ * và trả về bảng màu, thứ tự từng bước mô phỏng và kết quả kiểm chứng.
+ * @param {"DSATUR"|"WELSH_POWELL"} algorithm
+ */
+function computeGraphColoring(algorithm = "DSATUR") {
+  const algo = algorithm === "WELSH_POWELL" ? "WELSH_POWELL" : "DSATUR";
+  const nodes = getGraphNodesList().map((n) => n.data.id);
+  const edges = getGraphEdgesList();
+  const adj = buildAdjacencyMap();
+  const shiftByNode = {};
+  const saturationByNode = {};
+  const steps = [];
+
+  if (algo === "WELSH_POWELL") {
+    const ordered = [...nodes].sort((a, b) => {
+      const diff = adj[b].size - adj[a].size;
+      return diff !== 0 ? diff : a.localeCompare(b);
+    });
+    ordered.forEach((nodeId, idx) => {
+      const neighborColors = new Set();
+      adj[nodeId].forEach((nb) => {
+        if (shiftByNode[nb]) neighborColors.add(shiftByNode[nb]);
+      });
+      let color = 1;
+      while (neighborColors.has(color)) color += 1;
+      shiftByNode[nodeId] = color;
+      saturationByNode[nodeId] = neighborColors.size;
+      steps.push({
+        step: idx + 1,
+        nodeId,
+        shift: color,
+        degree: adj[nodeId].size,
+        saturation: neighborColors.size,
+      });
+    });
+  } else {
+    const uncolored = new Set(nodes);
+    let stepIndex = 1;
+    while (uncolored.size > 0) {
+      let chosen = null;
+      let bestSat = -1;
+      let bestDeg = -1;
+
+      uncolored.forEach((nodeId) => {
+        const neighborColors = new Set();
+        adj[nodeId].forEach((nb) => {
+          if (shiftByNode[nb]) neighborColors.add(shiftByNode[nb]);
+        });
+        const sat = neighborColors.size;
+        const deg = adj[nodeId].size;
+        if (
+          sat > bestSat ||
+          (sat === bestSat && deg > bestDeg) ||
+          (sat === bestSat && deg === bestDeg && (!chosen || nodeId.localeCompare(chosen) < 0))
+        ) {
+          chosen = nodeId;
+          bestSat = sat;
+          bestDeg = deg;
+        }
+      });
+
+      const used = new Set();
+      adj[chosen].forEach((nb) => {
+        if (shiftByNode[nb]) used.add(shiftByNode[nb]);
+      });
+      let color = 1;
+      while (used.has(color)) color += 1;
+      shiftByNode[chosen] = color;
+      saturationByNode[chosen] = bestSat;
+      uncolored.delete(chosen);
+      steps.push({
+        step: stepIndex,
+        nodeId: chosen,
+        shift: color,
+        degree: bestDeg,
+        saturation: bestSat,
+      });
+      stepIndex += 1;
+    }
+  }
+
+  let conflicts = 0;
+  edges.forEach((e) => {
+    if (shiftByNode[e.data.source] === shiftByNode[e.data.target]) {
+      conflicts += 1;
+    }
+  });
+  const chromaticNumber = Math.max(1, ...Object.values(shiftByNode));
+
+  return {
+    algorithm: algo,
+    shiftByNode,
+    saturationByNode,
+    steps,
+    chromaticNumber,
+    conflicts,
+  };
+}
+
+function getShiftColorInfo(shift) {
+  return CYTOSCAPE_SHIFT_COLORS[shift] || CYTOSCAPE_SHIFT_COLORS[1];
+}
+
+function getNodeShift(nodeId) {
+  if (currentShiftByNode[nodeId]) return currentShiftByNode[nodeId];
+  const nodeEntry = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && el.data.id === nodeId && !el.data.source);
+  return nodeEntry ? nodeEntry.data.shift : 1;
+}
+
+function setStatusBannerText(message) {
+  const banner = document.getElementById("graph-status-banner");
+  if (banner) banner.textContent = message;
+}
+
+function updateClearFocusButtonVisibility() {
+  const btn = document.getElementById("btn-graph-clear-focus");
+  if (!btn || !btn.classList) return;
+  const shouldShow = Boolean(activeFocusedNodeId || activeShiftFilter);
+  if (shouldShow) {
+    btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+
+function applyColoringToCytoscape(shiftByNode) {
+  if (!cyInstance || typeof cyInstance.nodes !== "function") return;
+  cyInstance.nodes().forEach((node) => {
+    const id = typeof node.id === "function" ? node.id() : null;
+    if (!id) return;
+    const shift = shiftByNode[id];
+    const palette = shift ? getShiftColorInfo(shift) : UNCOLORED_NODE_STYLE;
+    if (typeof node.data === "function") {
+      node.data("shift", shift || 0);
+      node.data("color", palette.bg);
+      node.data("borderColor", palette.border);
+    }
+  });
+}
+
+function renderGraphLegend() {
+  const container = document.getElementById("graph-legend-buttons");
+  if (!container || typeof container.replaceChildren !== "function") return;
+
+  const grouped = {};
+  getGraphNodesList().forEach((n) => {
+    const shift = getNodeShift(n.data.id);
+    if (!grouped[shift]) grouped[shift] = [];
+    grouped[shift].push(n.data.id);
+  });
+
+  const shifts = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  container.replaceChildren();
+  shifts.forEach((shift) => {
+    const info = getShiftColorInfo(shift);
+    const isActive = activeShiftFilter === shift;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-shift-filter", String(shift));
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    btn.className = isActive
+      ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white transition cursor-pointer"
+      : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer";
+    btn.onclick = () => filterGraphByShift(shift);
+
+    const dot = document.createElement("span");
+    dot.className = `w-2.5 h-2.5 rounded-full shrink-0 ${info.dotClass}`;
+    dot.setAttribute("aria-hidden", "true");
+
+    const text = document.createElement("span");
+    text.textContent = info.timeRange ? `${info.label}: ${info.timeRange}` : info.label;
+
+    btn.append(dot, text);
+    container.appendChild(btn);
+  });
+}
+
+function appendInspectorRow(listEl, label, valueNodeOrText) {
+  const li = document.createElement("li");
+  li.className = "flex items-start justify-between gap-3 py-2";
+
+  const labelEl = document.createElement("span");
+  labelEl.className = "text-slate-500 shrink-0";
+  labelEl.textContent = label;
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "font-semibold text-slate-900 text-right";
+  if (typeof valueNodeOrText === "object" && valueNodeOrText !== null && valueNodeOrText.tagName) {
+    valueEl.appendChild(valueNodeOrText);
+  } else {
+    valueEl.textContent = String(valueNodeOrText);
+  }
+
+  li.append(labelEl, valueEl);
+  listEl.appendChild(li);
+}
+
 function renderNodeInspector(nodeId) {
+  const headingEl = document.getElementById("graph-inspector-heading");
   const badgeEl = document.getElementById("graph-inspector-badge");
   const listEl = document.getElementById("graph-inspector-details");
   const nodeEntry = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && el.data.id === nodeId && !el.data.source);
   if (!badgeEl || !listEl || !nodeEntry) return;
 
-  const { shift } = nodeEntry.data;
+  const shift = getNodeShift(nodeId);
+  const shiftInfo = getShiftColorInfo(shift);
   const meta = SAMPLE_COURSE_METADATA[nodeId] || {
     ten_mon: nodeId,
     so_sv: 0,
-    saturation: 0,
     rooms: [],
   };
   const adjEdges = getAdjacentEdgesForNode(nodeId);
-  const topConflicts = adjEdges
-    .map((e) => ({
-      other: e.data.source === nodeId ? e.data.target : e.data.source,
-      weight: e.data.weight,
-    }))
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 3)
-    .map((c) => `${c.other} (${c.weight} SV chung)`)
-    .join(", ");
 
-  badgeEl.textContent = `Đỉnh: ${nodeId} • Màu ${shift} (Ca thi số ${shift})`;
+  if (headingEl) headingEl.textContent = meta.ten_mon;
+  badgeEl.className = `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${shiftInfo.badgeClass}`;
+  badgeEl.textContent = `Mã học phần: ${nodeId} (${shiftInfo.label})`;
+
   listEl.replaceChildren();
-  appendInspectorLine(listEl, "Tên môn", meta.ten_mon);
-  appendInspectorLine(listEl, "Số sinh viên đăng ký", `${meta.so_sv} SV`);
-  appendInspectorLine(listEl, "Độ bão hòa DSatur (Saturation)", meta.saturation);
-  appendInspectorLine(listEl, "Bậc của đỉnh deg(v)", `${adjEdges.length} môn xung đột`);
-  appendInspectorLine(listEl, "Xung đột mạnh nhất", topConflicts || "Không có");
-  appendInspectorLine(listEl, "Phân phòng (First-Fit Decreasing)", meta.rooms.join(" • ") || "Chưa phân phòng");
+  appendInspectorRow(listEl, "Sinh viên đăng ký", `${meta.so_sv} SV`);
+  appendInspectorRow(listEl, "Số môn cần chọn khác ca", `${adjEdges.length} môn`);
+  appendInspectorRow(listEl, "Mã phòng", meta.rooms.join(", ") || "Chưa phân phòng");
 }
 
 function renderEdgeInspector(edgeData) {
+  const headingEl = document.getElementById("graph-inspector-heading");
   const badgeEl = document.getElementById("graph-inspector-badge");
   const listEl = document.getElementById("graph-inspector-details");
   if (!badgeEl || !listEl || !edgeData) return;
 
-  const srcNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && !el.data.source && el.data.id === edgeData.source);
-  const tgtNode = SAMPLE_GRAPH_ELEMENTS.find((el) => el.data && !el.data.source && el.data.id === edgeData.target);
-  const srcShift = srcNode ? srcNode.data.shift : "?";
-  const tgtShift = tgtNode ? tgtNode.data.shift : "?";
+  const srcShift = getNodeShift(edgeData.source);
+  const tgtShift = getNodeShift(edgeData.target);
+  const isValid = srcShift !== tgtShift;
+  const srcMeta = SAMPLE_COURSE_METADATA[edgeData.source];
+  const tgtMeta = SAMPLE_COURSE_METADATA[edgeData.target];
+  const srcLabel = srcMeta ? srcMeta.ten_mon : edgeData.source;
+  const tgtLabel = tgtMeta ? tgtMeta.ten_mon : edgeData.target;
 
-  badgeEl.textContent = `Cạnh: ${edgeData.source} — ${edgeData.target}`;
+  if (headingEl) headingEl.textContent = `${srcLabel} - ${tgtLabel}`;
+  badgeEl.className = isValid
+    ? "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
+    : "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700";
+  badgeEl.textContent = `${edgeData.source} - ${edgeData.target}`;
+
   listEl.replaceChildren();
-  appendInspectorLine(listEl, "Cặp môn xung đột", `${edgeData.source} & ${edgeData.target}`);
-  appendInspectorLine(listEl, "Số sinh viên thi chung", `${edgeData.weight} SV`);
-  appendInspectorLine(
-    listEl,
-    "Kiểm chứng tô màu",
-    srcShift !== tgtShift
-      ? `Hợp lệ (Ca ${srcShift} ≠ Ca ${tgtShift})`
-      : `Trùng ca (Ca ${srcShift})`
+  appendInspectorRow(listEl, "Số sinh viên thi cả 2 ca", `${edgeData.weight} SV`);
+}
+
+/**
+ * Làm nổi bật đỉnh đang chọn cùng các đỉnh/cạnh kề và làm mờ phần còn lại (Neighborhood Focus).
+ * @param {string} nodeId
+ */
+function focusGraphNode(nodeId) {
+  if (simulationTimerId !== null) {
+    stopColoringSimulation(true);
+  }
+  activeFocusedNodeId = nodeId;
+  activeShiftFilter = null;
+  renderNodeInspector(nodeId);
+  renderGraphLegend();
+  updateClearFocusButtonVisibility();
+
+  if (!cyInstance || typeof cyInstance.elements !== "function") return;
+  const all = cyInstance.elements();
+  all.removeClass("dimmed highlighted");
+
+  const target = typeof cyInstance.getElementById === "function" ? cyInstance.getElementById(nodeId) : null;
+  if (target && target.length) {
+    const neighborhood = typeof target.closedNeighborhood === "function" ? target.closedNeighborhood() : target;
+    all.not(neighborhood).addClass("dimmed");
+    neighborhood.addClass("highlighted");
+  }
+}
+
+/**
+ * Lọc / highlight toàn bộ các đỉnh thuộc một Ca thi cụ thể để kiểm chứng trực quan 0 cạnh cùng màu.
+ * @param {number} shift
+ */
+function filterGraphByShift(shift) {
+  if (simulationTimerId !== null) {
+    stopColoringSimulation(true);
+  }
+  if (activeShiftFilter === shift) {
+    clearGraphHighlight();
+    return null;
+  }
+  activeShiftFilter = shift;
+  activeFocusedNodeId = null;
+  renderGraphLegend();
+  updateClearFocusButtonVisibility();
+
+  const info = getShiftColorInfo(shift);
+  setStatusBannerText(`Đang lọc ${info.label} · 0 cạnh nối giữa các môn cùng ca`);
+
+  if (!cyInstance || typeof cyInstance.elements !== "function") return shift;
+  const all = cyInstance.elements();
+  all.removeClass("dimmed highlighted");
+
+  const matchingNodes = cyInstance.nodes().filter((n) => {
+    const id = typeof n.id === "function" ? n.id() : null;
+    return id && getNodeShift(id) === shift;
+  });
+  all.not(matchingNodes).addClass("dimmed");
+  matchingNodes.addClass("highlighted");
+  return shift;
+}
+
+function clearGraphHighlight(resetSearchInput = true) {
+  activeShiftFilter = null;
+  activeFocusedNodeId = null;
+  if (resetSearchInput) {
+    const searchInput = document.getElementById("graph-node-search");
+    if (searchInput) searchInput.value = "";
+  }
+  if (cyInstance && typeof cyInstance.elements === "function") {
+    cyInstance.elements().removeClass("dimmed highlighted");
+  }
+  renderGraphLegend();
+  updateClearFocusButtonVisibility();
+  const res = computeGraphColoring(activeAlgorithm);
+  const algoLabel = activeAlgorithm === "WELSH_POWELL" ? "Welsh-Powell" : "DSatur";
+  setStatusBannerText(
+    `${getGraphNodesList().length} đỉnh · ${getGraphEdgesList().length} cạnh · ${algoLabel} (${res.chromaticNumber} ca)`
   );
+}
+
+/**
+ * Tìm kiếm đỉnh theo mã môn hoặc tên học phần và định vị trên đồ thị.
+ * Ưu tiên khớp chính xác mã môn trước khi tìm theo chuỗi con.
+ * @param {string} query
+ */
+function searchGraphNode(query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) {
+    clearGraphHighlight(false);
+    return null;
+  }
+
+  const nodes = getGraphNodesList();
+  const matched =
+    nodes.find((n) => n.data.id.toLowerCase() === q) ||
+    nodes.find((n) => {
+      const id = n.data.id;
+      const meta = SAMPLE_COURSE_METADATA[id];
+      const name = meta ? meta.ten_mon.toLowerCase() : "";
+      return id.toLowerCase().includes(q) || name.includes(q);
+    });
+
+  if (!matched) {
+    clearGraphHighlight(false);
+    return null;
+  }
+  focusGraphNode(matched.data.id);
+  if (cyInstance && typeof cyInstance.getElementById === "function" && typeof cyInstance.center === "function") {
+    const el = cyInstance.getElementById(matched.data.id);
+    if (el && el.length) {
+      cyInstance.center(el);
+    }
+  }
+  return matched.data.id;
+}
+
+function updateAlgorithmButtons() {
+  const btnDsatur = document.getElementById("btn-algo-dsatur");
+  const btnWp = document.getElementById("btn-algo-welsh-powell");
+  const activeClass =
+    "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition cursor-pointer";
+  const inactiveClass =
+    "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer";
+
+  const isDsatur = activeAlgorithm === "DSATUR";
+  if (btnDsatur) {
+    btnDsatur.className = isDsatur ? activeClass : inactiveClass;
+    btnDsatur.setAttribute("aria-pressed", isDsatur ? "true" : "false");
+  }
+  if (btnWp) {
+    btnWp.className = !isDsatur ? activeClass : inactiveClass;
+    btnWp.setAttribute("aria-pressed", !isDsatur ? "true" : "false");
+  }
+}
+
+function stopColoringSimulation(restoreColors = true) {
+  if (simulationTimerId !== null && typeof clearInterval === "function") {
+    clearInterval(simulationTimerId);
+    simulationTimerId = null;
+  }
+  if (restoreColors) {
+    applyColoringToCytoscape(currentShiftByNode);
+    renderGraphLegend();
+  }
+}
+
+/**
+ * Chuyển đổi thuật toán tô màu (DSATUR hoặc WELSH_POWELL) và tự động chạy mô phỏng tô màu từng bước.
+ * @param {"DSATUR"|"WELSH_POWELL"} algo
+ */
+function selectGraphAlgorithm(algo) {
+  activeAlgorithm = algo === "WELSH_POWELL" ? "WELSH_POWELL" : "DSATUR";
+  updateAlgorithmButtons();
+  return startColoringSimulation();
+}
+
+/**
+ * Thực thi thuật toán xếp lịch (tô màu đồ thị + kiểm chứng) và cập nhật giao diện ngay lập tức.
+ */
+function runAutoSchedule() {
+  stopColoringSimulation(false);
+  const result = computeGraphColoring(activeAlgorithm);
+  currentShiftByNode = result.shiftByNode;
+  activeShiftFilter = null;
+  activeFocusedNodeId = null;
+
+  applyColoringToCytoscape(currentShiftByNode);
+  if (cyInstance && typeof cyInstance.elements === "function") {
+    cyInstance.elements().removeClass("dimmed highlighted");
+  }
+  renderGraphLegend();
+  updateClearFocusButtonVisibility();
+
+  const selectedId = activeFocusedNodeId || "IT002";
+  renderNodeInspector(selectedId);
+
+  const algoLabel = activeAlgorithm === "WELSH_POWELL" ? "Welsh-Powell" : "DSatur";
+  setStatusBannerText(
+    `Đã xếp lịch bằng ${algoLabel}: ${getGraphNodesList().length} môn · χ(G) = ${result.chromaticNumber} ca · ${result.conflicts} xung đột`
+  );
+  return result;
+}
+
+/**
+ * Chạy mô phỏng quá trình tô màu từng đỉnh theo thứ tự thuật toán đang chọn.
+ */
+function startColoringSimulation() {
+  stopColoringSimulation(false);
+
+  const result = computeGraphColoring(activeAlgorithm);
+  currentShiftByNode = result.shiftByNode;
+  activeShiftFilter = null;
+  activeFocusedNodeId = null;
+  if (cyInstance && typeof cyInstance.elements === "function") {
+    cyInstance.elements().removeClass("dimmed highlighted");
+  }
+  updateClearFocusButtonVisibility();
+
+  const partialMap = {};
+  applyColoringToCytoscape(partialMap);
+  const algoLabel = activeAlgorithm === "WELSH_POWELL" ? "Welsh-Powell" : "DSatur";
+  setStatusBannerText(`Đang mô phỏng ${algoLabel} (0/${result.steps.length} đỉnh)...`);
+
+  let stepIdx = 0;
+  const runNextStep = () => {
+    if (stepIdx >= result.steps.length) {
+      stopColoringSimulation(true);
+      setStatusBannerText(
+        `Hoàn tất ${algoLabel}: ${result.steps.length}/${result.steps.length} đỉnh · χ(G) = ${result.chromaticNumber} ca · ${result.conflicts} xung đột`
+      );
+      return;
+    }
+    const cur = result.steps[stepIdx];
+    partialMap[cur.nodeId] = cur.shift;
+    applyColoringToCytoscape(partialMap);
+    renderNodeInspector(cur.nodeId);
+    setStatusBannerText(
+      `${algoLabel} · Bước ${cur.step}/${result.steps.length}: Tô ${cur.nodeId} (deg=${cur.degree}) → Ca ${cur.shift}`
+    );
+    stepIdx += 1;
+  };
+
+  runNextStep();
+  if (typeof setInterval === "function") {
+    simulationTimerId = setInterval(runNextStep, 450);
+  }
+  return result;
+}
+
+function syncGraphExamSelectors(academicYear, preferredExamCode) {
+  const years = Array.from(new Set(GRAPH_EXAM_OPTIONS.map((item) => item.nam_hoc))).sort((a, b) =>
+    b.localeCompare(a)
+  );
+  const activeYear = years.includes(academicYear) ? academicYear : years[0];
+  const examsInYear = GRAPH_EXAM_OPTIONS.filter((item) => item.nam_hoc === activeYear);
+  const matched =
+    examsInYear.find((item) => item.ma_ky_thi === preferredExamCode) ||
+    examsInYear[0] ||
+    GRAPH_EXAM_OPTIONS[0];
+
+  const yearSelect = document.getElementById("graph-year-select");
+  if (yearSelect && typeof yearSelect.replaceChildren === "function") {
+    yearSelect.replaceChildren();
+    years.forEach((yr) => {
+      const opt = document.createElement("option");
+      opt.value = yr;
+      opt.textContent = yr;
+      if (yr === activeYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    });
+    yearSelect.value = activeYear;
+  }
+
+  const examSelect = document.getElementById("graph-exam-select");
+  if (examSelect && typeof examSelect.replaceChildren === "function") {
+    examSelect.replaceChildren();
+    examsInYear.forEach((ex) => {
+      const opt = document.createElement("option");
+      opt.value = ex.ma_ky_thi;
+      opt.textContent = ex.label;
+      if (ex.ma_ky_thi === matched.ma_ky_thi) opt.selected = true;
+      examSelect.appendChild(opt);
+    });
+    examSelect.value = matched.ma_ky_thi;
+  }
+
+  activeExamCode = matched.ma_ky_thi;
+  return activeExamCode;
+}
+
+function handleGraphYearChange() {
+  const yearSelect = document.getElementById("graph-year-select");
+  const selectedYear = yearSelect && yearSelect.value ? yearSelect.value : "2026 - 2027";
+  syncGraphExamSelectors(selectedYear, "");
+  return runAutoSchedule();
+}
+
+function handleGraphExamChange() {
+  const examSelect = document.getElementById("graph-exam-select");
+  if (examSelect && examSelect.value) {
+    activeExamCode = examSelect.value;
+  }
+  return runAutoSchedule();
 }
 
 function updateZoomStatusLabel() {
@@ -187,7 +721,7 @@ function zoomInGraph() {
     level: next,
     renderedPosition: {
       x: (cyInstance.width ? cyInstance.width() : 600) / 2,
-      y: (cyInstance.height ? cyInstance.height() : 440) / 2,
+      y: (cyInstance.height ? cyInstance.height() : 500) / 2,
     },
   });
   updateZoomStatusLabel();
@@ -200,7 +734,7 @@ function zoomOutGraph() {
     level: next,
     renderedPosition: {
       x: (cyInstance.width ? cyInstance.width() : 600) / 2,
-      y: (cyInstance.height ? cyInstance.height() : 440) / 2,
+      y: (cyInstance.height ? cyInstance.height() : 500) / 2,
     },
   });
   updateZoomStatusLabel();
@@ -214,26 +748,29 @@ function resetGraphView() {
   updateZoomStatusLabel();
 }
 
-function changeGraphLayout(layoutName) {
-  const allowed = ["cose", "circle", "grid"];
-  const chosen = allowed.includes(layoutName) ? layoutName : "cose";
-  if (!cyInstance || typeof cyInstance.layout !== "function") return chosen;
-  const layout = cyInstance.layout({
-    name: chosen,
+function getConcentricLayoutOptions() {
+  return {
+    name: "concentric",
     animate: false,
-    padding: 28,
-  });
-  if (layout && typeof layout.run === "function") {
-    layout.run();
-  }
-  resetGraphView();
-  return chosen;
+    padding: 32,
+    avoidOverlap: true,
+    minNodeSpacing: 54,
+    spacingFactor: 0.95,
+    equidistant: false,
+    startAngle: (3 / 2) * Math.PI,
+    concentric: (node) => {
+      const deg = node && typeof node.data === "function" ? Number(node.data("degree") || 0) : 0;
+      return deg >= 4 ? 2 : 1;
+    },
+    levelWidth: () => 1,
+  };
 }
 
 function initConflictGraph() {
   const container = document.getElementById("cy");
   if (!container || typeof window.cytoscape !== "function") return null;
 
+  stopColoringSimulation(false);
   if (cyInstance && typeof cyInstance.destroy === "function") {
     cyInstance.destroy();
   }
@@ -241,15 +778,17 @@ function initConflictGraph() {
   const fallback = document.getElementById("cy-fallback-svg");
   if (fallback) fallback.classList.add("hidden");
 
+  syncGraphExamSelectors("2026 - 2027", activeExamCode);
+
+  currentShiftByNode = Object.fromEntries(
+    getGraphNodesList().map((n) => [n.data.id, n.data.shift])
+  );
+
   cyInstance = window.cytoscape({
     container,
     elements: SAMPLE_GRAPH_ELEMENTS,
     style: CYTOSCAPE_STYLE,
-    layout: {
-      name: "cose",
-      animate: false,
-      padding: 28,
-    },
+    layout: getConcentricLayoutOptions(),
     minZoom: 0.4,
     maxZoom: 2.5,
     wheelSensitivity: 0.25,
@@ -261,17 +800,28 @@ function initConflictGraph() {
   if (cyInstance && typeof cyInstance.on === "function") {
     cyInstance.on("tap", "node", (evt) => {
       const id = evt && evt.target && typeof evt.target.id === "function" ? evt.target.id() : null;
-      if (id) renderNodeInspector(id);
+      if (id) focusGraphNode(id);
     });
     cyInstance.on("tap", "edge", (evt) => {
+      if (simulationTimerId !== null) {
+        stopColoringSimulation(true);
+      }
       const data = evt && evt.target && typeof evt.target.data === "function" ? evt.target.data() : null;
       if (data) renderEdgeInspector(data);
+    });
+    cyInstance.on("tap", (evt) => {
+      if (evt && evt.target === cyInstance) {
+        clearGraphHighlight();
+      }
     });
     cyInstance.on("zoom", () => {
       updateZoomStatusLabel();
     });
   }
 
+  updateAlgorithmButtons();
+  renderGraphLegend();
+  updateClearFocusButtonVisibility();
   renderNodeInspector("IT002");
   updateZoomStatusLabel();
   return cyInstance;
