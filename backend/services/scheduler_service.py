@@ -64,12 +64,17 @@ SQL_CHECK_EXAM_EXISTS = text(
 )
 
 
+MAX_PG_BIGINT = 9_223_372_036_854_775_807
+
+
 def _validate_ky_thi_id(ky_thi_id: Any) -> int:
-    """Kiểm tra tính hợp lệ của tham số ky_thi_id."""
+    """Kiểm tra tính hợp lệ của tham số ky_thi_id trong phạm vi BIGINT dương của PostgreSQL."""
     if isinstance(ky_thi_id, bool) or not isinstance(ky_thi_id, int):
         raise ValueError(f"ky_thi_id không hợp lệ (cần số nguyên dương): {ky_thi_id!r}")
-    if ky_thi_id <= 0:
-        raise ValueError(f"ky_thi_id phải lớn hơn 0, nhận được: {ky_thi_id}")
+    if ky_thi_id <= 0 or ky_thi_id > MAX_PG_BIGINT:
+        raise ValueError(
+            f"ky_thi_id phải nằm trong khoảng [1, {MAX_PG_BIGINT}], nhận được: {ky_thi_id}"
+        )
     return ky_thi_id
 
 
