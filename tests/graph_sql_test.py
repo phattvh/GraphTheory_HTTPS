@@ -99,6 +99,10 @@ def test_exam_isolation_by_ky_thi_id() -> None:
     db = SessionLocal()
     temp_exam_id = None
     try:
+        # Dọn bản ghi tồn dư nếu lần chạy trước bị gián đoạn giữa chừng
+        db.query(KyThi).filter(KyThi.ma_ky_thi == "KT_TEMP_SQL_ISO_TEST").delete()
+        db.flush()
+
         # Tạo 1 kỳ thi tạm chỉ có đúng 1 sinh viên đăng ký 2 môn
         temp_exam = KyThi(
             ma_ky_thi="KT_TEMP_SQL_ISO_TEST",
@@ -129,6 +133,7 @@ def test_exam_isolation_by_ky_thi_id() -> None:
 
         print("[PASS] Test 4: Cô lập tuyệt đối theo ky_thi_id (2 đỉnh, 1 cạnh, 0 rò rỉ dữ liệu).")
     finally:
+        db.rollback()
         if temp_exam_id is not None:
             db.query(KyThi).filter(KyThi.id == temp_exam_id).delete()
             db.commit()
@@ -140,6 +145,9 @@ def test_empty_exam_and_invalid_exam_id() -> None:
     db = SessionLocal()
     empty_exam_id = None
     try:
+        db.query(KyThi).filter(KyThi.ma_ky_thi == "KT_TEMP_EMPTY_GRAPH_TEST").delete()
+        db.flush()
+
         empty_exam = KyThi(
             ma_ky_thi="KT_TEMP_EMPTY_GRAPH_TEST",
             ten_ky_thi="Kỳ thi rỗng 0 đăng ký",
@@ -158,8 +166,8 @@ def test_empty_exam_and_invalid_exam_id() -> None:
         assert fetch_conflict_graph_nodes(db, empty_exam_id) == []
         assert fetch_conflict_graph_edges(db, empty_exam_id) == []
 
-        # Kiểm tra ky_thi_id không tồn tại hoặc kiểu bẩn
-        for bad_id in [99999999, 0, -5, True, "1"]:
+        # Kiểm tra ky_thi_id không tồn tại, tràn PostgreSQL BIGINT hoặc kiểu bẩn
+        for bad_id in [99999999, 10**25, 0, -5, True, "1"]:
             raised = False
             try:
                 build_conflict_graph_from_db(db, bad_id)  # type: ignore[arg-type]
@@ -169,6 +177,7 @@ def test_empty_exam_and_invalid_exam_id() -> None:
 
         print("[PASS] Test 5-6: Kỳ thi rỗng trả đồ thị 0 đỉnh; ky_thi_id không tồn tại/bẩn ném ValueError.")
     finally:
+        db.rollback()
         if empty_exam_id is not None:
             db.query(KyThi).filter(KyThi.id == empty_exam_id).delete()
             db.commit()
