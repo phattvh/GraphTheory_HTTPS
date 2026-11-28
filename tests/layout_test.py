@@ -292,9 +292,25 @@ assert.strictEqual(sandbox.sanitizeCsvCell("IT002"), `"IT002"`);
     assert res.returncode == 0, f"Node runtime CRUD test failed:\n{res.stderr or res.stdout}"
 
 
+def test_no_raw_unicode_emojis_in_web_ui():
+    """Đảm bảo giao diện web dùng Lucide SVG icons, không còn emoji Unicode thô trong web/."""
+    import re
+
+    emoji_re = re.compile(r"[\U0001F300-\U0001FAFF\u2600-\u27BF]")
+    offenders = []
+    for path in sorted(WEB_DIR.rglob("*")):
+        if path.is_file() and path.suffix in {".html", ".js"}:
+            text = path.read_text(encoding="utf-8")
+            found = emoji_re.findall(text)
+            if found:
+                offenders.append(f"{path.relative_to(ROOT_DIR)}: {''.join(sorted(set(found)))}")
+    assert not offenders, f"Còn emoji Unicode thô trong web/ (cần thay bằng Lucide SVG): {offenders}"
+
+
 if __name__ == "__main__":
     test_layout_files_exist()
     test_admin_pages_and_student_structure()
     test_crud_modals_and_delete_alert_runtime()
+    test_no_raw_unicode_emojis_in_web_ui()
     test_caddy_serves_all_pages_if_running()
     print("ALL LAYOUT TESTS PASSED!")
