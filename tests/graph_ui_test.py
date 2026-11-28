@@ -159,7 +159,17 @@ const mockCy = {
   },
 };
 
+let activeIntervalId = 0;
+let clearedIntervals = [];
+
 const sandbox = {
+  setInterval: (_fn, _ms) => {
+    activeIntervalId += 1;
+    return activeIntervalId;
+  },
+  clearInterval: (id) => {
+    clearedIntervals.push(id);
+  },
   document: {
     getElementById: (id) => elements[id] || null,
     createElement: (tag) => makeEl(tag),
@@ -247,7 +257,9 @@ assert.strictEqual(dsRes.conflicts, 0, "DSatur không được có cạnh cùng 
 assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô phỏng tô màu");
 assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
 assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
-sandbox.stopColoringSimulation(true);
+const prevCleared = clearedIntervals.length;
+sandbox.focusGraphNode("IT002");
+assert.ok(clearedIntervals.length > prevCleared, "Click đỉnh khi đang mô phỏng phải dừng interval cũ");
 const runRes = sandbox.runAutoSchedule();
 assert.strictEqual(runRes.conflicts, 0);
 assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));

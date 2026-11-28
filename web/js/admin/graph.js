@@ -429,6 +429,9 @@ function renderEdgeInspector(edgeData) {
  * @param {string} nodeId
  */
 function focusGraphNode(nodeId) {
+  if (simulationTimerId !== null) {
+    stopColoringSimulation(true);
+  }
   activeFocusedNodeId = nodeId;
   activeShiftFilter = null;
   renderNodeInspector(nodeId);
@@ -452,6 +455,9 @@ function focusGraphNode(nodeId) {
  * @param {number} shift
  */
 function filterGraphByShift(shift) {
+  if (simulationTimerId !== null) {
+    stopColoringSimulation(true);
+  }
   if (activeShiftFilter === shift) {
     clearGraphHighlight();
     return null;
@@ -786,6 +792,9 @@ function initConflictGraph() {
       if (id) focusGraphNode(id);
     });
     cyInstance.on("tap", "edge", (evt) => {
+      if (simulationTimerId !== null) {
+        stopColoringSimulation(true);
+      }
       const data = evt && evt.target && typeof evt.target.data === "function" ? evt.target.data() : null;
       if (data) renderEdgeInspector(data);
     });
