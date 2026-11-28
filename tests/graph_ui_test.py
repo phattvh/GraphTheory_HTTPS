@@ -49,6 +49,9 @@ def test_graph_html_elements():
     assert "Các môn phải thi khác ca với môn bạn tìm" not in html, "Đã bỏ dòng gợi ý dưới ô tìm kiếm đỉnh"
     assert "Đồ thị &amp; xếp lịch" in html, "Tiêu đề trang đồ thị phải là 'Đồ thị & xếp lịch'"
     assert "Đồ thị xung đột &amp; xếp lịch tự động" not in html, "Đã rút gọn tiêu đề trang đồ thị"
+    assert html.index('id="btn-graph-zoom-out"') < html.index('id="btn-graph-zoom-in"'), (
+        "Nút thu nhỏ (−) phải nằm trước nút phóng to (+)"
+    )
 
 
 def test_graph_js_structure_and_xss():
