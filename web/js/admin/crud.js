@@ -26,11 +26,11 @@ const CRUD_MODAL_IDS = [
 ];
 
 const CRUD_HEADINGS = {
-  ky_thi: "Quản lý Dữ liệu Đầu vào • Kỳ thi",
-  mon_hoc: "Quản lý Dữ liệu Đầu vào • Môn học",
-  sinh_vien: "Quản lý Dữ liệu Đầu vào • Quản lý Sinh viên",
-  phong_thi: "Quản lý Dữ liệu Đầu vào • Phòng thi",
-  dang_ky_thi: "Quản lý Dữ liệu Đầu vào • Đăng ký thi",
+  ky_thi: "Quản lý dữ liệu đầu vào • Kỳ thi",
+  mon_hoc: "Quản lý dữ liệu đầu vào • Môn học",
+  sinh_vien: "Quản lý dữ liệu đầu vào • Sinh viên",
+  phong_thi: "Quản lý dữ liệu đầu vào • Phòng thi",
+  dang_ky_thi: "Quản lý dữ liệu đầu vào • Đăng ký thi",
 };
 
 function setInputLockedState(inputEl, locked) {
@@ -195,7 +195,7 @@ function renderStudentTable() {
     : studentRecords;
 
   if (countEl) {
-    countEl.textContent = `Danh sách Sinh viên (${filtered.length} sinh viên)`;
+    countEl.textContent = `Danh sách sinh viên (${filtered.length} sinh viên)`;
   }
 
   tbody.replaceChildren();
@@ -242,8 +242,8 @@ function openStudentModal() {
   resetStudentForm();
   const titleEl = document.getElementById("student-modal-title");
   const submitEl = document.getElementById("student-modal-submit");
-  if (titleEl) titleEl.textContent = "Thêm Sinh viên mới";
-  if (submitEl) submitEl.textContent = "+ Thêm Sinh viên";
+  if (titleEl) titleEl.textContent = "Thêm sinh viên mới";
+  if (submitEl) submitEl.textContent = "+ Thêm sinh viên";
   openCrudModal("student-crud-modal", "sv-form-mssv");
 }
 
@@ -296,7 +296,7 @@ function startEditStudent(mssv) {
   if (errEl) errEl.textContent = "";
   const titleEl = document.getElementById("student-modal-title");
   const submitEl = document.getElementById("student-modal-submit");
-  if (titleEl) titleEl.textContent = "Chỉnh sửa Sinh viên";
+  if (titleEl) titleEl.textContent = "Chỉnh sửa sinh viên";
   if (submitEl) submitEl.textContent = "Lưu thay đổi";
   openCrudModal("student-crud-modal", "sv-form-hoten");
 }
@@ -305,7 +305,7 @@ function deleteStudent(mssv) {
   const sv = studentRecords.find((s) => s.mssv === mssv);
   const label = sv ? `${sv.mssv} - ${sv.ho_ten}` : mssv;
   openDeleteAlert(
-    "Xác nhận xóa Sinh viên",
+    "Xác nhận xóa sinh viên",
     `Bạn có chắc chắn muốn xóa sinh viên "${label}"? Hành động này không thể hoàn tác.`,
     () => {
       studentRecords = studentRecords.filter((s) => s.mssv !== mssv);
@@ -366,7 +366,7 @@ function renderExamTable() {
     : examRecords;
 
   if (countEl) {
-    countEl.textContent = `Danh sách Kỳ thi (${filtered.length} kỳ thi)`;
+    countEl.textContent = `Danh sách kỳ thi (${filtered.length} kỳ thi)`;
   }
 
   tbody.replaceChildren();
@@ -421,8 +421,8 @@ function openExamModal() {
   resetExamForm();
   const titleEl = document.getElementById("exam-modal-title");
   const submitEl = document.getElementById("exam-modal-submit");
-  if (titleEl) titleEl.textContent = "Thêm Kỳ thi mới";
-  if (submitEl) submitEl.textContent = "+ Thêm Kỳ thi";
+  if (titleEl) titleEl.textContent = "Thêm kỳ thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm kỳ thi";
   openCrudModal("exam-crud-modal", "exam-form-ma");
 }
 
@@ -498,7 +498,7 @@ function startEditExam(maKyThi) {
   if (errEl) errEl.textContent = "";
   const titleEl = document.getElementById("exam-modal-title");
   const submitEl = document.getElementById("exam-modal-submit");
-  if (titleEl) titleEl.textContent = "Chỉnh sửa Kỳ thi";
+  if (titleEl) titleEl.textContent = "Chỉnh sửa kỳ thi";
   if (submitEl) submitEl.textContent = "Lưu thay đổi";
   openCrudModal("exam-crud-modal", "exam-form-ten");
 }
@@ -507,7 +507,7 @@ function deleteExam(maKyThi) {
   const kt = examRecords.find((e) => e.ma_ky_thi === maKyThi);
   const label = kt ? `${kt.ma_ky_thi} - ${kt.ten_ky_thi}` : maKyThi;
   openDeleteAlert(
-    "Xác nhận xóa Kỳ thi",
+    "Xác nhận xóa kỳ thi",
     `Bạn có chắc chắn muốn xóa kỳ thi "${label}"? Hành động này không thể hoàn tác.`,
     () => {
       examRecords = examRecords.filter((e) => e.ma_ky_thi !== maKyThi);
@@ -547,7 +547,7 @@ function renderCourseTable() {
     : courseRecords;
 
   if (countEl) {
-    countEl.textContent = `Danh mục Học phần / Môn thi (${filtered.length} môn học)`;
+    countEl.textContent = `Danh sách học phần (${filtered.length} học phần)`;
   }
 
   tbody.replaceChildren();
@@ -594,8 +594,8 @@ function openCourseModal() {
   resetCourseForm();
   const titleEl = document.getElementById("course-modal-title");
   const submitEl = document.getElementById("course-modal-submit");
-  if (titleEl) titleEl.textContent = "Thêm Môn học mới";
-  if (submitEl) submitEl.textContent = "+ Thêm Môn học";
+  if (titleEl) titleEl.textContent = "Thêm môn học mới";
+  if (submitEl) submitEl.textContent = "+ Thêm môn học";
   openCrudModal("course-crud-modal", "course-form-ma");
 }
 
@@ -657,7 +657,7 @@ function startEditCourse(maMon) {
   if (errEl) errEl.textContent = "";
   const titleEl = document.getElementById("course-modal-title");
   const submitEl = document.getElementById("course-modal-submit");
-  if (titleEl) titleEl.textContent = "Chỉnh sửa Môn học";
+  if (titleEl) titleEl.textContent = "Chỉnh sửa môn học";
   if (submitEl) submitEl.textContent = "Lưu thay đổi";
   openCrudModal("course-crud-modal", "course-form-ten");
 }
@@ -666,7 +666,7 @@ function deleteCourse(maMon) {
   const mh = courseRecords.find((c) => c.ma_mon === maMon);
   const label = mh ? `${mh.ma_mon} - ${mh.ten_mon}` : maMon;
   openDeleteAlert(
-    "Xác nhận xóa Môn học",
+    "Xác nhận xóa môn học",
     `Bạn có chắc chắn muốn xóa môn học "${label}"? Hành động này không thể hoàn tác.`,
     () => {
       courseRecords = courseRecords.filter((c) => c.ma_mon !== maMon);
@@ -703,7 +703,7 @@ function renderRoomTable() {
     : roomRecords;
 
   if (countEl) {
-    countEl.textContent = `Danh mục Phòng thi & Sức chứa (${filtered.length} phòng)`;
+    countEl.textContent = `Danh sách phòng thi (${filtered.length} phòng)`;
   }
 
   tbody.replaceChildren();
@@ -759,8 +759,8 @@ function openRoomModal() {
   resetRoomForm();
   const titleEl = document.getElementById("room-modal-title");
   const submitEl = document.getElementById("room-modal-submit");
-  if (titleEl) titleEl.textContent = "Thêm Phòng thi mới";
-  if (submitEl) submitEl.textContent = "+ Thêm Phòng thi";
+  if (titleEl) titleEl.textContent = "Thêm phòng thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm phòng thi";
   openCrudModal("room-crud-modal", "room-form-ma");
 }
 
@@ -822,7 +822,7 @@ function startEditRoom(maPhong) {
   if (errEl) errEl.textContent = "";
   const titleEl = document.getElementById("room-modal-title");
   const submitEl = document.getElementById("room-modal-submit");
-  if (titleEl) titleEl.textContent = "Chỉnh sửa Phòng thi";
+  if (titleEl) titleEl.textContent = "Chỉnh sửa phòng thi";
   if (submitEl) submitEl.textContent = "Lưu thay đổi";
   openCrudModal("room-crud-modal", "room-form-ten");
 }
@@ -831,7 +831,7 @@ function deleteRoom(maPhong) {
   const p = roomRecords.find((r) => r.ma_phong === maPhong);
   const label = p ? `${p.ma_phong} - ${p.ten_phong}` : maPhong;
   openDeleteAlert(
-    "Xác nhận xóa Phòng thi",
+    "Xác nhận xóa phòng thi",
     `Bạn có chắc chắn muốn xóa phòng thi "${label}"? Hành động này không thể hoàn tác.`,
     () => {
       roomRecords = roomRecords.filter((r) => r.ma_phong !== maPhong);
@@ -920,9 +920,9 @@ function renderRegistrationTable() {
 
   if (countEl) {
     if (selectedCourse && selectedCourse !== "ALL") {
-      countEl.textContent = `Danh sách Sinh viên đăng ký môn (${filtered.length} sinh viên)`;
+      countEl.textContent = `Danh sách sinh viên đăng ký môn (${filtered.length} sinh viên)`;
     } else {
-      countEl.textContent = `Danh sách Đăng ký dự thi theo Môn học (${filtered.length} lượt đăng ký)`;
+      countEl.textContent = `Danh sách đăng ký dự thi (${filtered.length} lượt đăng ký)`;
     }
   }
 
@@ -1041,8 +1041,8 @@ function openRegistrationModal() {
   }
   const titleEl = document.getElementById("registration-modal-title");
   const submitEl = document.getElementById("registration-modal-submit");
-  if (titleEl) titleEl.textContent = "Thêm Đăng ký thi mới";
-  if (submitEl) submitEl.textContent = "+ Thêm Đăng ký thi";
+  if (titleEl) titleEl.textContent = "Thêm đăng ký thi mới";
+  if (submitEl) submitEl.textContent = "+ Thêm đăng ký thi";
   openCrudModal("registration-crud-modal", "reg-form-ma-mon");
 }
 
@@ -1118,7 +1118,7 @@ function startEditRegistration(regId) {
   if (errEl) errEl.textContent = "";
   const titleEl = document.getElementById("registration-modal-title");
   const submitEl = document.getElementById("registration-modal-submit");
-  if (titleEl) titleEl.textContent = "Chỉnh sửa Đăng ký thi";
+  if (titleEl) titleEl.textContent = "Chỉnh sửa đăng ký thi";
   if (submitEl) submitEl.textContent = "Lưu thay đổi";
   openCrudModal("registration-crud-modal", "reg-form-ma-mon");
 }
@@ -1130,7 +1130,7 @@ function deleteRegistration(regId) {
     ? `${item.mssv} (${item.ho_ten}) - Môn ${item.ma_mon}`
     : String(regId);
   openDeleteAlert(
-    "Xác nhận xóa Đăng ký thi",
+    "Xác nhận xóa đăng ký thi",
     `Bạn có chắc chắn muốn xóa đăng ký dự thi của sinh viên "${label}"? Hành động này không thể hoàn tác.`,
     () => {
       registrationRecords = registrationRecords.filter((r) => r.id !== regId);
@@ -1185,7 +1185,7 @@ function normalizeBusinessCode(cellRes) {
 
 const IMPORT_SCHEMAS = {
   sinh_vien: {
-    label: "Quản lý Sinh viên",
+    label: "Sinh viên",
     headers: ["mssv", "ho_ten", "email", "lop_sinh_hoat"],
     required: ["mssv", "ho_ten"],
     sampleRow: ["22110099", "Nguyễn Minh Khôi", "khoi.nm@univ.edu.vn", "22CNTT1"],
@@ -1678,7 +1678,7 @@ function openImportModal(entity) {
   }
   const label = (IMPORT_SCHEMAS[target] && IMPORT_SCHEMAS[target].label) || "Dữ liệu";
   if (displayEl) displayEl.textContent = label;
-  if (titleEl) titleEl.textContent = "Nạp & Xuất dữ liệu";
+  if (titleEl) titleEl.textContent = "Nạp & xuất dữ liệu";
   updateImportEntityGuide();
   openCrudModal("import-data-modal", "import-dropzone");
 }

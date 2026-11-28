@@ -38,25 +38,25 @@ const ADMIN_PAGES = {
     href: "/index.html",
     icon: "database",
     navLabel: "1. Quản lý dữ liệu",
-    title: "02. Quản lý Dữ liệu & Import Excel",
+    title: "02. Quản lý dữ liệu & nạp Excel",
   },
   graph: {
     href: "/graph.html",
     icon: "share-2",
-    navLabel: "2. Đồ thị & Xếp lịch",
-    title: "03. Đồ thị Xung đột & Xếp lịch DSatur",
+    navLabel: "2. Đồ thị & xếp lịch",
+    title: "03. Đồ thị xung đột & xếp lịch DSatur",
   },
   calendar: {
     href: "/calendar.html",
     icon: "calendar-days",
     navLabel: "3. Lịch thi toàn trường",
-    title: "04. Lịch thi Toàn trường FullCalendar",
+    title: "04. Lịch thi toàn trường",
   },
   stats: {
     href: "/stats.html",
     icon: "bar-chart-3",
-    navLabel: "4. Thống kê & Phân tích",
-    title: "05. Thống kê & Phân tích Đồ thị",
+    navLabel: "4. Thống kê & phân tích",
+    title: "05. Thống kê & phân tích kỳ thi",
   },
 };
 
@@ -105,7 +105,7 @@ function toggleRightDrawer() {
 const CRUD_ENTITIES = [
   { key: "ky_thi", icon: "calendar", label: "Kỳ thi" },
   { key: "mon_hoc", icon: "book-open", label: "Môn học" },
-  { key: "sinh_vien", icon: "graduation-cap", label: "Quản lý Sinh viên" },
+  { key: "sinh_vien", icon: "graduation-cap", label: "Sinh viên" },
   { key: "phong_thi", icon: "building-2", label: "Phòng thi" },
   { key: "dang_ky_thi", icon: "clipboard-list", label: "Đăng ký thi" },
 ];
