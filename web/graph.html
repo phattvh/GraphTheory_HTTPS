@@ -189,16 +189,6 @@
               <!-- Cụm điều khiển Zoom nổi góc dưới phải -->
               <nav aria-label="Điều khiển thu phóng đồ thị" class="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 no-print">
                 <button
-                  id="btn-graph-zoom-in"
-                  type="button"
-                  onclick="zoomInGraph()"
-                  title="Phóng to"
-                  aria-label="Phóng to đồ thị"
-                  class="w-7 h-7 rounded-md text-xs font-bold bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
-                >
-                  +
-                </button>
-                <button
                   id="btn-graph-zoom-out"
                   type="button"
                   onclick="zoomOutGraph()"
@@ -207,6 +197,16 @@
                   class="w-7 h-7 rounded-md text-xs font-bold bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
                 >
                   −
+                </button>
+                <button
+                  id="btn-graph-zoom-in"
+                  type="button"
+                  onclick="zoomInGraph()"
+                  title="Phóng to"
+                  aria-label="Phóng to đồ thị"
+                  class="w-7 h-7 rounded-md text-xs font-bold bg-white/95 hover:bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer"
+                >
+                  +
                 </button>
                 <button
                   id="btn-graph-fit"
