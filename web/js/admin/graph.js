@@ -483,9 +483,13 @@ function filterGraphByShift(shift) {
   return shift;
 }
 
-function clearGraphHighlight() {
+function clearGraphHighlight(resetSearchInput = true) {
   activeShiftFilter = null;
   activeFocusedNodeId = null;
+  if (resetSearchInput) {
+    const searchInput = document.getElementById("graph-node-search");
+    if (searchInput) searchInput.value = "";
+  }
   if (cyInstance && typeof cyInstance.elements === "function") {
     cyInstance.elements().removeClass("dimmed highlighted");
   }
@@ -500,23 +504,30 @@ function clearGraphHighlight() {
 
 /**
  * Tìm kiếm đỉnh theo mã môn hoặc tên học phần và định vị trên đồ thị.
+ * Ưu tiên khớp chính xác mã môn trước khi tìm theo chuỗi con.
  * @param {string} query
  */
 function searchGraphNode(query) {
   const q = String(query || "").trim().toLowerCase();
   if (!q) {
-    clearGraphHighlight();
+    clearGraphHighlight(false);
     return null;
   }
 
-  const matched = getGraphNodesList().find((n) => {
-    const id = n.data.id;
-    const meta = SAMPLE_COURSE_METADATA[id];
-    const name = meta ? meta.ten_mon.toLowerCase() : "";
-    return id.toLowerCase() === q || id.toLowerCase().includes(q) || name.includes(q);
-  });
+  const nodes = getGraphNodesList();
+  const matched =
+    nodes.find((n) => n.data.id.toLowerCase() === q) ||
+    nodes.find((n) => {
+      const id = n.data.id;
+      const meta = SAMPLE_COURSE_METADATA[id];
+      const name = meta ? meta.ten_mon.toLowerCase() : "";
+      return id.toLowerCase().includes(q) || name.includes(q);
+    });
 
-  if (!matched) return null;
+  if (!matched) {
+    clearGraphHighlight(false);
+    return null;
+  }
   focusGraphNode(matched.data.id);
   if (cyInstance && typeof cyInstance.getElementById === "function" && typeof cyInstance.center === "function") {
     const el = cyInstance.getElementById(matched.data.id);

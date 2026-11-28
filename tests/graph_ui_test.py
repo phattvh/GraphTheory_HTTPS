@@ -123,6 +123,7 @@ const elements = {
   "btn-algo-dsatur": makeEl("button"),
   "btn-algo-welsh-powell": makeEl("button"),
   "btn-graph-clear-focus": makeEl("button"),
+  "graph-node-search": makeEl("input"),
   "graph-status-banner": makeEl("span"),
   "graph-legend-buttons": makeEl("div"),
   "graph-inspector-heading": makeEl("h3"),
@@ -265,15 +266,20 @@ assert.strictEqual(runRes.conflicts, 0);
 assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
 
 // Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
+elements["graph-node-search"].value = "IT008";
 const foundId = sandbox.searchGraphNode("IT008");
 assert.strictEqual(foundId, "IT008");
 assert.ok(elements["graph-inspector-badge"].textContent.includes("IT008"));
+assert.strictEqual(sandbox.searchGraphNode("KHONG_TON_TAI"), null);
+assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
 
 const filteredShift = sandbox.filterGraphByShift(1);
 assert.strictEqual(filteredShift, 1);
 assert.ok(elements["graph-status-banner"].textContent.includes("Ca 1"));
+elements["graph-node-search"].value = "IT008";
 sandbox.clearGraphHighlight();
 assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
+assert.strictEqual(elements["graph-node-search"].value, "");
 """
     res = subprocess.run(
         ["node", "-e", script],
