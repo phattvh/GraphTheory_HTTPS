@@ -29,4 +29,15 @@ def transactional_scope(db: Session) -> Iterator[Session]:
         raise
 
 
-__all__ = ["transactional_scope"]
+from .scheduler_service import (
+    build_conflict_graph_from_db,
+    fetch_conflict_graph_edges,
+    fetch_conflict_graph_nodes,
+)
+
+__all__ = [
+    "transactional_scope",
+    "fetch_conflict_graph_nodes",
+    "fetch_conflict_graph_edges",
+    "build_conflict_graph_from_db",
+]
