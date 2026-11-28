@@ -146,7 +146,7 @@ def test_admin_pages_and_student_structure():
         'id="student-header"',
         'id="student-main-content"',
         'id="student-fullcalendar-shell"',
-        "Student Portal",
+        "Cổng thông tin lịch thi sinh viên",
         'src="/js/core/auth.js"',
         'onclick="handleLogout()"',
     ]:
