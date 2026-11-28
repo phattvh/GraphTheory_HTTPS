@@ -20,11 +20,15 @@ def test_graph_html_elements():
     for marker in [
         'data-admin-page="graph"',
         'id="tab-graph"',
+        'id="graph-year-select"',
+        'id="graph-exam-select"',
+        'id="btn-algo-dsatur"',
+        'id="btn-algo-welsh-powell"',
+        'id="btn-run-schedule"',
+        'id="graph-node-search"',
         'id="cy"',
         'id="cy-fallback-svg"',
         "cytoscape.min.js",
-        'id="graph-layout-select"',
-        'onchange="changeGraphLayout(this.value)"',
         'id="btn-graph-zoom-in"',
         'onclick="zoomInGraph()"',
         'id="btn-graph-zoom-out"',
@@ -38,6 +42,10 @@ def test_graph_html_elements():
         'src="/js/admin/graph.js"',
     ]:
         assert marker in html, f"Thiếu phần tử UI đồ thị trong graph.html: {marker}"
+    assert 'id="graph-layout-select"' not in html, "Đã bỏ ô chọn bố cục, dùng cố định Concentric"
+    assert 'list="graph-node-suggestions"' not in html, "Ô tìm kiếm không gắn datalist để ẩn mũi tên dropdown"
+    assert 'id="graph-verifier-card"' not in html, "Đã xóa khung Schedule Verifier"
+    assert 'id="btn-simulate-coloring"' not in html, "Đã xóa nút Mô phỏng tô màu, tự chạy khi chọn thuật toán"
 
 
 def test_graph_js_structure_and_xss():
@@ -48,13 +56,22 @@ def test_graph_js_structure_and_xss():
     for symbol in [
         "SAMPLE_GRAPH_ELEMENTS",
         "CYTOSCAPE_STYLE",
+        "function computeGraphColoring",
+        "function selectGraphAlgorithm",
+        "function runAutoSchedule",
+        "function startColoringSimulation",
+        "function focusGraphNode",
+        "function filterGraphByShift",
+        "function clearGraphHighlight",
+        "function searchGraphNode",
+        "function getConcentricLayoutOptions",
         "function initConflictGraph",
         "function zoomInGraph",
         "function zoomOutGraph",
         "function resetGraphView",
-        "function changeGraphLayout",
         "function renderNodeInspector",
         "function renderEdgeInspector",
+        'name: "concentric"',
         "userZoomingEnabled: true",
         "userPanningEnabled: true",
     ]:
@@ -83,9 +100,14 @@ const makeClassList = (initial = []) => {
 const makeEl = (tag = "div") => {
   const el = {
     tagName: tag.toUpperCase(),
+    className: "",
     textContent: "",
+    value: "",
+    selected: false,
     children: [],
+    attrs: {},
     classList: makeClassList(),
+    setAttribute: (k, v) => { el.attrs[k] = String(v); },
     append: (...nodes) => el.children.push(...nodes),
     appendChild: (node) => el.children.push(node),
     replaceChildren: (...nodes) => { el.children = [...nodes]; },
@@ -96,6 +118,15 @@ const makeEl = (tag = "div") => {
 const elements = {
   cy: makeEl("div"),
   "cy-fallback-svg": makeEl("svg"),
+  "graph-year-select": makeEl("select"),
+  "graph-exam-select": makeEl("select"),
+  "btn-algo-dsatur": makeEl("button"),
+  "btn-algo-welsh-powell": makeEl("button"),
+  "btn-graph-clear-focus": makeEl("button"),
+  "graph-node-search": makeEl("input"),
+  "graph-status-banner": makeEl("span"),
+  "graph-legend-buttons": makeEl("div"),
+  "graph-inspector-heading": makeEl("h3"),
   "graph-inspector-badge": makeEl("span"),
   "graph-inspector-details": makeEl("ul"),
   "graph-zoom-label": makeEl("span"),
@@ -129,7 +160,17 @@ const mockCy = {
   },
 };
 
+let activeIntervalId = 0;
+let clearedIntervals = [];
+
 const sandbox = {
+  setInterval: (_fn, _ms) => {
+    activeIntervalId += 1;
+    return activeIntervalId;
+  },
+  clearInterval: (id) => {
+    clearedIntervals.push(id);
+  },
   document: {
     getElementById: (id) => elements[id] || null,
     createElement: (tag) => makeEl(tag),
@@ -179,17 +220,66 @@ sandbox.resetGraphView();
 assert.strictEqual(fitCalls, 1);
 assert.strictEqual(elements["graph-zoom-label"].textContent, "100%");
 
-// Kiểm tra đổi layout
-const chosenLayout = sandbox.changeGraphLayout("circle");
-assert.strictEqual(chosenLayout, "circle");
-assert.strictEqual(lastLayoutName, "circle");
+// Kiểm tra dùng bố cục mặc định Concentric 2 vòng gọn gàng theo bậc đỉnh
+assert.strictEqual(capturedConfig.layout.name, "concentric");
+assert.strictEqual(capturedConfig.layout.avoidOverlap, true);
+assert.ok(capturedConfig.layout.spacingFactor < 1);
 
 // Kiểm tra click node & click edge cập nhật Inspector
 eventHandlers["tap:node"]({ target: { id: () => "IT010" } });
-assert.ok(elements["graph-inspector-badge"].textContent.includes("IT010"));
+assert.strictEqual(elements["graph-inspector-heading"].textContent, "Học máy Ứng dụng");
+assert.strictEqual(elements["graph-inspector-badge"].textContent, "Mã học phần: IT010 (Ca 2)");
+const inspectorLabels = elements["graph-inspector-details"].children.map((li) => li.children[0].textContent);
+const inspectorValues = elements["graph-inspector-details"].children.map((li) => li.children[1].textContent);
+assert.ok(!inspectorLabels.includes("Tên học phần"));
+assert.ok(inspectorLabels.includes("Số môn cần chọn khác ca"));
+assert.ok(!inspectorLabels.includes("Độ bão hòa DSatur"));
+assert.ok(!inspectorLabels.includes("Xung đột mạnh nhất"));
+assert.ok(inspectorLabels.includes("Mã phòng"));
+assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Số môn cần chọn khác ca")], "1 môn");
+assert.strictEqual(inspectorValues[inspectorLabels.indexOf("Mã phòng")], "C301, C302");
 
 eventHandlers["tap:edge"]({ target: { data: () => ({ source: "IT002", target: "IT001", weight: 42 }) } });
-assert.ok(elements["graph-inspector-badge"].textContent.includes("IT002 — IT001"));
+assert.strictEqual(
+  elements["graph-inspector-heading"].textContent,
+  "Cấu trúc Dữ liệu & Giải thuật - Lý thuyết Đồ thị"
+);
+assert.strictEqual(elements["graph-inspector-badge"].textContent, "IT002 - IT001");
+
+// Kiểm tra bấm thuật toán Welsh-Powell / DSatur tự động chạy mô phỏng tô màu 0 xung đột
+const wpRes = sandbox.selectGraphAlgorithm("WELSH_POWELL");
+assert.strictEqual(wpRes.conflicts, 0, "Welsh-Powell không được có cạnh cùng màu");
+assert.ok(elements["graph-status-banner"].textContent.includes("Welsh-Powell"));
+assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
+assert.strictEqual(elements["btn-algo-welsh-powell"].attrs["aria-pressed"], "true");
+
+const dsRes = sandbox.selectGraphAlgorithm("DSATUR");
+assert.strictEqual(dsRes.conflicts, 0, "DSatur không được có cạnh cùng màu");
+assert.strictEqual(dsRes.steps.length, 10, "Phải có đúng 10 bước mô phỏng tô màu");
+assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
+assert.ok(elements["graph-status-banner"].textContent.includes("Bước 1/10"));
+const prevCleared = clearedIntervals.length;
+sandbox.focusGraphNode("IT002");
+assert.ok(clearedIntervals.length > prevCleared, "Click đỉnh khi đang mô phỏng phải dừng interval cũ");
+const runRes = sandbox.runAutoSchedule();
+assert.strictEqual(runRes.conflicts, 0);
+assert.ok(elements["graph-status-banner"].textContent.includes("DSatur"));
+
+// Kiểm tra tìm kiếm đỉnh & lọc theo ca thi
+elements["graph-node-search"].value = "IT008";
+const foundId = sandbox.searchGraphNode("IT008");
+assert.strictEqual(foundId, "IT008");
+assert.ok(elements["graph-inspector-badge"].textContent.includes("IT008"));
+assert.strictEqual(sandbox.searchGraphNode("KHONG_TON_TAI"), null);
+assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
+
+const filteredShift = sandbox.filterGraphByShift(1);
+assert.strictEqual(filteredShift, 1);
+assert.ok(elements["graph-status-banner"].textContent.includes("Ca 1"));
+elements["graph-node-search"].value = "IT008";
+sandbox.clearGraphHighlight();
+assert.ok(elements["btn-graph-clear-focus"].classList.contains("hidden"));
+assert.strictEqual(elements["graph-node-search"].value, "");
 """
     res = subprocess.run(
         ["node", "-e", script],

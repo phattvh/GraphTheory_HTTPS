@@ -4,8 +4,8 @@
  * Hỗ trợ:
  * - 4 thẻ KPI tổng quan đồng nhất (Tổng môn |V| & cạnh |E|, SV & lượt đăng ký, Số ca tối ưu χ(G), Tỷ lệ lấp đầy phòng TB)
  * - Biểu đồ 1 (Chart.js): Tỷ lệ lấp đầy phòng thi (%) theo từng Ca thi (bỏ biểu đồ so sánh ms không cần thiết)
- * - Biểu đồ 2 (Chart.js): Top 5 môn học có bậc xung đột deg(v) cao nhất (trục Y gọn mã môn, tooltip đầy đủ tên môn)
- * - Bảng chi tiết phân bổ từng Ca thi (không trùng lặp Biểu đồ 2), 100% DOM API an toàn (textContent)
+ * - Biểu đồ 2 (Chart.js): Phân bố số môn thi trong 1 ngày của sinh viên (Doughnut Chart — UC14)
+ * - Bảng chi tiết phân bổ từng Ca thi, 100% DOM API an toàn (textContent)
  */
 
 const STATS_EXAM_DATASETS = {
@@ -68,12 +68,10 @@ const STATS_EXAM_DATASETS = {
         status: "Thông thoáng",
       },
     ],
-    top_degree_courses: [
-      { ma_mon: "IT002", ten_mon: "Cấu trúc Dữ liệu & Giải thuật", deg: 11, so_sv: 24, stt_ca: 1 },
-      { ma_mon: "IT008", ten_mon: "Toán Rời rạc & Tổ hợp", deg: 10, so_sv: 22, stt_ca: 3 },
-      { ma_mon: "IT006", ten_mon: "Trí tuệ Nhân tạo", deg: 9, so_sv: 21, stt_ca: 2 },
-      { ma_mon: "IT001", ten_mon: "Lý thuyết Đồ thị", deg: 8, so_sv: 20, stt_ca: 2 },
-      { ma_mon: "IT003", ten_mon: "Hệ Quản trị Cơ sở Dữ liệu PostgreSQL", deg: 7, so_sv: 19, stt_ca: 4 },
+    daily_exam_distribution: [
+      { label: "1 môn / ngày", students: 62 },
+      { label: "2 môn / ngày", students: 31 },
+      { label: "3+ môn / ngày", students: 7 },
     ],
   },
   KTHK2_2025: {
@@ -135,12 +133,10 @@ const STATS_EXAM_DATASETS = {
         status: "Thông thoáng",
       },
     ],
-    top_degree_courses: [
-      { ma_mon: "IT004", ten_mon: "Lập trình Web", deg: 9, so_sv: 23, stt_ca: 1 },
-      { ma_mon: "IT005", ten_mon: "An toàn & Bảo mật Thông tin", deg: 8, so_sv: 21, stt_ca: 2 },
-      { ma_mon: "IT007", ten_mon: "Mạng Máy tính & Truyền thông", deg: 7, so_sv: 19, stt_ca: 3 },
-      { ma_mon: "IT012", ten_mon: "Lập trình Hướng đối tượng (OOP)", deg: 6, so_sv: 18, stt_ca: 1 },
-      { ma_mon: "IT014", ten_mon: "Hệ điều hành", deg: 5, so_sv: 17, stt_ca: 4 },
+    daily_exam_distribution: [
+      { label: "1 môn / ngày", students: 56 },
+      { label: "2 môn / ngày", students: 24 },
+      { label: "3+ môn / ngày", students: 5 },
     ],
   },
 };
@@ -153,7 +149,7 @@ const SHIFT_BADGE_CLASSES = {
 };
 
 let shiftUtilizationChartInstance = null;
-let topDegreeChartInstance = null;
+let dailyExamChartInstance = null;
 let activeStatsExamCode = "KTHK1_2026";
 
 function formatNumberVi(value) {
@@ -332,62 +328,66 @@ function buildShiftUtilizationChartConfig(dataset) {
 }
 
 /**
- * Xây dựng cấu hình Chart.js cho Biểu đồ 2: Top 5 Môn học có Bậc đỉnh deg(v) cao nhất.
- * Trục Y hiển thị mã môn ngắn gọn; tooltip hiển thị tên học phần đầy đủ và số SV.
+ * Xây dựng cấu hình Chart.js cho Biểu đồ 2: Phân bố số môn thi trong 1 ngày của Sinh viên (Doughnut Chart).
  * @param {Record<string, any>} dataset
  */
-function buildTopDegreeChartConfig(dataset) {
+function buildDailyExamDistributionChartConfig(dataset) {
   const data = dataset || getStatsDataset();
-  const list = Array.isArray(data.top_degree_courses) ? data.top_degree_courses : [];
+  const buckets = Array.isArray(data.daily_exam_distribution) ? data.daily_exam_distribution : [];
+  const totalStudents =
+    buckets.reduce((sum, item) => sum + Number(item.students || 0), 0) ||
+    Number(data.total_students || 0) ||
+    1;
 
   return {
-    type: "bar",
+    type: "doughnut",
     data: {
-      labels: list.map((item) => item.ma_mon),
+      labels: buckets.map((item) => {
+        const pct = ((Number(item.students || 0) / totalStudents) * 100).toFixed(1);
+        return `${item.label} (${item.students} SV · ${pct}%)`;
+      }),
       datasets: [
         {
-          label: "Số môn xung đột trực tiếp deg(v)",
-          data: list.map((item) => item.deg),
-          backgroundColor: "rgba(37, 99, 235, 0.85)",
-          borderColor: "#1d4ed8",
-          borderWidth: 1.5,
-          borderRadius: 6,
-          maxBarThickness: 32,
+          label: "Số sinh viên",
+          data: buckets.map((item) => item.students),
+          backgroundColor: [
+            "rgba(37, 99, 235, 0.88)",
+            "rgba(245, 158, 11, 0.88)",
+            "rgba(220, 38, 38, 0.85)",
+          ],
+          borderColor: "#ffffff",
+          borderWidth: 2,
+          hoverOffset: 6,
         },
       ],
     },
     options: {
-      indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
+      cutout: "62%",
       plugins: {
         legend: {
-          display: false,
+          position: "bottom",
+          labels: {
+            padding: 16,
+            usePointStyle: true,
+            pointStyle: "circle",
+            font: { size: 11, weight: "600" },
+          },
         },
         tooltip: {
           callbacks: {
             title: (items) => {
               const idx = items && items[0] ? items[0].dataIndex : -1;
-              const course = list[idx];
-              return course ? `${course.ma_mon} — ${course.ten_mon}` : "";
+              const bucket = buckets[idx];
+              return bucket ? bucket.label : "";
             },
             label: (ctx) => {
-              const course = list[ctx.dataIndex];
-              if (!course) return `Bậc đỉnh: ${ctx.parsed.x}`;
-              return `Xung đột ${course.deg} môn · ${course.so_sv} SV · Ca ${course.stt_ca}`;
+              const bucket = buckets[ctx.dataIndex];
+              if (!bucket) return `${ctx.parsed} SV`;
+              const pct = ((Number(bucket.students || 0) / totalStudents) * 100).toFixed(1);
+              return `${bucket.students} sinh viên (${pct}%)`;
             },
-          },
-        },
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          suggestedMax: 12,
-          ticks: { stepSize: 2 },
-          title: {
-            display: true,
-            text: "Số môn xung đột trực tiếp deg(v)",
-            font: { size: 11, weight: "600" },
           },
         },
       },
@@ -473,7 +473,7 @@ function initStatsCharts(examCode = activeStatsExamCode) {
   renderStatsShiftSummaryTable(dataset);
 
   const shiftCanvas = document.getElementById("chart-shift-utilization");
-  const degreeCanvas = document.getElementById("chart-top-degree-courses");
+  const dailyExamCanvas = document.getElementById("chart-daily-exam-distribution");
 
   if (typeof window === "undefined" || typeof window.Chart !== "function") {
     return null;
@@ -482,8 +482,8 @@ function initStatsCharts(examCode = activeStatsExamCode) {
   if (shiftUtilizationChartInstance && typeof shiftUtilizationChartInstance.destroy === "function") {
     shiftUtilizationChartInstance.destroy();
   }
-  if (topDegreeChartInstance && typeof topDegreeChartInstance.destroy === "function") {
-    topDegreeChartInstance.destroy();
+  if (dailyExamChartInstance && typeof dailyExamChartInstance.destroy === "function") {
+    dailyExamChartInstance.destroy();
   }
 
   if (shiftCanvas) {
@@ -493,16 +493,16 @@ function initStatsCharts(examCode = activeStatsExamCode) {
     );
   }
 
-  if (degreeCanvas) {
-    topDegreeChartInstance = new window.Chart(
-      degreeCanvas,
-      buildTopDegreeChartConfig(dataset)
+  if (dailyExamCanvas) {
+    dailyExamChartInstance = new window.Chart(
+      dailyExamCanvas,
+      buildDailyExamDistributionChartConfig(dataset)
     );
   }
 
   return {
     shiftChart: shiftUtilizationChartInstance,
-    degreeChart: topDegreeChartInstance,
+    dailyExamChart: dailyExamChartInstance,
   };
 }
 
